@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>CloudClean</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23111318'/><path d='M16 5l9 5.2v10.6L16 26l-9-5.2V10.2z' fill='none' stroke='%235aa9ff' stroke-width='2'/><circle cx='16' cy='16' r='2.6' fill='%235aa9ff'/><circle cx='11' cy='12.5' r='1.4' fill='%237cbcff'/><circle cx='21' cy='12.5' r='1.4' fill='%237cbcff'/><circle cx='16' cy='21.5' r='1.4' fill='%237cbcff'/></svg>" />
+    <script>
+      // The theme before the first paint, read the way lib/theme.ts does: the stored choice, "system" follows the OS.
+      (function () {
+        var t = 'paper';
+        try {
+          t = JSON.parse(localStorage.getItem('cloudclean.theme') || '"paper"');
+        } catch (e) {}
+        if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'carbon' : 'paper';
+        document.documentElement.setAttribute('data-theme', t === 'carbon' ? 'carbon' : 'paper');
+      })();
+    </script>
+    <style>:root{--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;background:#f4f2ed}:root[data-theme=carbon]{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark;background:#0f0f10}.cc-intro{--cc-bg:#f4f2ed;--cc-ink:#4f4c45;--cc-ink-strong:#17161a;--cc-pill:#ffffffc7;--cc-pill-line:#d5d0c4;--cc-focus:#ee4b1fbf;z-index:2147483000;background:var(--cc-bg);color:var(--cc-ink);cursor:pointer;font:600 13.5px/1.2 Instrument Sans Variable,Instrument Sans,system-ui,-apple-system,Segoe UI,sans-serif;transition:opacity .4s cubic-bezier(.2,.8,.2,1);animation:0s linear 60s forwards cc-intro-failsafe;position:fixed;inset:0;overflow:hidden}:root[data-theme=carbon] .cc-intro{--cc-bg:#0f0f10;--cc-ink:#c3bfb6;--cc-ink-strong:#f3f1ec;--cc-pill:#18181ac7;--cc-pill-line:#3b3b41;--cc-focus:#ff6a3dcc}.cc-intro.is-leaving{opacity:0;pointer-events:none}.cc-intro-video{--cc-h:max(100vh, 56.25vw);object-fit:cover;width:100%;height:100%;-webkit-mask-image:radial-gradient(circle calc(var(--cc-h) * .8) at 50% 50%, #000 45%, transparent);-webkit-mask-image:radial-gradient(circle calc(var(--cc-h) * .8) at 50% 50%, #000 45%, transparent);mask-image:radial-gradient(circle calc(var(--cc-h) * .8) at 50% 50%, #000 45%, transparent);animation:.7s cubic-bezier(.2,.8,.2,1) both cc-intro-in;position:absolute;inset:0}:root[data-theme=carbon] .cc-intro-video{-webkit-mask-image:radial-gradient(circle calc(var(--cc-h) * .6) at 50% 50%, #000 42%, #000000c7 50%, #00000070 60%, #0000002b 71%, #0000000a 82%, transparent 92%);-webkit-mask-image:radial-gradient(circle calc(var(--cc-h) * .6) at 50% 50%, #000 42%, #000000c7 50%, #00000070 60%, #0000002b 71%, #0000000a 82%, transparent 92%);mask-image:radial-gradient(circle calc(var(--cc-h) * .6) at 50% 50%, #000 42%, #000000c7 50%, #00000070 60%, #0000002b 71%, #0000000a 82%, transparent 92%);filter:brightness(.76)saturate(1.08);animation-duration:1.1s}.cc-intro-status{background:var(--cc-pill);white-space:nowrap;opacity:0;border-radius:999px;align-items:center;gap:10px;margin:0;padding:8px 14px;font-size:14px;font-weight:550;transition:opacity .3s,translate .3s;display:flex;position:absolute;bottom:max(40px,9vh);left:50%;translate:-50% 6px}.cc-intro.is-holding .cc-intro-status{opacity:1;translate:-50%}.cc-intro-dots{gap:4px;display:inline-flex}.cc-intro-dots i{background:currentColor;border-radius:50%;width:5px;height:5px;animation:1.2s ease-in-out infinite cc-intro-dot}.cc-intro-dots i:nth-child(2){animation-delay:.15s}.cc-intro-dots i:nth-child(3){animation-delay:.3s}.cc-intro-skip{border:1px solid var(--cc-pill-line);background:var(--cc-pill);height:36px;color:var(--cc-ink);font:inherit;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:0 16px;transition:color .12s,border-color .12s;position:absolute;bottom:max(20px,3.5vh);right:max(20px,2.5vw)}.cc-intro-skip:hover{color:var(--cc-ink-strong);border-color:var(--cc-ink)}.cc-intro-skip:focus-visible{box-shadow:0 0 0 2px var(--cc-bg), 0 0 0 4px var(--cc-focus);outline:none}.cc-intro-sr{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;margin:-1px;position:absolute;overflow:hidden}@keyframes cc-intro-in{0%{opacity:0}}@keyframes cc-intro-dot{50%{opacity:.3}}@keyframes cc-intro-failsafe{to{visibility:hidden;pointer-events:none}}@media (prefers-reduced-motion:reduce){.cc-intro,.cc-intro-status{transition:none}.cc-intro-video,.cc-intro-dots i{animation:none}}</style>
+    <noscript><style>.cc-intro{display:none}</style></noscript>
+    <script type="module" crossorigin src="./assets/index-B-_uLGry.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/primitives-zGGcP2LB.js">
+    <link rel="modulepreload" crossorigin href="./assets/colormaps-CTlfyfCn.js">
+    <link rel="modulepreload" crossorigin href="./assets/format-D4U9xUG4.js">
+    <link rel="modulepreload" crossorigin href="./assets/StepFrame-D34-LGMJ.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BQkqayc4.css">
+  </head>
+  <body>
+    <div id="cc-intro" class="cc-intro">
+      <video class="cc-intro-video" src="./intro/cloudclean-intro.mp4" poster="./intro/cloudclean-intro-poster.webp" muted playsinline autoplay preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+      <p class="cc-intro-status" aria-hidden="true"><span class="cc-intro-dots"><i></i><i></i><i></i></span>Starting CloudClean…</p>
+      <p class="cc-intro-sr" role="status" aria-live="polite"></p>
+      <button type="button" class="cc-intro-skip">Skip intro</button>
+    </div>
+    <script>
+      // Start-up intro, once per tab session. It leaves with a short fade when BOTH the video has ended AND the server
+      // has answered GET /api/auth/status; Skip, Esc (or any other key) and a click remove it at once. The app below
+      // mounts as usual and never depends on it.
+      (function () {
+        var intro = document.getElementById('cc-intro');
+        if (!intro) return;
+        var video = intro.querySelector('video');
+        var still = false, ended = false, ready = false, gone = false, started = false;
+        var timers = [], lastFocus = null;
+
+        function later(fn, ms) {
+          timers.push(setTimeout(fn, ms));
+        }
+        function unload() {
+          try {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          } catch (e) {}
+        }
+        function leave(fade) {
+          if (gone) return;
+          gone = true;
+          timers.forEach(clearTimeout);
+          document.removeEventListener('keydown', onKey, true);
+          document.removeEventListener('focusin', onFocus, true);
+          // hand focus back to where it was (the sign-in page's username field) if the intro had taken it
+          var active = document.activeElement;
+          var lost = !active || active === document.body || intro.contains(active);
+          var back = lost && lastFocus && document.contains(lastFocus) ? lastFocus : null;
+          function done() {
+            unload();
+            intro.remove();
+            if (back) back.focus();
+          }
+          if (fade && !still) {
+            intro.classList.add('is-leaving');
+            setTimeout(done, 420);
+          } else done();
+        }
+        function check() {
+          if (ended && ready) leave(true);
+          else if (ended) intro.classList.add('is-holding');
+        }
+        function onEnded() {
+          if (ended) return;
+          ended = true;
+          check();
+        }
+        function onKey(e) {
+          if (e.key === 'Tab' || e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          leave(false);
+        }
+        function onFocus(e) {
+          if (!intro.contains(e.target)) lastFocus = e.target;
+        }
+        function poll() {
+          if (gone) return;
+          var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+          var cut = ctl ? setTimeout(function () { ctl.abort(); }, 4000) : 0;
+          fetch('/api/auth/status', { cache: 'no-store', signal: ctl ? ctl.signal : null }).then(
+            function () {
+              clearTimeout(cut);
+              ready = true;
+              check();
+            },
+            function () {
+              clearTimeout(cut);
+              later(poll, 500);
+            },
+          );
+        }
+
+        try {
+          var seen = false;
+          try {
+            seen = sessionStorage.getItem('cloudclean.intro') === 'seen';
+            sessionStorage.setItem('cloudclean.intro', 'seen');
+          } catch (e) {}
+          if (seen) {
+            unload();
+            intro.remove();
+            return;
+          }
+          still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+          document.addEventListener('keydown', onKey, true);
+          document.addEventListener('focusin', onFocus, true);
+          intro.addEventListener('click', function () {
+            leave(false);
+          });
+          // a click skips, but must not pull focus off the page underneath (e.g. the username field)
+          intro.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+          });
+          later(function () {
+            intro.querySelector('.cc-intro-sr').textContent = 'Starting CloudClean';
+          }, 150);
+          poll();
+          if (still) {
+            unload(); // no motion: the poster stays as a still picture
+            later(onEnded, 1500);
+          } else {
+            video.addEventListener('ended', onEnded);
+            video.addEventListener('error', onEnded);
+            video.addEventListener('playing', function () {
+              if (started) return;
+              started = true;
+              var d = isFinite(video.duration) && video.duration > 0 ? video.duration : 10;
+              later(onEnded, (d + 3) * 1000); // a stalled video never holds the app back
+            });
+            later(function () {
+              if (!started) onEnded();
+            }, 5000);
+            var p = video.play();
+            if (p && p.catch) p.catch(onEnded);
+          }
+        } catch (e) {
+          leave(false);
+        }
+      })();
+    </script>
+    <div id="root"></div>
+  </body>
+</html>

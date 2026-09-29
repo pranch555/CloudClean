@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloudclean"
+version = "0.2.0"
+description = "Point cloud cleaning, merging, meshing and photo colorization for 3D scanner data (Revopoint MetroY and others)"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "open3d>=0.18",
+    "numpy",
+    "scipy",
+    "pillow",
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "httpx",          # assistant LLM client, capture bridge
+    "cascadio",       # STEP / IGES tessellation for CAD comparison (wheels for Windows, Linux and macOS)
+    "pillow-heif",    # HEIC phone photos (iPhone default), converted to JPEG when they are added
+]
+
+[project.urls]
+Homepage = "https://github.com/pranch555/CloudClean"
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+# native MetroY capture (Linux): stripe triangulation needs OpenCV
+metroy = ["opencv-python-headless>=4.8"]
+# Revopoint turntables over Bluetooth LE (Windows WinRT / Linux BlueZ); see docs/turntable.md
+turntable = ["bleak>=0.22"]
+# everything above except the test tools; what CloudClean.bat, cloudclean.sh and the Dockerfile install
+all = ["opencv-python-headless>=4.8", "bleak>=0.22"]
+
+[project.scripts]
+cloudclean = "cloudclean.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cloudclean*"]
+
+[tool.setuptools.package-data]
+cloudclean = ["web/static/*", "web/static/assets/*", "web/static/intro/*"]

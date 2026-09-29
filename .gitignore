@@ -1,0 +1,8 @@
+.venv/
+workspace/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+output/
+node_modules/
+.env

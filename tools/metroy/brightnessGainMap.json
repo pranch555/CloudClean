@@ -1,0 +1,130 @@
+{
+    "lineDark": [
+        {
+            "brightness": 9,
+            "gain": 1
+        },
+        {
+            "brightness": 4,
+            "gain": 2
+        },
+        {
+            "brightness": 2,
+            "gain": 3
+        },
+        {
+            "brightness": 1,
+            "gain": 4
+        },
+        {
+            "brightness": 1,
+            "gain": 5
+        }
+    ],
+    "lineGeneral": [
+        {
+            "brightness": 45,
+            "gain": 1
+        },
+        {
+            "brightness": 21,
+            "gain": 2
+        },
+        {
+            "brightness": 14,
+            "gain": 3
+        },
+        {
+            "brightness": 10,
+            "gain": 4
+        },
+        {
+            "brightness": 8,
+            "gain": 5
+        },
+        {
+            "brightness": 7,
+            "gain": 6
+        },
+        {
+            "brightness": 6,
+            "gain": 7
+        },
+        {
+            "brightness": 5,
+            "gain": 8
+        },
+        {
+            "brightness": 4,
+            "gain": 9
+        },
+        {
+            "brightness": 4,
+            "gain": 10
+        }
+    ],
+    "lineReflect": [
+        {
+            "brightness": 11,
+            "gain": 1
+        },
+        {
+            "brightness": 5,
+            "gain": 2
+        },
+        {
+            "brightness": 3,
+            "gain": 3
+        },
+        {
+            "brightness": 2,
+            "gain": 4
+        },
+        {
+            "brightness": 1,
+            "gain": 5
+        }
+    ],
+    "surface": [
+        {
+            "brightness": 15,
+            "gain": 1
+        },
+        {
+            "brightness": 14,
+            "gain": 2
+        },
+        {
+            "brightness": 9,
+            "gain": 3
+        },
+        {
+            "brightness": 7,
+            "gain": 4
+        },
+        {
+            "brightness": 5,
+            "gain": 5
+        },
+        {
+            "brightness": 4,
+            "gain": 6
+        },
+        {
+            "brightness": 3,
+            "gain": 7
+        },
+        {
+            "brightness": 3,
+            "gain": 8
+        },
+        {
+            "brightness": 2,
+            "gain": 9
+        },
+        {
+            "brightness": 1,
+            "gain": 10
+        }
+    ]
+}

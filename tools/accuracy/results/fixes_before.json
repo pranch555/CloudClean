@@ -1,0 +1,49 @@
+{
+ "assess": {
+  "layering_mm": 0.096754,
+  "layering_p90_mm": 0.285583,
+  "separation_ratio": 7.52,
+  "doubled_surface": true,
+  "ambiguous": true,
+  "fitness": 0.5829,
+  "overlap": 0.6341,
+  "combined_noise_mm": 0.019076,
+  "recommendation": "ask",
+  "reasons": [
+   "Scan 2 adds 47.4% new surface (3199 mm\u00b2).",
+   "Scan 2: a pose rotated 92\u00b0 fits almost as well - the part may be symmetric, so the alignment cannot be trusted without checking.",
+   "Scan 2: where the scans overlap their surfaces are 0.097 mm apart (median), 7.5x what the scan noise explains - merging would create a doubled, layered skin.",
+   "The merge is uncertain - check the alignment before merging."
+  ],
+  "seconds": 46.63307070732117
+ },
+ "03264af7e9f5": {
+  "error": "No thread found: only 1 complete crest(s) in the selection - select at least three threads"
+ },
+ "ecce23d3a40c": {
+  "pitch": 3.1767639501003413,
+  "pitch_se": 0.0007045301483812969,
+  "major_diameter": 25.217824228385552,
+  "minor_diameter": 21.17044338879151,
+  "pitch_diameter": 23.519090602306523,
+  "flank_angle_deg": 60.53730011913635,
+  "crest_count": 4,
+  "handedness": "right",
+  "confidence": "high",
+  "warnings": [],
+  "axis_uncertainty_deg": 0.0026528982306109634
+ },
+ "36a13a3e43aa": {
+  "pitch": 3.17740819085753,
+  "pitch_se": 0.00014549362261747015,
+  "major_diameter": 25.145927671315135,
+  "minor_diameter": 21.22396671203119,
+  "pitch_diameter": 23.520068877348844,
+  "flank_angle_deg": 56.39108975760017,
+  "crest_count": 20,
+  "handedness": "right",
+  "confidence": "high",
+  "warnings": [],
+  "axis_uncertainty_deg": 0.0018091904569354793
+ }
+}

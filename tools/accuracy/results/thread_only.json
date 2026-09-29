@@ -1,0 +1,134 @@
+{
+ "T_ours": {
+  "rigid": {
+   "rms": 0.15757517322636944,
+   "overlap": 0.5718125,
+   "scale": 1.0,
+   "scale_se": null,
+   "axis_scales": null,
+   "axis_scales_se": null,
+   "offset": 0.0,
+   "offset_se": null,
+   "iterations": 40,
+   "converged": false
+  },
+  "axes_offset": {
+   "rms": 0.15616763019073765,
+   "overlap": 0.5753375,
+   "scale": 1.0,
+   "scale_se": null,
+   "axis_scales": [
+    1.0002203263043745,
+    1.0012508996943508,
+    1.0013818239325856
+   ],
+   "axis_scales_se": [
+    3.9581372986675196e-05,
+    0.00019902809289159198,
+    0.00020177579655484965
+   ],
+   "offset": -0.00522724655985219,
+   "offset_se": 0.001859015454587131,
+   "iterations": 40,
+   "converged": false
+  },
+  "similarity_offset": {
+   "rms": 0.15640958072943298,
+   "overlap": 0.576075,
+   "scale": 1.0003517489710556,
+   "scale_se": 3.7569365708419384e-05,
+   "axis_scales": null,
+   "axis_scales_se": null,
+   "offset": -0.01457709362931251,
+   "offset_se": 0.0006240183399571096,
+   "iterations": 40,
+   "converged": false
+  },
+  "axial_ppm": -220.27777138722283,
+  "radial_ppm": [
+   -1249.3368992053665,
+   -1379.9171300702405
+  ],
+  "offset_mm": -0.00522724655985219,
+  "separation": {
+   "signed_mean": -0.017072918715860565,
+   "median": -0.015267530038921406,
+   "mean": 0.06744367706596742,
+   "rms": 0.08575333071341999,
+   "std": 0.08403659426087422,
+   "p05": -0.16071335659640573,
+   "p95_signed": 0.12093235541335534,
+   "median_abs": 0.054886276122730886,
+   "p95": 0.17442686244713076,
+   "max": 0.3036946961447417,
+   "count": 29834
+  },
+  "overlap_fraction": 0.372925
+ },
+ "T_merge": {
+  "rigid": {
+   "rms": 0.15374541515523996,
+   "overlap": 0.574275,
+   "scale": 1.0,
+   "scale_se": null,
+   "axis_scales": null,
+   "axis_scales_se": null,
+   "offset": 0.0,
+   "offset_se": null,
+   "iterations": 40,
+   "converged": false
+  },
+  "axes_offset": {
+   "rms": 0.1520242678397359,
+   "overlap": 0.5782875,
+   "scale": 1.0,
+   "scale_se": null,
+   "axis_scales": [
+    1.0001492488850139,
+    1.0017051039890112,
+    1.0012456213457124
+   ],
+   "axis_scales_se": [
+    3.891688092673711e-05,
+    0.00019317623015353247,
+    0.00019584108717833073
+   ],
+   "offset": -0.004740158548291648,
+   "offset_se": 0.0018098575177249465,
+   "iterations": 40,
+   "converged": false
+  },
+  "similarity_offset": {
+   "rms": 0.15249386227947728,
+   "overlap": 0.57935,
+   "scale": 1.0002868287168143,
+   "scale_se": 3.663024437756502e-05,
+   "axis_scales": null,
+   "axis_scales_se": null,
+   "offset": -0.01644405378273251,
+   "offset_se": 0.0006037535091329175,
+   "iterations": 40,
+   "converged": false
+  },
+  "axial_ppm": -149.22661310823315,
+  "radial_ppm": [
+   -1702.2015583439963,
+   -1244.0717034429838
+  ],
+  "offset_mm": -0.004740158548291648,
+  "separation": {
+   "signed_mean": -0.01822986122881359,
+   "median": -0.01650246068008912,
+   "mean": 0.0676311585608444,
+   "rms": 0.08589019141919203,
+   "std": 0.08393328982950476,
+   "p05": -0.1621781666230417,
+   "p95_signed": 0.12037439871196472,
+   "median_abs": 0.0551897345236807,
+   "p95": 0.1750384788961713,
+   "max": 0.3299936914816223,
+   "count": 30184
+  },
+  "overlap_fraction": 0.3773
+ }
+}

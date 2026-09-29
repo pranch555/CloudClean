@@ -1,0 +1,3628 @@
+{
+ "sigma_combined": 0.019075723128457737,
+ "within_mm": 0.057227169385373214,
+ "pitch": 3.1765007620892494,
+ "hand": 1,
+ "screw": [
+  {
+   "deg": -180.0,
+   "head_within": 0.079725,
+   "head_median_abs": 0.1492419957480636,
+   "head_signed_median": 0.013779602467316897,
+   "thread_within": 0.174875,
+   "thread_median_abs": 0.06323910570210343,
+   "thread_signed_median": -0.007875861635755878
+  },
+  {
+   "deg": -179.0,
+   "head_within": 0.08115,
+   "head_median_abs": 0.14729032291636338,
+   "head_signed_median": 0.011836191359835217,
+   "thread_within": 0.173375,
+   "thread_median_abs": 0.06343259862415863,
+   "thread_signed_median": -0.006788478397652947
+  },
+  {
+   "deg": -178.0,
+   "head_within": 0.0839,
+   "head_median_abs": 0.14379670688932467,
+   "head_signed_median": 0.009398549574929395,
+   "thread_within": 0.175475,
+   "thread_median_abs": 0.06313777344069159,
+   "thread_signed_median": -0.007431351459515224
+  },
+  {
+   "deg": -177.0,
+   "head_within": 0.08715,
+   "head_median_abs": 0.1379168696472496,
+   "head_signed_median": 0.007256039562430518,
+   "thread_within": 0.17545,
+   "thread_median_abs": 0.06308507032864345,
+   "thread_signed_median": -0.008231845300091939
+  },
+  {
+   "deg": -176.0,
+   "head_within": 0.095775,
+   "head_median_abs": 0.13160009010172966,
+   "head_signed_median": 0.004131464502856321,
+   "thread_within": 0.174425,
+   "thread_median_abs": 0.06330246307445024,
+   "thread_signed_median": -0.007800573723412528
+  },
+  {
+   "deg": -175.0,
+   "head_within": 0.109375,
+   "head_median_abs": 0.12285113026352924,
+   "head_signed_median": -0.0017473000563063697,
+   "thread_within": 0.173,
+   "thread_median_abs": 0.0635676523900015,
+   "thread_signed_median": -0.006762969202218729
+  },
+  {
+   "deg": -174.0,
+   "head_within": 0.123025,
+   "head_median_abs": 0.11633304044476472,
+   "head_signed_median": -0.006364966019300627,
+   "thread_within": 0.174225,
+   "thread_median_abs": 0.0628435627896441,
+   "thread_signed_median": -0.007201125358842776
+  },
+  {
+   "deg": -173.0,
+   "head_within": 0.1311,
+   "head_median_abs": 0.11080287976315606,
+   "head_signed_median": -0.006470758938369237,
+   "thread_within": 0.1747,
+   "thread_median_abs": 0.06291758699396979,
+   "thread_signed_median": -0.00650658226460093
+  },
+  {
+   "deg": -172.0,
+   "head_within": 0.130175,
+   "head_median_abs": 0.10845757517411261,
+   "head_signed_median": -0.011264502111657857,
+   "thread_within": 0.176775,
+   "thread_median_abs": 0.06223301827575383,
+   "thread_signed_median": -0.006515026351750375
+  },
+  {
+   "deg": -171.0,
+   "head_within": 0.12945,
+   "head_median_abs": 0.11335820623836516,
+   "head_signed_median": -0.008269985960956985,
+   "thread_within": 0.1747,
+   "thread_median_abs": 0.06296292050906252,
+   "thread_signed_median": -0.006679335913290375
+  },
+  {
+   "deg": -170.0,
+   "head_within": 0.124075,
+   "head_median_abs": 0.11795458760216873,
+   "head_signed_median": -0.004947079902189166,
+   "thread_within": 0.174225,
+   "thread_median_abs": 0.06301743902041411,
+   "thread_signed_median": -0.00708183635096586
+  },
+  {
+   "deg": -169.0,
+   "head_within": 0.112125,
+   "head_median_abs": 0.12414131873665012,
+   "head_signed_median": -0.001393875776585573,
+   "thread_within": 0.1736,
+   "thread_median_abs": 0.0628218668458949,
+   "thread_signed_median": -0.005908306100485588
+  },
+  {
+   "deg": -168.0,
+   "head_within": 0.104025,
+   "head_median_abs": 0.12866673202521445,
+   "head_signed_median": 0.0008952749115785338,
+   "thread_within": 0.176525,
+   "thread_median_abs": 0.06310471208940284,
+   "thread_signed_median": -0.006348618613087517
+  },
+  {
+   "deg": -167.0,
+   "head_within": 0.0992,
+   "head_median_abs": 0.1346675494585703,
+   "head_signed_median": 0.0031273065287964054,
+   "thread_within": 0.1763,
+   "thread_median_abs": 0.06290779743747021,
+   "thread_signed_median": -0.0062423120400360455
+  },
+  {
+   "deg": -166.0,
+   "head_within": 0.09705,
+   "head_median_abs": 0.13900850451881486,
+   "head_signed_median": 0.005107119907481517,
+   "thread_within": 0.17675,
+   "thread_median_abs": 0.06282627398042372,
+   "thread_signed_median": -0.0060738742318505205
+  },
+  {
+   "deg": -165.0,
+   "head_within": 0.098875,
+   "head_median_abs": 0.13969628503775577,
+   "head_signed_median": 0.005303113941047484,
+   "thread_within": 0.17685,
+   "thread_median_abs": 0.06250502772855988,
+   "thread_signed_median": -0.005231193216040465
+  },
+  {
+   "deg": -164.0,
+   "head_within": 0.102675,
+   "head_median_abs": 0.13530717301767037,
+   "head_signed_median": 0.005910940884871795,
+   "thread_within": 0.176275,
+   "thread_median_abs": 0.06235836008454603,
+   "thread_signed_median": -0.005366812879167264
+  },
+  {
+   "deg": -163.0,
+   "head_within": 0.108725,
+   "head_median_abs": 0.1288845665565932,
+   "head_signed_median": 0.006011079681812447,
+   "thread_within": 0.17765,
+   "thread_median_abs": 0.06262902387260427,
+   "thread_signed_median": -0.004650011870540113
+  },
+  {
+   "deg": -162.0,
+   "head_within": 0.116125,
+   "head_median_abs": 0.12256616664011824,
+   "head_signed_median": 0.00495936472377309,
+   "thread_within": 0.17685,
+   "thread_median_abs": 0.06284331363400375,
+   "thread_signed_median": -0.003880977272314103
+  },
+  {
+   "deg": -161.0,
+   "head_within": 0.121325,
+   "head_median_abs": 0.11819585784529102,
+   "head_signed_median": 0.003921682839350025,
+   "thread_within": 0.178,
+   "thread_median_abs": 0.06228151232662575,
+   "thread_signed_median": -0.0050171416246858995
+  },
+  {
+   "deg": -160.0,
+   "head_within": 0.12885,
+   "head_median_abs": 0.11589618420279221,
+   "head_signed_median": 0.003683195077120728,
+   "thread_within": 0.177175,
+   "thread_median_abs": 0.06317033750078849,
+   "thread_signed_median": -0.005683192692863725
+  },
+  {
+   "deg": -159.0,
+   "head_within": 0.13315,
+   "head_median_abs": 0.11534928431799385,
+   "head_signed_median": 0.0013034776314558077,
+   "thread_within": 0.1767,
+   "thread_median_abs": 0.06241314196921247,
+   "thread_signed_median": -0.0053584758463328525
+  },
+  {
+   "deg": -158.0,
+   "head_within": 0.1304,
+   "head_median_abs": 0.11394145035919903,
+   "head_signed_median": -0.0028283317558290407,
+   "thread_within": 0.1778,
+   "thread_median_abs": 0.06236034373632791,
+   "thread_signed_median": -0.005036399780928448
+  },
+  {
+   "deg": -157.0,
+   "head_within": 0.1232,
+   "head_median_abs": 0.11567210450599072,
+   "head_signed_median": -0.0021440659127440337,
+   "thread_within": 0.176875,
+   "thread_median_abs": 0.0623619149587849,
+   "thread_signed_median": -0.004755649619681774
+  },
+  {
+   "deg": -156.0,
+   "head_within": 0.11765,
+   "head_median_abs": 0.12152019671532986,
+   "head_signed_median": -0.002205533101108585,
+   "thread_within": 0.176625,
+   "thread_median_abs": 0.06295484826802529,
+   "thread_signed_median": -0.004822878012449965
+  },
+  {
+   "deg": -155.0,
+   "head_within": 0.107975,
+   "head_median_abs": 0.12847375712937367,
+   "head_signed_median": -0.0030020841167338642,
+   "thread_within": 0.176625,
+   "thread_median_abs": 0.06279115800434792,
+   "thread_signed_median": -0.004614643739809103
+  },
+  {
+   "deg": -154.0,
+   "head_within": 0.09765,
+   "head_median_abs": 0.13329580991108536,
+   "head_signed_median": -0.0013553011748208808,
+   "thread_within": 0.178975,
+   "thread_median_abs": 0.06195343216805411,
+   "thread_signed_median": -0.005105808154992355
+  },
+  {
+   "deg": -153.0,
+   "head_within": 0.0903,
+   "head_median_abs": 0.1376275734893749,
+   "head_signed_median": 0.0005708573252200741,
+   "thread_within": 0.177175,
+   "thread_median_abs": 0.06196083526064351,
+   "thread_signed_median": -0.0043973298225652565
+  },
+  {
+   "deg": -152.0,
+   "head_within": 0.086525,
+   "head_median_abs": 0.14099936981771338,
+   "head_signed_median": 0.005627129333150825,
+   "thread_within": 0.178675,
+   "thread_median_abs": 0.06168071418410204,
+   "thread_signed_median": -0.005342071842242046
+  },
+  {
+   "deg": -151.0,
+   "head_within": 0.083525,
+   "head_median_abs": 0.1426478024524773,
+   "head_signed_median": 0.010211756736253574,
+   "thread_within": 0.178425,
+   "thread_median_abs": 0.06184847597537649,
+   "thread_signed_median": -0.005979698867464188
+  },
+  {
+   "deg": -150.0,
+   "head_within": 0.082175,
+   "head_median_abs": 0.14569964654665157,
+   "head_signed_median": 0.017192903539844616,
+   "thread_within": 0.179475,
+   "thread_median_abs": 0.062351602986232005,
+   "thread_signed_median": -0.006075669209147402
+  },
+  {
+   "deg": -149.0,
+   "head_within": 0.0805,
+   "head_median_abs": 0.14744051764677824,
+   "head_signed_median": 0.021091965732939123,
+   "thread_within": 0.177025,
+   "thread_median_abs": 0.061893776318681926,
+   "thread_signed_median": -0.00507158117780031
+  },
+  {
+   "deg": -148.0,
+   "head_within": 0.081075,
+   "head_median_abs": 0.14833721504085948,
+   "head_signed_median": 0.024470225859378057,
+   "thread_within": 0.1789,
+   "thread_median_abs": 0.06170631088672882,
+   "thread_signed_median": -0.005740172894576219
+  },
+  {
+   "deg": -147.0,
+   "head_within": 0.081675,
+   "head_median_abs": 0.14583915168435435,
+   "head_signed_median": 0.024140582961696272,
+   "thread_within": 0.178325,
+   "thread_median_abs": 0.06215329647085283,
+   "thread_signed_median": -0.006286611710084792
+  },
+  {
+   "deg": -146.0,
+   "head_within": 0.0818,
+   "head_median_abs": 0.14355217342055965,
+   "head_signed_median": 0.020818301167843015,
+   "thread_within": 0.179825,
+   "thread_median_abs": 0.06140532223196318,
+   "thread_signed_median": -0.005755311135359457
+  },
+  {
+   "deg": -145.0,
+   "head_within": 0.08705,
+   "head_median_abs": 0.14323206149894022,
+   "head_signed_median": 0.017368979551643154,
+   "thread_within": 0.178725,
+   "thread_median_abs": 0.06169868433075189,
+   "thread_signed_median": -0.0065939418433448305
+  },
+  {
+   "deg": -144.0,
+   "head_within": 0.09295,
+   "head_median_abs": 0.1455983640973117,
+   "head_signed_median": 0.01353142270919611,
+   "thread_within": 0.1775,
+   "thread_median_abs": 0.061601505692219546,
+   "thread_signed_median": -0.005449155395699794
+  },
+  {
+   "deg": -143.0,
+   "head_within": 0.095025,
+   "head_median_abs": 0.14188323610001163,
+   "head_signed_median": 0.010116586680326011,
+   "thread_within": 0.178625,
+   "thread_median_abs": 0.061330474375559565,
+   "thread_signed_median": -0.004568115628519951
+  },
+  {
+   "deg": -142.0,
+   "head_within": 0.095425,
+   "head_median_abs": 0.13393215532492334,
+   "head_signed_median": 0.012220074002357202,
+   "thread_within": 0.180825,
+   "thread_median_abs": 0.06092481380860712,
+   "thread_signed_median": -0.003917370987014572
+  },
+  {
+   "deg": -141.0,
+   "head_within": 0.10115,
+   "head_median_abs": 0.12623145741466527,
+   "head_signed_median": 0.014139377064756107,
+   "thread_within": 0.181425,
+   "thread_median_abs": 0.061326459861371335,
+   "thread_signed_median": -0.0042216537125165515
+  },
+  {
+   "deg": -140.0,
+   "head_within": 0.112425,
+   "head_median_abs": 0.12561058895178015,
+   "head_signed_median": 0.019909292912575836,
+   "thread_within": 0.181425,
+   "thread_median_abs": 0.06191396078586044,
+   "thread_signed_median": -0.004415139083659861
+  },
+  {
+   "deg": -139.0,
+   "head_within": 0.10655,
+   "head_median_abs": 0.12698007548640458,
+   "head_signed_median": 0.012520309530855867,
+   "thread_within": 0.181975,
+   "thread_median_abs": 0.06102170294699214,
+   "thread_signed_median": -0.004582197123779344
+  },
+  {
+   "deg": -138.0,
+   "head_within": 0.099425,
+   "head_median_abs": 0.13103919747329648,
+   "head_signed_median": 0.008302862183198936,
+   "thread_within": 0.180575,
+   "thread_median_abs": 0.06119823003137853,
+   "thread_signed_median": -0.003630558708134041
+  },
+  {
+   "deg": -137.0,
+   "head_within": 0.09595,
+   "head_median_abs": 0.1358959669720356,
+   "head_signed_median": 0.005990621809541146,
+   "thread_within": 0.1819,
+   "thread_median_abs": 0.06046888965650398,
+   "thread_signed_median": -0.00428938228801584
+  },
+  {
+   "deg": -136.0,
+   "head_within": 0.09565,
+   "head_median_abs": 0.13752054323724505,
+   "head_signed_median": 0.0035063881608969473,
+   "thread_within": 0.181625,
+   "thread_median_abs": 0.06100440160762742,
+   "thread_signed_median": -0.004291616156810738
+  },
+  {
+   "deg": -135.0,
+   "head_within": 0.0966,
+   "head_median_abs": 0.13783830931258745,
+   "head_signed_median": 0.002281793545049276,
+   "thread_within": 0.179975,
+   "thread_median_abs": 0.06143151949775788,
+   "thread_signed_median": -0.004479237472782107
+  },
+  {
+   "deg": -134.0,
+   "head_within": 0.09755,
+   "head_median_abs": 0.13482768450307822,
+   "head_signed_median": 0.00022472363524386695,
+   "thread_within": 0.181875,
+   "thread_median_abs": 0.06102094779793599,
+   "thread_signed_median": -0.0048720120387388665
+  },
+  {
+   "deg": -133.0,
+   "head_within": 0.102025,
+   "head_median_abs": 0.1324743064462821,
+   "head_signed_median": -0.0003753314842063341,
+   "thread_within": 0.1818,
+   "thread_median_abs": 0.06099238882596434,
+   "thread_signed_median": -0.004075916656272355
+  },
+  {
+   "deg": -132.0,
+   "head_within": 0.108775,
+   "head_median_abs": 0.1267715407642515,
+   "head_signed_median": -0.0009669478741172136,
+   "thread_within": 0.1829,
+   "thread_median_abs": 0.06105002259218945,
+   "thread_signed_median": -0.0036560684206904783
+  },
+  {
+   "deg": -131.0,
+   "head_within": 0.119875,
+   "head_median_abs": 0.11821203957302472,
+   "head_signed_median": -0.000611536971550469,
+   "thread_within": 0.182075,
+   "thread_median_abs": 0.061400556692352205,
+   "thread_signed_median": -0.003938290512303537
+  },
+  {
+   "deg": -130.0,
+   "head_within": 0.134525,
+   "head_median_abs": 0.10725406773056206,
+   "head_signed_median": -0.0033004206179321188,
+   "thread_within": 0.1819,
+   "thread_median_abs": 0.0610726949840889,
+   "thread_signed_median": -0.0041597083513241345
+  },
+  {
+   "deg": -129.0,
+   "head_within": 0.1518,
+   "head_median_abs": 0.09886477303746169,
+   "head_signed_median": -0.007716772534167405,
+   "thread_within": 0.181525,
+   "thread_median_abs": 0.061183249845288556,
+   "thread_signed_median": -0.004748793789596984
+  },
+  {
+   "deg": -128.0,
+   "head_within": 0.157775,
+   "head_median_abs": 0.09570718444426855,
+   "head_signed_median": -0.009592522368577596,
+   "thread_within": 0.18235,
+   "thread_median_abs": 0.06138189857139853,
+   "thread_signed_median": -0.00445290074293284
+  },
+  {
+   "deg": -127.0,
+   "head_within": 0.154525,
+   "head_median_abs": 0.10231808315483532,
+   "head_signed_median": -0.009058981467198662,
+   "thread_within": 0.182575,
+   "thread_median_abs": 0.06088599315322593,
+   "thread_signed_median": -0.004515384754342177
+  },
+  {
+   "deg": -126.0,
+   "head_within": 0.138525,
+   "head_median_abs": 0.11035834432486,
+   "head_signed_median": -0.016259985793293675,
+   "thread_within": 0.183825,
+   "thread_median_abs": 0.060311086776448294,
+   "thread_signed_median": -0.004840725039092442
+  },
+  {
+   "deg": -125.0,
+   "head_within": 0.120875,
+   "head_median_abs": 0.11973989661120278,
+   "head_signed_median": -0.022337045436512173,
+   "thread_within": 0.18185,
+   "thread_median_abs": 0.06107767489056473,
+   "thread_signed_median": -0.0060839327538990805
+  },
+  {
+   "deg": -124.0,
+   "head_within": 0.1129,
+   "head_median_abs": 0.12868071893459132,
+   "head_signed_median": -0.02897881278728552,
+   "thread_within": 0.1828,
+   "thread_median_abs": 0.060419970299057255,
+   "thread_signed_median": -0.004509577258976631
+  },
+  {
+   "deg": -123.0,
+   "head_within": 0.1071,
+   "head_median_abs": 0.12904394541209477,
+   "head_signed_median": -0.03420239333398603,
+   "thread_within": 0.184125,
+   "thread_median_abs": 0.06030694294554729,
+   "thread_signed_median": -0.004673699250708879
+  },
+  {
+   "deg": -122.0,
+   "head_within": 0.1058,
+   "head_median_abs": 0.13134835734399114,
+   "head_signed_median": -0.03100819658115985,
+   "thread_within": 0.1841,
+   "thread_median_abs": 0.0601084703594821,
+   "thread_signed_median": -0.004305442663148064
+  },
+  {
+   "deg": -121.0,
+   "head_within": 0.102975,
+   "head_median_abs": 0.13266315829958458,
+   "head_signed_median": -0.022658031124522936,
+   "thread_within": 0.18405,
+   "thread_median_abs": 0.06064284535679458,
+   "thread_signed_median": -0.005000861663915793
+  },
+  {
+   "deg": -120.0,
+   "head_within": 0.09665,
+   "head_median_abs": 0.13422790878327606,
+   "head_signed_median": -0.011245454678130668,
+   "thread_within": 0.1833,
+   "thread_median_abs": 0.061014549211838895,
+   "thread_signed_median": -0.004867960086772691
+  },
+  {
+   "deg": -119.0,
+   "head_within": 0.0912,
+   "head_median_abs": 0.13794951531695937,
+   "head_signed_median": -0.004411145169351133,
+   "thread_within": 0.181375,
+   "thread_median_abs": 0.061258795559579346,
+   "thread_signed_median": -0.005019638899859119
+  },
+  {
+   "deg": -118.0,
+   "head_within": 0.089675,
+   "head_median_abs": 0.13961817954179825,
+   "head_signed_median": 0.0035119871409710706,
+   "thread_within": 0.18275,
+   "thread_median_abs": 0.06165073465220347,
+   "thread_signed_median": -0.00437348344663858
+  },
+  {
+   "deg": -117.0,
+   "head_within": 0.09165,
+   "head_median_abs": 0.14260748318620575,
+   "head_signed_median": 0.012112690105708417,
+   "thread_within": 0.181775,
+   "thread_median_abs": 0.06109014341156011,
+   "thread_signed_median": -0.005009792657796731
+  },
+  {
+   "deg": -116.0,
+   "head_within": 0.090975,
+   "head_median_abs": 0.14006664778954336,
+   "head_signed_median": 0.014209718537455824,
+   "thread_within": 0.184675,
+   "thread_median_abs": 0.060655610818216646,
+   "thread_signed_median": -0.005116564808404131
+  },
+  {
+   "deg": -115.0,
+   "head_within": 0.093175,
+   "head_median_abs": 0.13756801026293128,
+   "head_signed_median": 0.013064393565405613,
+   "thread_within": 0.18485,
+   "thread_median_abs": 0.060542720776147196,
+   "thread_signed_median": -0.00589088240814584
+  },
+  {
+   "deg": -114.0,
+   "head_within": 0.101225,
+   "head_median_abs": 0.1355452662113358,
+   "head_signed_median": 0.011335927934461129,
+   "thread_within": 0.183725,
+   "thread_median_abs": 0.060457880083242745,
+   "thread_signed_median": -0.005835572511518157
+  },
+  {
+   "deg": -113.0,
+   "head_within": 0.10755,
+   "head_median_abs": 0.13331819480650853,
+   "head_signed_median": 0.009983850182967156,
+   "thread_within": 0.184925,
+   "thread_median_abs": 0.06003878707389784,
+   "thread_signed_median": -0.00574232422639392
+  },
+  {
+   "deg": -112.0,
+   "head_within": 0.1069,
+   "head_median_abs": 0.1265081453902199,
+   "head_signed_median": 0.012948297214007568,
+   "thread_within": 0.185125,
+   "thread_median_abs": 0.06019697640829917,
+   "thread_signed_median": -0.005993251339625933
+  },
+  {
+   "deg": -111.0,
+   "head_within": 0.108725,
+   "head_median_abs": 0.12240429087976289,
+   "head_signed_median": 0.020715402029132433,
+   "thread_within": 0.184725,
+   "thread_median_abs": 0.060205564215322305,
+   "thread_signed_median": -0.007173623697883364
+  },
+  {
+   "deg": -110.0,
+   "head_within": 0.108625,
+   "head_median_abs": 0.12111350073390084,
+   "head_signed_median": 0.03131438513724244,
+   "thread_within": 0.184575,
+   "thread_median_abs": 0.05967408014429061,
+   "thread_signed_median": -0.005804805079385477
+  },
+  {
+   "deg": -109.0,
+   "head_within": 0.1053,
+   "head_median_abs": 0.12186476870831504,
+   "head_signed_median": 0.03172233335863677,
+   "thread_within": 0.1838,
+   "thread_median_abs": 0.05998044559209722,
+   "thread_signed_median": -0.0057537935301688395
+  },
+  {
+   "deg": -108.0,
+   "head_within": 0.10285,
+   "head_median_abs": 0.12610402355622954,
+   "head_signed_median": 0.026773186280322013,
+   "thread_within": 0.183525,
+   "thread_median_abs": 0.06071854614977519,
+   "thread_signed_median": -0.0054317473339451396
+  },
+  {
+   "deg": -107.0,
+   "head_within": 0.0983,
+   "head_median_abs": 0.13103857605408464,
+   "head_signed_median": 0.026335432249964538,
+   "thread_within": 0.184125,
+   "thread_median_abs": 0.060386842566388994,
+   "thread_signed_median": -0.006020669664618001
+  },
+  {
+   "deg": -106.0,
+   "head_within": 0.095275,
+   "head_median_abs": 0.13489006989153424,
+   "head_signed_median": 0.02322435298371336,
+   "thread_within": 0.18475,
+   "thread_median_abs": 0.060070779330581525,
+   "thread_signed_median": -0.005777971567255633
+  },
+  {
+   "deg": -105.0,
+   "head_within": 0.092175,
+   "head_median_abs": 0.13615253813349776,
+   "head_signed_median": 0.017424126832625113,
+   "thread_within": 0.1843,
+   "thread_median_abs": 0.0604558177317447,
+   "thread_signed_median": -0.005968177182475725
+  },
+  {
+   "deg": -104.0,
+   "head_within": 0.091325,
+   "head_median_abs": 0.137791821432739,
+   "head_signed_median": 0.011327648909990754,
+   "thread_within": 0.185625,
+   "thread_median_abs": 0.05975582790761602,
+   "thread_signed_median": -0.006598265636603191
+  },
+  {
+   "deg": -103.0,
+   "head_within": 0.0933,
+   "head_median_abs": 0.13841463061631312,
+   "head_signed_median": 0.00636394104295984,
+   "thread_within": 0.184575,
+   "thread_median_abs": 0.060184194043205984,
+   "thread_signed_median": -0.006014697643873826
+  },
+  {
+   "deg": -102.0,
+   "head_within": 0.097775,
+   "head_median_abs": 0.13819631155782303,
+   "head_signed_median": 0.002827634775905517,
+   "thread_within": 0.1841,
+   "thread_median_abs": 0.06073223834032154,
+   "thread_signed_median": -0.005928385357101511
+  },
+  {
+   "deg": -101.0,
+   "head_within": 0.104125,
+   "head_median_abs": 0.13598214440712622,
+   "head_signed_median": -0.004208521411000277,
+   "thread_within": 0.186825,
+   "thread_median_abs": 0.059422740393471556,
+   "thread_signed_median": -0.006747966834392152
+  },
+  {
+   "deg": -100.0,
+   "head_within": 0.110475,
+   "head_median_abs": 0.129582861699214,
+   "head_signed_median": -0.010916465291607193,
+   "thread_within": 0.18705,
+   "thread_median_abs": 0.05930363068585773,
+   "thread_signed_median": -0.006830341738159489
+  },
+  {
+   "deg": -99.0,
+   "head_within": 0.1206,
+   "head_median_abs": 0.12121748427763465,
+   "head_signed_median": -0.017196356982083032,
+   "thread_within": 0.187525,
+   "thread_median_abs": 0.05927475443860844,
+   "thread_signed_median": -0.007092975522497411
+  },
+  {
+   "deg": -98.0,
+   "head_within": 0.13005,
+   "head_median_abs": 0.1127068135222043,
+   "head_signed_median": -0.023137408543254447,
+   "thread_within": 0.18715,
+   "thread_median_abs": 0.059536146684090824,
+   "thread_signed_median": -0.0065144207403012725
+  },
+  {
+   "deg": -97.0,
+   "head_within": 0.134925,
+   "head_median_abs": 0.10620443934615412,
+   "head_signed_median": -0.03419513902155345,
+   "thread_within": 0.186675,
+   "thread_median_abs": 0.05979462166421916,
+   "thread_signed_median": -0.007062972515979268
+  },
+  {
+   "deg": -96.0,
+   "head_within": 0.146775,
+   "head_median_abs": 0.1076514425963369,
+   "head_signed_median": -0.035205453037763464,
+   "thread_within": 0.187075,
+   "thread_median_abs": 0.05965152413585151,
+   "thread_signed_median": -0.006890392138466006
+  },
+  {
+   "deg": -95.0,
+   "head_within": 0.143525,
+   "head_median_abs": 0.11440135114898403,
+   "head_signed_median": -0.039663328610688386,
+   "thread_within": 0.18745,
+   "thread_median_abs": 0.05960987904817174,
+   "thread_signed_median": -0.0073599044522551695
+  },
+  {
+   "deg": -94.0,
+   "head_within": 0.1316,
+   "head_median_abs": 0.11869602358013737,
+   "head_signed_median": -0.044362514775780536,
+   "thread_within": 0.1882,
+   "thread_median_abs": 0.059431990410544706,
+   "thread_signed_median": -0.007041275732603828
+  },
+  {
+   "deg": -93.0,
+   "head_within": 0.124275,
+   "head_median_abs": 0.1269563894331167,
+   "head_signed_median": -0.043470170627429805,
+   "thread_within": 0.189225,
+   "thread_median_abs": 0.05905904875243261,
+   "thread_signed_median": -0.007582957719250191
+  },
+  {
+   "deg": -92.0,
+   "head_within": 0.116925,
+   "head_median_abs": 0.1275004700234561,
+   "head_signed_median": -0.038107202767242686,
+   "thread_within": 0.187875,
+   "thread_median_abs": 0.059328031807027226,
+   "thread_signed_median": -0.0073884253215128004
+  },
+  {
+   "deg": -91.0,
+   "head_within": 0.114025,
+   "head_median_abs": 0.12678560703487365,
+   "head_signed_median": -0.03426093495367165,
+   "thread_within": 0.18725,
+   "thread_median_abs": 0.05934647242477436,
+   "thread_signed_median": -0.007714412232058269
+  },
+  {
+   "deg": -90.0,
+   "head_within": 0.111875,
+   "head_median_abs": 0.1279185937975148,
+   "head_signed_median": -0.027306199783986955,
+   "thread_within": 0.187725,
+   "thread_median_abs": 0.059453428386222064,
+   "thread_signed_median": -0.007642250879916627
+  },
+  {
+   "deg": -89.0,
+   "head_within": 0.108975,
+   "head_median_abs": 0.13043818413763206,
+   "head_signed_median": -0.019404711296437067,
+   "thread_within": 0.187975,
+   "thread_median_abs": 0.05895445424798746,
+   "thread_signed_median": -0.00778817059364169
+  },
+  {
+   "deg": -88.0,
+   "head_within": 0.0984,
+   "head_median_abs": 0.1356448161260932,
+   "head_signed_median": -0.013588285765785128,
+   "thread_within": 0.1885,
+   "thread_median_abs": 0.058953834182988954,
+   "thread_signed_median": -0.00801203447011202
+  },
+  {
+   "deg": -87.0,
+   "head_within": 0.090425,
+   "head_median_abs": 0.14129677592174567,
+   "head_signed_median": -0.006178805599883804,
+   "thread_within": 0.18795,
+   "thread_median_abs": 0.05910195174861756,
+   "thread_signed_median": -0.009106011628971327
+  },
+  {
+   "deg": -86.0,
+   "head_within": 0.08755,
+   "head_median_abs": 0.14712694596880743,
+   "head_signed_median": 0.0014674883993065092,
+   "thread_within": 0.187325,
+   "thread_median_abs": 0.05928616554609098,
+   "thread_signed_median": -0.009386774372910505
+  },
+  {
+   "deg": -85.0,
+   "head_within": 0.083275,
+   "head_median_abs": 0.15053756366594762,
+   "head_signed_median": 0.009670989727654337,
+   "thread_within": 0.186525,
+   "thread_median_abs": 0.05950606999414963,
+   "thread_signed_median": -0.00910929668054057
+  },
+  {
+   "deg": -84.0,
+   "head_within": 0.08395,
+   "head_median_abs": 0.15125704625923972,
+   "head_signed_median": 0.013537013661057187,
+   "thread_within": 0.187875,
+   "thread_median_abs": 0.05894407484669029,
+   "thread_signed_median": -0.008972972498055433
+  },
+  {
+   "deg": -83.0,
+   "head_within": 0.0873,
+   "head_median_abs": 0.1490913435281919,
+   "head_signed_median": 0.012043042029549672,
+   "thread_within": 0.1869,
+   "thread_median_abs": 0.05902275474291541,
+   "thread_signed_median": -0.008866253239289369
+  },
+  {
+   "deg": -82.0,
+   "head_within": 0.087825,
+   "head_median_abs": 0.1423880483453826,
+   "head_signed_median": 0.006689095711914411,
+   "thread_within": 0.189575,
+   "thread_median_abs": 0.05844486306183419,
+   "thread_signed_median": -0.009698444658464535
+  },
+  {
+   "deg": -81.0,
+   "head_within": 0.091175,
+   "head_median_abs": 0.13469116546038004,
+   "head_signed_median": 0.0033624618801511258,
+   "thread_within": 0.18945,
+   "thread_median_abs": 0.05883197555855056,
+   "thread_signed_median": -0.010099256753962957
+  },
+  {
+   "deg": -80.0,
+   "head_within": 0.1015,
+   "head_median_abs": 0.13079537406048727,
+   "head_signed_median": 0.00037315379471534316,
+   "thread_within": 0.1884,
+   "thread_median_abs": 0.059059667101278225,
+   "thread_signed_median": -0.009073676610554613
+  },
+  {
+   "deg": -79.0,
+   "head_within": 0.10345,
+   "head_median_abs": 0.12641568394448552,
+   "head_signed_median": -0.000650347073604298,
+   "thread_within": 0.18745,
+   "thread_median_abs": 0.059251347991030656,
+   "thread_signed_median": -0.009693644769737992
+  },
+  {
+   "deg": -78.0,
+   "head_within": 0.1002,
+   "head_median_abs": 0.12519970735699948,
+   "head_signed_median": 0.0016194431952777145,
+   "thread_within": 0.18815,
+   "thread_median_abs": 0.05875419816980213,
+   "thread_signed_median": -0.009955087312799864
+  },
+  {
+   "deg": -77.0,
+   "head_within": 0.0972,
+   "head_median_abs": 0.12793434815358254,
+   "head_signed_median": 0.0042695509816021975,
+   "thread_within": 0.188225,
+   "thread_median_abs": 0.05901117191459957,
+   "thread_signed_median": -0.010028280189446041
+  },
+  {
+   "deg": -76.0,
+   "head_within": 0.0945,
+   "head_median_abs": 0.13277674164140138,
+   "head_signed_median": 0.006540204963113328,
+   "thread_within": 0.1878,
+   "thread_median_abs": 0.058874668814679565,
+   "thread_signed_median": -0.009745862212701245
+  },
+  {
+   "deg": -75.0,
+   "head_within": 0.089475,
+   "head_median_abs": 0.13562031084349163,
+   "head_signed_median": 0.008386649161229803,
+   "thread_within": 0.1897,
+   "thread_median_abs": 0.05862893755531207,
+   "thread_signed_median": -0.010449986715670424
+  },
+  {
+   "deg": -74.0,
+   "head_within": 0.0873,
+   "head_median_abs": 0.13779730355941713,
+   "head_signed_median": 0.00984155184747788,
+   "thread_within": 0.190925,
+   "thread_median_abs": 0.05779789028740823,
+   "thread_signed_median": -0.010261838725737436
+  },
+  {
+   "deg": -73.0,
+   "head_within": 0.086525,
+   "head_median_abs": 0.1403208557992745,
+   "head_signed_median": 0.010078838444479422,
+   "thread_within": 0.189975,
+   "thread_median_abs": 0.057945536241237085,
+   "thread_signed_median": -0.010020501190303423
+  },
+  {
+   "deg": -72.0,
+   "head_within": 0.087975,
+   "head_median_abs": 0.14149330605489702,
+   "head_signed_median": 0.010533852666389494,
+   "thread_within": 0.18995,
+   "thread_median_abs": 0.05880796633530354,
+   "thread_signed_median": -0.010430596342376584
+  },
+  {
+   "deg": -71.0,
+   "head_within": 0.091225,
+   "head_median_abs": 0.1398662093942115,
+   "head_signed_median": 0.009566860232630668,
+   "thread_within": 0.1885,
+   "thread_median_abs": 0.05909253039668716,
+   "thread_signed_median": -0.01069379447337871
+  },
+  {
+   "deg": -70.0,
+   "head_within": 0.0963,
+   "head_median_abs": 0.13679916182583374,
+   "head_signed_median": 0.0021799249840354544,
+   "thread_within": 0.18785,
+   "thread_median_abs": 0.05905226307211841,
+   "thread_signed_median": -0.011193466616629028
+  },
+  {
+   "deg": -69.0,
+   "head_within": 0.10475,
+   "head_median_abs": 0.13124566977587482,
+   "head_signed_median": -0.008519202322710398,
+   "thread_within": 0.19025,
+   "thread_median_abs": 0.058804829491695056,
+   "thread_signed_median": -0.011485722668128298
+  },
+  {
+   "deg": -68.0,
+   "head_within": 0.11495,
+   "head_median_abs": 0.12679700996351623,
+   "head_signed_median": -0.02146077143890875,
+   "thread_within": 0.190525,
+   "thread_median_abs": 0.05820777239249357,
+   "thread_signed_median": -0.01162594006951868
+  },
+  {
+   "deg": -67.0,
+   "head_within": 0.1189,
+   "head_median_abs": 0.12347995924136311,
+   "head_signed_median": -0.03301372445772262,
+   "thread_within": 0.19045,
+   "thread_median_abs": 0.057918300688663125,
+   "thread_signed_median": -0.012276401268059563
+  },
+  {
+   "deg": -66.0,
+   "head_within": 0.119275,
+   "head_median_abs": 0.12444077630538357,
+   "head_signed_median": -0.045616620705253075,
+   "thread_within": 0.1906,
+   "thread_median_abs": 0.05806033217743574,
+   "thread_signed_median": -0.012261753577320424
+  },
+  {
+   "deg": -65.0,
+   "head_within": 0.12245,
+   "head_median_abs": 0.12667774760893652,
+   "head_signed_median": -0.051135226585487185,
+   "thread_within": 0.191125,
+   "thread_median_abs": 0.058029589089967366,
+   "thread_signed_median": -0.012508566266460219
+  },
+  {
+   "deg": -64.0,
+   "head_within": 0.1269,
+   "head_median_abs": 0.12773062333416552,
+   "head_signed_median": -0.053777480496224495,
+   "thread_within": 0.192025,
+   "thread_median_abs": 0.05793922419663822,
+   "thread_signed_median": -0.012369967437924664
+  },
+  {
+   "deg": -63.0,
+   "head_within": 0.1249,
+   "head_median_abs": 0.1247442679939156,
+   "head_signed_median": -0.05408302569911942,
+   "thread_within": 0.192025,
+   "thread_median_abs": 0.058150757469660155,
+   "thread_signed_median": -0.011444980502683243
+  },
+  {
+   "deg": -62.0,
+   "head_within": 0.13185,
+   "head_median_abs": 0.12480970385953914,
+   "head_signed_median": -0.04544818435650543,
+   "thread_within": 0.1942,
+   "thread_median_abs": 0.05729733074033636,
+   "thread_signed_median": -0.01156320623650781
+  },
+  {
+   "deg": -61.0,
+   "head_within": 0.140225,
+   "head_median_abs": 0.11905922187497874,
+   "head_signed_median": -0.035963483259722415,
+   "thread_within": 0.19305,
+   "thread_median_abs": 0.05771663152934167,
+   "thread_signed_median": -0.011724485490819246
+  },
+  {
+   "deg": -60.0,
+   "head_within": 0.144375,
+   "head_median_abs": 0.11462463722921436,
+   "head_signed_median": -0.026734207059410625,
+   "thread_within": 0.193375,
+   "thread_median_abs": 0.05774912346252655,
+   "thread_signed_median": -0.013296232963531779
+  },
+  {
+   "deg": -59.0,
+   "head_within": 0.142425,
+   "head_median_abs": 0.1155042659949902,
+   "head_signed_median": -0.017399469287179344,
+   "thread_within": 0.191825,
+   "thread_median_abs": 0.057836249668337725,
+   "thread_signed_median": -0.013648621962254286
+  },
+  {
+   "deg": -58.0,
+   "head_within": 0.132475,
+   "head_median_abs": 0.1206984242392774,
+   "head_signed_median": -0.008939752030460733,
+   "thread_within": 0.192325,
+   "thread_median_abs": 0.05788470461597961,
+   "thread_signed_median": -0.012942244806347258
+  },
+  {
+   "deg": -57.0,
+   "head_within": 0.1198,
+   "head_median_abs": 0.12815079793988937,
+   "head_signed_median": -0.004798183348742342,
+   "thread_within": 0.193625,
+   "thread_median_abs": 0.05739998347858058,
+   "thread_signed_median": -0.01268627858661062
+  },
+  {
+   "deg": -56.0,
+   "head_within": 0.10675,
+   "head_median_abs": 0.13584514758851696,
+   "head_signed_median": -0.0006489502355586501,
+   "thread_within": 0.19415,
+   "thread_median_abs": 0.05736946740567859,
+   "thread_signed_median": -0.013854554277062456
+  },
+  {
+   "deg": -55.0,
+   "head_within": 0.100775,
+   "head_median_abs": 0.14000847204323272,
+   "head_signed_median": 0.00606219341062437,
+   "thread_within": 0.19145,
+   "thread_median_abs": 0.058383581692565745,
+   "thread_signed_median": -0.014242762847806591
+  },
+  {
+   "deg": -54.0,
+   "head_within": 0.0967,
+   "head_median_abs": 0.14204030259415706,
+   "head_signed_median": 0.008914015843026746,
+   "thread_within": 0.1927,
+   "thread_median_abs": 0.05789231598423957,
+   "thread_signed_median": -0.01432555735220839
+  },
+  {
+   "deg": -53.0,
+   "head_within": 0.0947,
+   "head_median_abs": 0.1386012098825992,
+   "head_signed_median": 0.011912427905332625,
+   "thread_within": 0.191525,
+   "thread_median_abs": 0.05825844483772601,
+   "thread_signed_median": -0.014371719325669581
+  },
+  {
+   "deg": -52.0,
+   "head_within": 0.098975,
+   "head_median_abs": 0.13270718106158522,
+   "head_signed_median": 0.013296298121609434,
+   "thread_within": 0.193075,
+   "thread_median_abs": 0.05770081059543129,
+   "thread_signed_median": -0.014109240332436672
+  },
+  {
+   "deg": -51.0,
+   "head_within": 0.1041,
+   "head_median_abs": 0.12541272331005876,
+   "head_signed_median": 0.011825213680305292,
+   "thread_within": 0.192675,
+   "thread_median_abs": 0.05756634735853911,
+   "thread_signed_median": -0.01496889700272838
+  },
+  {
+   "deg": -50.0,
+   "head_within": 0.106425,
+   "head_median_abs": 0.11901788509606298,
+   "head_signed_median": 0.012690354740332406,
+   "thread_within": 0.19065,
+   "thread_median_abs": 0.05806582038681572,
+   "thread_signed_median": -0.015022606205521944
+  },
+  {
+   "deg": -49.0,
+   "head_within": 0.108425,
+   "head_median_abs": 0.11628792006301246,
+   "head_signed_median": 0.012544367571863778,
+   "thread_within": 0.191025,
+   "thread_median_abs": 0.058110674120981406,
+   "thread_signed_median": -0.01374926456942381
+  },
+  {
+   "deg": -48.0,
+   "head_within": 0.1002,
+   "head_median_abs": 0.1206105475519737,
+   "head_signed_median": 0.008019132884491981,
+   "thread_within": 0.19085,
+   "thread_median_abs": 0.05822194724747881,
+   "thread_signed_median": -0.013493822875882898
+  },
+  {
+   "deg": -47.0,
+   "head_within": 0.094625,
+   "head_median_abs": 0.1247438909096295,
+   "head_signed_median": 0.009136912183082947,
+   "thread_within": 0.191925,
+   "thread_median_abs": 0.05800831097663785,
+   "thread_signed_median": -0.01448543157088891
+  },
+  {
+   "deg": -46.0,
+   "head_within": 0.0878,
+   "head_median_abs": 0.13216221960344746,
+   "head_signed_median": 0.014434064832489773,
+   "thread_within": 0.1911,
+   "thread_median_abs": 0.05802324962758654,
+   "thread_signed_median": -0.014856503446316938
+  },
+  {
+   "deg": -45.0,
+   "head_within": 0.0854,
+   "head_median_abs": 0.13618482096598533,
+   "head_signed_median": 0.01681727316719382,
+   "thread_within": 0.190075,
+   "thread_median_abs": 0.05776396000737594,
+   "thread_signed_median": -0.0150030762910118
+  },
+  {
+   "deg": -44.0,
+   "head_within": 0.08295,
+   "head_median_abs": 0.13924189821741148,
+   "head_signed_median": 0.017796277233702588,
+   "thread_within": 0.19275,
+   "thread_median_abs": 0.057260559647237017,
+   "thread_signed_median": -0.014240100433850654
+  },
+  {
+   "deg": -43.0,
+   "head_within": 0.08355,
+   "head_median_abs": 0.1409058457378829,
+   "head_signed_median": 0.01814620306092219,
+   "thread_within": 0.1925,
+   "thread_median_abs": 0.057484948031877224,
+   "thread_signed_median": -0.014586559934229469
+  },
+  {
+   "deg": -42.0,
+   "head_within": 0.083175,
+   "head_median_abs": 0.14086600275710126,
+   "head_signed_median": 0.016377878337712024,
+   "thread_within": 0.193625,
+   "thread_median_abs": 0.05723835086718497,
+   "thread_signed_median": -0.014591160355055068
+  },
+  {
+   "deg": -41.0,
+   "head_within": 0.0855,
+   "head_median_abs": 0.13885340734878743,
+   "head_signed_median": 0.015200368459189643,
+   "thread_within": 0.19205,
+   "thread_median_abs": 0.05789061639966602,
+   "thread_signed_median": -0.015048947266592628
+  },
+  {
+   "deg": -40.0,
+   "head_within": 0.08955,
+   "head_median_abs": 0.13751260259046494,
+   "head_signed_median": 0.012230001523862203,
+   "thread_within": 0.192975,
+   "thread_median_abs": 0.05746672310596565,
+   "thread_signed_median": -0.014244356307658638
+  },
+  {
+   "deg": -39.0,
+   "head_within": 0.096425,
+   "head_median_abs": 0.13469486580649453,
+   "head_signed_median": 0.004932184248222272,
+   "thread_within": 0.193175,
+   "thread_median_abs": 0.05724561741649923,
+   "thread_signed_median": -0.015312087890958833
+  },
+  {
+   "deg": -38.0,
+   "head_within": 0.106375,
+   "head_median_abs": 0.13237922410950484,
+   "head_signed_median": -0.003307075183410338,
+   "thread_within": 0.193825,
+   "thread_median_abs": 0.05704832249238953,
+   "thread_signed_median": -0.014686654430633179
+  },
+  {
+   "deg": -37.0,
+   "head_within": 0.113275,
+   "head_median_abs": 0.12898364784746374,
+   "head_signed_median": -0.011439267800232057,
+   "thread_within": 0.193325,
+   "thread_median_abs": 0.05708861922814005,
+   "thread_signed_median": -0.015170375684119731
+  },
+  {
+   "deg": -36.0,
+   "head_within": 0.12195,
+   "head_median_abs": 0.12750467936791393,
+   "head_signed_median": -0.022359362051047167,
+   "thread_within": 0.19195,
+   "thread_median_abs": 0.05751219451453675,
+   "thread_signed_median": -0.014558617291641752
+  },
+  {
+   "deg": -35.0,
+   "head_within": 0.1327,
+   "head_median_abs": 0.12545000571394715,
+   "head_signed_median": -0.030306115290527524,
+   "thread_within": 0.192825,
+   "thread_median_abs": 0.0572697444256156,
+   "thread_signed_median": -0.015196901162890318
+  },
+  {
+   "deg": -34.0,
+   "head_within": 0.142675,
+   "head_median_abs": 0.12114528651622537,
+   "head_signed_median": -0.039182298994838,
+   "thread_within": 0.19515,
+   "thread_median_abs": 0.056713446579534754,
+   "thread_signed_median": -0.01489379134765765
+  },
+  {
+   "deg": -33.0,
+   "head_within": 0.14685,
+   "head_median_abs": 0.11450066449845447,
+   "head_signed_median": -0.04770151999899799,
+   "thread_within": 0.194175,
+   "thread_median_abs": 0.057051712926475186,
+   "thread_signed_median": -0.014692080461602038
+  },
+  {
+   "deg": -32.0,
+   "head_within": 0.1605,
+   "head_median_abs": 0.10734667412042267,
+   "head_signed_median": -0.046506232941093795,
+   "thread_within": 0.193875,
+   "thread_median_abs": 0.05737940462473343,
+   "thread_signed_median": -0.015404094546066789
+  },
+  {
+   "deg": -31.0,
+   "head_within": 0.174175,
+   "head_median_abs": 0.10394232005874601,
+   "head_signed_median": -0.039628430949171026,
+   "thread_within": 0.1956,
+   "thread_median_abs": 0.056582455165854306,
+   "thread_signed_median": -0.01471831565033649
+  },
+  {
+   "deg": -30.0,
+   "head_within": 0.17575,
+   "head_median_abs": 0.10129344858091147,
+   "head_signed_median": -0.03919410232667389,
+   "thread_within": 0.194175,
+   "thread_median_abs": 0.057055069038959474,
+   "thread_signed_median": -0.01446773351813809
+  },
+  {
+   "deg": -29.0,
+   "head_within": 0.174625,
+   "head_median_abs": 0.10533416718339825,
+   "head_signed_median": -0.030185943956776123,
+   "thread_within": 0.19455,
+   "thread_median_abs": 0.05695057451959388,
+   "thread_signed_median": -0.0144725803504478
+  },
+  {
+   "deg": -28.0,
+   "head_within": 0.15855,
+   "head_median_abs": 0.11188721331609314,
+   "head_signed_median": -0.021258586801155718,
+   "thread_within": 0.19365,
+   "thread_median_abs": 0.0570689910522528,
+   "thread_signed_median": -0.015228383236918046
+  },
+  {
+   "deg": -27.0,
+   "head_within": 0.13765,
+   "head_median_abs": 0.1198519226765098,
+   "head_signed_median": -0.014186990480453389,
+   "thread_within": 0.19455,
+   "thread_median_abs": 0.05715024762640232,
+   "thread_signed_median": -0.016216038014219017
+  },
+  {
+   "deg": -26.0,
+   "head_within": 0.1241,
+   "head_median_abs": 0.12834015310703337,
+   "head_signed_median": -0.0059727032001300065,
+   "thread_within": 0.194375,
+   "thread_median_abs": 0.05687722799039724,
+   "thread_signed_median": -0.015905313233350538
+  },
+  {
+   "deg": -25.0,
+   "head_within": 0.112175,
+   "head_median_abs": 0.13321394602481637,
+   "head_signed_median": 0.0016839501902526385,
+   "thread_within": 0.194975,
+   "thread_median_abs": 0.05655295068062492,
+   "thread_signed_median": -0.015829014956012445
+  },
+  {
+   "deg": -24.0,
+   "head_within": 0.1056,
+   "head_median_abs": 0.13537325404122058,
+   "head_signed_median": 0.010217999852178715,
+   "thread_within": 0.195175,
+   "thread_median_abs": 0.05646825992215745,
+   "thread_signed_median": -0.01564893050093847
+  },
+  {
+   "deg": -23.0,
+   "head_within": 0.10315,
+   "head_median_abs": 0.13498714577855586,
+   "head_signed_median": 0.013605313620934888,
+   "thread_within": 0.1963,
+   "thread_median_abs": 0.056270210846371994,
+   "thread_signed_median": -0.015226700091565943
+  },
+  {
+   "deg": -22.0,
+   "head_within": 0.1014,
+   "head_median_abs": 0.1345606001114202,
+   "head_signed_median": 0.016076485035627208,
+   "thread_within": 0.196725,
+   "thread_median_abs": 0.05627387225918381,
+   "thread_signed_median": -0.015524748705914797
+  },
+  {
+   "deg": -21.0,
+   "head_within": 0.096925,
+   "head_median_abs": 0.13516475972589606,
+   "head_signed_median": 0.01920168738077483,
+   "thread_within": 0.19555,
+   "thread_median_abs": 0.05654556864538689,
+   "thread_signed_median": -0.016199571679594918
+  },
+  {
+   "deg": -20.0,
+   "head_within": 0.090425,
+   "head_median_abs": 0.13593772881151278,
+   "head_signed_median": 0.020633787509436924,
+   "thread_within": 0.1938,
+   "thread_median_abs": 0.05719341466324859,
+   "thread_signed_median": -0.01591266966951274
+  },
+  {
+   "deg": -19.0,
+   "head_within": 0.086,
+   "head_median_abs": 0.13819057438837723,
+   "head_signed_median": 0.020823485752027387,
+   "thread_within": 0.19355,
+   "thread_median_abs": 0.05750196426079697,
+   "thread_signed_median": -0.015414670621828806
+  },
+  {
+   "deg": -18.0,
+   "head_within": 0.08265,
+   "head_median_abs": 0.13855446310286107,
+   "head_signed_median": 0.021431401578339438,
+   "thread_within": 0.1927,
+   "thread_median_abs": 0.057845244693211076,
+   "thread_signed_median": -0.016044608279992267
+  },
+  {
+   "deg": -17.0,
+   "head_within": 0.080275,
+   "head_median_abs": 0.14059772971881518,
+   "head_signed_median": 0.0226968187548873,
+   "thread_within": 0.192575,
+   "thread_median_abs": 0.057670900854924365,
+   "thread_signed_median": -0.015186614559594091
+  },
+  {
+   "deg": -16.0,
+   "head_within": 0.0801,
+   "head_median_abs": 0.14252682653041238,
+   "head_signed_median": 0.024472700738229478,
+   "thread_within": 0.193625,
+   "thread_median_abs": 0.05744952377042294,
+   "thread_signed_median": -0.014821267134965895
+  },
+  {
+   "deg": -15.0,
+   "head_within": 0.079725,
+   "head_median_abs": 0.14167588888323576,
+   "head_signed_median": 0.02297112478807692,
+   "thread_within": 0.192475,
+   "thread_median_abs": 0.057932088779384314,
+   "thread_signed_median": -0.01592141608132392
+  },
+  {
+   "deg": -14.0,
+   "head_within": 0.08,
+   "head_median_abs": 0.141810864015397,
+   "head_signed_median": 0.023142456918348236,
+   "thread_within": 0.19245,
+   "thread_median_abs": 0.05753949714920463,
+   "thread_signed_median": -0.01505653974409631
+  },
+  {
+   "deg": -13.0,
+   "head_within": 0.0822,
+   "head_median_abs": 0.1414314268882724,
+   "head_signed_median": 0.020616285013507353,
+   "thread_within": 0.19335,
+   "thread_median_abs": 0.05740032092348428,
+   "thread_signed_median": -0.014873428756006633
+  },
+  {
+   "deg": -12.0,
+   "head_within": 0.085575,
+   "head_median_abs": 0.14017805469990016,
+   "head_signed_median": 0.02044238542506086,
+   "thread_within": 0.19185,
+   "thread_median_abs": 0.05742512266507135,
+   "thread_signed_median": -0.014429005316666434
+  },
+  {
+   "deg": -11.0,
+   "head_within": 0.0891,
+   "head_median_abs": 0.13777348926520652,
+   "head_signed_median": 0.018227147895239344,
+   "thread_within": 0.19295,
+   "thread_median_abs": 0.05685107682060452,
+   "thread_signed_median": -0.01589138470485114
+  },
+  {
+   "deg": -10.0,
+   "head_within": 0.0934,
+   "head_median_abs": 0.1359724790477948,
+   "head_signed_median": 0.014503884823758742,
+   "thread_within": 0.1941,
+   "thread_median_abs": 0.05631851432073746,
+   "thread_signed_median": -0.015047026646612775
+  },
+  {
+   "deg": -9.0,
+   "head_within": 0.099925,
+   "head_median_abs": 0.13156525184219373,
+   "head_signed_median": 0.012002927913800504,
+   "thread_within": 0.193125,
+   "thread_median_abs": 0.05693022628900476,
+   "thread_signed_median": -0.01489977654272966
+  },
+  {
+   "deg": -8.0,
+   "head_within": 0.11045,
+   "head_median_abs": 0.12814948978594484,
+   "head_signed_median": 0.008558231735041636,
+   "thread_within": 0.19135,
+   "thread_median_abs": 0.057888704006199124,
+   "thread_signed_median": -0.014531791861813836
+  },
+  {
+   "deg": -7.0,
+   "head_within": 0.127475,
+   "head_median_abs": 0.12454526454401924,
+   "head_signed_median": 0.0019616276938141017,
+   "thread_within": 0.190825,
+   "thread_median_abs": 0.057901976205549155,
+   "thread_signed_median": -0.015622843377784563
+  },
+  {
+   "deg": -6.0,
+   "head_within": 0.144475,
+   "head_median_abs": 0.12022514773901534,
+   "head_signed_median": -0.002614304893526157,
+   "thread_within": 0.1926,
+   "thread_median_abs": 0.05741850403853431,
+   "thread_signed_median": -0.016105240825587418
+  },
+  {
+   "deg": -5.0,
+   "head_within": 0.1578,
+   "head_median_abs": 0.11556982553214357,
+   "head_signed_median": -0.012073067539103213,
+   "thread_within": 0.192775,
+   "thread_median_abs": 0.057450609277731234,
+   "thread_signed_median": -0.01642912236580275
+  },
+  {
+   "deg": -4.0,
+   "head_within": 0.171675,
+   "head_median_abs": 0.10885229899486124,
+   "head_signed_median": -0.026275632780142732,
+   "thread_within": 0.192175,
+   "thread_median_abs": 0.05767356960661535,
+   "thread_signed_median": -0.015791311528691322
+  },
+  {
+   "deg": -3.0,
+   "head_within": 0.19305,
+   "head_median_abs": 0.10479615603798512,
+   "head_signed_median": -0.04011651878943,
+   "thread_within": 0.191,
+   "thread_median_abs": 0.057995037473028845,
+   "thread_signed_median": -0.01586776080299706
+  },
+  {
+   "deg": -2.0,
+   "head_within": 0.2001,
+   "head_median_abs": 0.09796581142081277,
+   "head_signed_median": -0.055397640685132594,
+   "thread_within": 0.19045,
+   "thread_median_abs": 0.05808749738580602,
+   "thread_signed_median": -0.016203355892057476
+  },
+  {
+   "deg": -1.0,
+   "head_within": 0.205225,
+   "head_median_abs": 0.09527471166990148,
+   "head_signed_median": -0.06307363123323673,
+   "thread_within": 0.19015,
+   "thread_median_abs": 0.058262042673576035,
+   "thread_signed_median": -0.015541300054091435
+  },
+  {
+   "deg": 0.0,
+   "head_within": 0.21225,
+   "head_median_abs": 0.08926236565157887,
+   "head_signed_median": -0.05982337153281242,
+   "thread_within": 0.191125,
+   "thread_median_abs": 0.058000852665905614,
+   "thread_signed_median": -0.016179718013344634
+  },
+  {
+   "deg": 1.0,
+   "head_within": 0.225325,
+   "head_median_abs": 0.08572520438197921,
+   "head_signed_median": -0.054220831599479505,
+   "thread_within": 0.1938,
+   "thread_median_abs": 0.05693808494424121,
+   "thread_signed_median": -0.01601442055280496
+  },
+  {
+   "deg": 2.0,
+   "head_within": 0.2213,
+   "head_median_abs": 0.09166261484400319,
+   "head_signed_median": -0.04564972625900396,
+   "thread_within": 0.192825,
+   "thread_median_abs": 0.05733612010749898,
+   "thread_signed_median": -0.014483728733923689
+  },
+  {
+   "deg": 3.0,
+   "head_within": 0.192175,
+   "head_median_abs": 0.10031014946092602,
+   "head_signed_median": -0.033427347932472956,
+   "thread_within": 0.192075,
+   "thread_median_abs": 0.0576791448783557,
+   "thread_signed_median": -0.014381400596390396
+  },
+  {
+   "deg": 4.0,
+   "head_within": 0.16225,
+   "head_median_abs": 0.11218839814834947,
+   "head_signed_median": -0.01961254168303686,
+   "thread_within": 0.191475,
+   "thread_median_abs": 0.05809101197472961,
+   "thread_signed_median": -0.014988909361732965
+  },
+  {
+   "deg": 5.0,
+   "head_within": 0.13795,
+   "head_median_abs": 0.12195438451243393,
+   "head_signed_median": -0.006129699674430954,
+   "thread_within": 0.189875,
+   "thread_median_abs": 0.058652087383651824,
+   "thread_signed_median": -0.013949011752985895
+  },
+  {
+   "deg": 6.0,
+   "head_within": 0.1215,
+   "head_median_abs": 0.12907959617089473,
+   "head_signed_median": 0.004261795387925173,
+   "thread_within": 0.1898,
+   "thread_median_abs": 0.05793599872027649,
+   "thread_signed_median": -0.014597076706682663
+  },
+  {
+   "deg": 7.0,
+   "head_within": 0.10825,
+   "head_median_abs": 0.1334950741932473,
+   "head_signed_median": 0.009365991984078333,
+   "thread_within": 0.19005,
+   "thread_median_abs": 0.05793219133167254,
+   "thread_signed_median": -0.014809652611557603
+  },
+  {
+   "deg": 8.0,
+   "head_within": 0.099625,
+   "head_median_abs": 0.1378795321958907,
+   "head_signed_median": 0.013616145361304285,
+   "thread_within": 0.19065,
+   "thread_median_abs": 0.05777904008262913,
+   "thread_signed_median": -0.014758584257370633
+  },
+  {
+   "deg": 9.0,
+   "head_within": 0.0931,
+   "head_median_abs": 0.1389812618445891,
+   "head_signed_median": 0.014731838928740597,
+   "thread_within": 0.191425,
+   "thread_median_abs": 0.05734955129002059,
+   "thread_signed_median": -0.014125395379472359
+  },
+  {
+   "deg": 10.0,
+   "head_within": 0.0885,
+   "head_median_abs": 0.140694316926204,
+   "head_signed_median": 0.015796784878903805,
+   "thread_within": 0.189925,
+   "thread_median_abs": 0.05814286045219506,
+   "thread_signed_median": -0.013901276191078058
+  },
+  {
+   "deg": 11.0,
+   "head_within": 0.085,
+   "head_median_abs": 0.14235725830682544,
+   "head_signed_median": 0.017429652772761157,
+   "thread_within": 0.189475,
+   "thread_median_abs": 0.05836519177499801,
+   "thread_signed_median": -0.013491777832203124
+  },
+  {
+   "deg": 12.0,
+   "head_within": 0.085,
+   "head_median_abs": 0.14228902200210408,
+   "head_signed_median": 0.01642254420960558,
+   "thread_within": 0.1895,
+   "thread_median_abs": 0.058306849961893364,
+   "thread_signed_median": -0.01408048466237298
+  },
+  {
+   "deg": 13.0,
+   "head_within": 0.082225,
+   "head_median_abs": 0.14125175638773688,
+   "head_signed_median": 0.019247863957990247,
+   "thread_within": 0.191125,
+   "thread_median_abs": 0.05792548919607508,
+   "thread_signed_median": -0.014401555021144475
+  },
+  {
+   "deg": 14.0,
+   "head_within": 0.08125,
+   "head_median_abs": 0.1400564694350918,
+   "head_signed_median": 0.02159585569836866,
+   "thread_within": 0.19,
+   "thread_median_abs": 0.057852396494268994,
+   "thread_signed_median": -0.014219334817893775
+  },
+  {
+   "deg": 15.0,
+   "head_within": 0.079425,
+   "head_median_abs": 0.13888128059374122,
+   "head_signed_median": 0.021387666967378746,
+   "thread_within": 0.19055,
+   "thread_median_abs": 0.05777659915082848,
+   "thread_signed_median": -0.014549719324096037
+  },
+  {
+   "deg": 16.0,
+   "head_within": 0.080475,
+   "head_median_abs": 0.14053456448683777,
+   "head_signed_median": 0.022773689105561858,
+   "thread_within": 0.19035,
+   "thread_median_abs": 0.057850174186344444,
+   "thread_signed_median": -0.014947196404697475
+  },
+  {
+   "deg": 17.0,
+   "head_within": 0.084,
+   "head_median_abs": 0.14126076781782315,
+   "head_signed_median": 0.01918519550270347,
+   "thread_within": 0.191125,
+   "thread_median_abs": 0.057439825595560205,
+   "thread_signed_median": -0.013961189049310672
+  },
+  {
+   "deg": 18.0,
+   "head_within": 0.0863,
+   "head_median_abs": 0.14099582391349777,
+   "head_signed_median": 0.017930929161818168,
+   "thread_within": 0.19265,
+   "thread_median_abs": 0.05711874119606505,
+   "thread_signed_median": -0.015211718413355214
+  },
+  {
+   "deg": 19.0,
+   "head_within": 0.084825,
+   "head_median_abs": 0.14097423621094957,
+   "head_signed_median": 0.014635345228994432,
+   "thread_within": 0.1887,
+   "thread_median_abs": 0.05835612335069042,
+   "thread_signed_median": -0.01458649603812261
+  },
+  {
+   "deg": 20.0,
+   "head_within": 0.086275,
+   "head_median_abs": 0.14206685298306665,
+   "head_signed_median": 0.009064526109014367,
+   "thread_within": 0.19065,
+   "thread_median_abs": 0.05805309940712729,
+   "thread_signed_median": -0.014774747669217912
+  },
+  {
+   "deg": 21.0,
+   "head_within": 0.0881,
+   "head_median_abs": 0.14259430203295756,
+   "head_signed_median": 0.003013463064030793,
+   "thread_within": 0.19175,
+   "thread_median_abs": 0.05759220774533491,
+   "thread_signed_median": -0.014945143708503417
+  },
+  {
+   "deg": 22.0,
+   "head_within": 0.093975,
+   "head_median_abs": 0.14157134755478118,
+   "head_signed_median": 0.00013151556789763692,
+   "thread_within": 0.1907,
+   "thread_median_abs": 0.05804504691142364,
+   "thread_signed_median": -0.015154355434660245
+  },
+  {
+   "deg": 23.0,
+   "head_within": 0.101925,
+   "head_median_abs": 0.1379534857346632,
+   "head_signed_median": -0.0023715484934029073,
+   "thread_within": 0.1894,
+   "thread_median_abs": 0.05847444875697608,
+   "thread_signed_median": -0.014773638862931829
+  },
+  {
+   "deg": 24.0,
+   "head_within": 0.109975,
+   "head_median_abs": 0.13230501147223803,
+   "head_signed_median": -0.002544139420548275,
+   "thread_within": 0.1884,
+   "thread_median_abs": 0.05858552952775718,
+   "thread_signed_median": -0.0157297279343103
+  },
+  {
+   "deg": 25.0,
+   "head_within": 0.1224,
+   "head_median_abs": 0.1262794556444876,
+   "head_signed_median": -0.006633274471169094,
+   "thread_within": 0.187675,
+   "thread_median_abs": 0.0588888283682526,
+   "thread_signed_median": -0.01433094261565923
+  },
+  {
+   "deg": 26.0,
+   "head_within": 0.136975,
+   "head_median_abs": 0.1189758844380935,
+   "head_signed_median": -0.010457767656277477,
+   "thread_within": 0.189175,
+   "thread_median_abs": 0.058354038761910185,
+   "thread_signed_median": -0.014621748026085223
+  },
+  {
+   "deg": 27.0,
+   "head_within": 0.154275,
+   "head_median_abs": 0.11342884126132627,
+   "head_signed_median": -0.014041340565592914,
+   "thread_within": 0.19,
+   "thread_median_abs": 0.058416158499305045,
+   "thread_signed_median": -0.014971361369239865
+  },
+  {
+   "deg": 28.0,
+   "head_within": 0.169875,
+   "head_median_abs": 0.1075145761364133,
+   "head_signed_median": -0.022999101498990523,
+   "thread_within": 0.189325,
+   "thread_median_abs": 0.058909726864197695,
+   "thread_signed_median": -0.014797438125604061
+  },
+  {
+   "deg": 29.0,
+   "head_within": 0.180825,
+   "head_median_abs": 0.10147544965686212,
+   "head_signed_median": -0.031302054114117135,
+   "thread_within": 0.187475,
+   "thread_median_abs": 0.059499997636964536,
+   "thread_signed_median": -0.014104920084394727
+  },
+  {
+   "deg": 30.0,
+   "head_within": 0.1919,
+   "head_median_abs": 0.09552407243946325,
+   "head_signed_median": -0.03723587911446295,
+   "thread_within": 0.189125,
+   "thread_median_abs": 0.058612111817320955,
+   "thread_signed_median": -0.01455045511916777
+  },
+  {
+   "deg": 31.0,
+   "head_within": 0.197025,
+   "head_median_abs": 0.08887827377288586,
+   "head_signed_median": -0.0354646307657303,
+   "thread_within": 0.186875,
+   "thread_median_abs": 0.059684541178260136,
+   "thread_signed_median": -0.015880315511200064
+  },
+  {
+   "deg": 32.0,
+   "head_within": 0.201725,
+   "head_median_abs": 0.09217396391346694,
+   "head_signed_median": -0.029680608616020013,
+   "thread_within": 0.18835,
+   "thread_median_abs": 0.05878947813662165,
+   "thread_signed_median": -0.015077293690816946
+  },
+  {
+   "deg": 33.0,
+   "head_within": 0.1803,
+   "head_median_abs": 0.09851065236117135,
+   "head_signed_median": -0.028797654931840416,
+   "thread_within": 0.18735,
+   "thread_median_abs": 0.059088395803505916,
+   "thread_signed_median": -0.014696915059629955
+  },
+  {
+   "deg": 34.0,
+   "head_within": 0.1543,
+   "head_median_abs": 0.10771430921700101,
+   "head_signed_median": -0.024712319713297758,
+   "thread_within": 0.185875,
+   "thread_median_abs": 0.059139519915000535,
+   "thread_signed_median": -0.014654893090869162
+  },
+  {
+   "deg": 35.0,
+   "head_within": 0.13505,
+   "head_median_abs": 0.11715110601086291,
+   "head_signed_median": -0.01672997582694504,
+   "thread_within": 0.187025,
+   "thread_median_abs": 0.05877118809847831,
+   "thread_signed_median": -0.01488838910412936
+  },
+  {
+   "deg": 36.0,
+   "head_within": 0.1217,
+   "head_median_abs": 0.12518106356720957,
+   "head_signed_median": -0.007977129391559786,
+   "thread_within": 0.1883,
+   "thread_median_abs": 0.05849743247915577,
+   "thread_signed_median": -0.014626242501952444
+  },
+  {
+   "deg": 37.0,
+   "head_within": 0.108225,
+   "head_median_abs": 0.1308751144579236,
+   "head_signed_median": -0.004261267054362694,
+   "thread_within": 0.185425,
+   "thread_median_abs": 0.05937788169550487,
+   "thread_signed_median": -0.015010618023320179
+  },
+  {
+   "deg": 38.0,
+   "head_within": 0.101475,
+   "head_median_abs": 0.1343925755827861,
+   "head_signed_median": -0.00301570367619067,
+   "thread_within": 0.18675,
+   "thread_median_abs": 0.05885488126419852,
+   "thread_signed_median": -0.014657566147413696
+  },
+  {
+   "deg": 39.0,
+   "head_within": 0.09595,
+   "head_median_abs": 0.13499240997873316,
+   "head_signed_median": -0.0014107113349770876,
+   "thread_within": 0.18835,
+   "thread_median_abs": 0.05837881334740935,
+   "thread_signed_median": -0.014708908355155589
+  },
+  {
+   "deg": 40.0,
+   "head_within": 0.091225,
+   "head_median_abs": 0.1368540848137463,
+   "head_signed_median": -0.0023394728505984233,
+   "thread_within": 0.188225,
+   "thread_median_abs": 0.05839536909099158,
+   "thread_signed_median": -0.014128467323825892
+  },
+  {
+   "deg": 41.0,
+   "head_within": 0.0873,
+   "head_median_abs": 0.13878133617291444,
+   "head_signed_median": -0.005039549357636844,
+   "thread_within": 0.187975,
+   "thread_median_abs": 0.05853389989599237,
+   "thread_signed_median": -0.014671788019282666
+  },
+  {
+   "deg": 42.0,
+   "head_within": 0.0825,
+   "head_median_abs": 0.14096812658006008,
+   "head_signed_median": -0.01151253857406084,
+   "thread_within": 0.186025,
+   "thread_median_abs": 0.05889070870829374,
+   "thread_signed_median": -0.014106211376561005
+  },
+  {
+   "deg": 43.0,
+   "head_within": 0.078025,
+   "head_median_abs": 0.14215503412458588,
+   "head_signed_median": -0.015462996314859966,
+   "thread_within": 0.186025,
+   "thread_median_abs": 0.058969174774017155,
+   "thread_signed_median": -0.014269546758570723
+  },
+  {
+   "deg": 44.0,
+   "head_within": 0.074175,
+   "head_median_abs": 0.14291206798859257,
+   "head_signed_median": -0.02024849923571807,
+   "thread_within": 0.185575,
+   "thread_median_abs": 0.05930300922054932,
+   "thread_signed_median": -0.013937849821722779
+  },
+  {
+   "deg": 45.0,
+   "head_within": 0.0703,
+   "head_median_abs": 0.14270447210043305,
+   "head_signed_median": -0.021904408863969053,
+   "thread_within": 0.1833,
+   "thread_median_abs": 0.05963818124112767,
+   "thread_signed_median": -0.014805119606806477
+  },
+  {
+   "deg": 46.0,
+   "head_within": 0.076675,
+   "head_median_abs": 0.14423463982720017,
+   "head_signed_median": -0.019031000454853283,
+   "thread_within": 0.18365,
+   "thread_median_abs": 0.05999182940268809,
+   "thread_signed_median": -0.015730496025562223
+  },
+  {
+   "deg": 47.0,
+   "head_within": 0.07965,
+   "head_median_abs": 0.14589847009277493,
+   "head_signed_median": -0.011662356203832314,
+   "thread_within": 0.1844,
+   "thread_median_abs": 0.06003545302748738,
+   "thread_signed_median": -0.015153518823712306
+  },
+  {
+   "deg": 48.0,
+   "head_within": 0.08045,
+   "head_median_abs": 0.1440579073706861,
+   "head_signed_median": -0.008132583564844606,
+   "thread_within": 0.1837,
+   "thread_median_abs": 0.06009593849324654,
+   "thread_signed_median": -0.015308484769319428
+  },
+  {
+   "deg": 49.0,
+   "head_within": 0.08045,
+   "head_median_abs": 0.14418482041372127,
+   "head_signed_median": -0.002136837856561923,
+   "thread_within": 0.18375,
+   "thread_median_abs": 0.059399746211824735,
+   "thread_signed_median": -0.014810009643897686
+  },
+  {
+   "deg": 50.0,
+   "head_within": 0.0813,
+   "head_median_abs": 0.1422633990788805,
+   "head_signed_median": 0.002562152892101057,
+   "thread_within": 0.183425,
+   "thread_median_abs": 0.060077249112095915,
+   "thread_signed_median": -0.01486217568576678
+  },
+  {
+   "deg": 51.0,
+   "head_within": 0.0814,
+   "head_median_abs": 0.14350979552310564,
+   "head_signed_median": 0.008543366898099397,
+   "thread_within": 0.1823,
+   "thread_median_abs": 0.060542762670010394,
+   "thread_signed_median": -0.015496751366637416
+  },
+  {
+   "deg": 52.0,
+   "head_within": 0.083525,
+   "head_median_abs": 0.14445242862360405,
+   "head_signed_median": 0.015967674405422096,
+   "thread_within": 0.182325,
+   "thread_median_abs": 0.06052646765169615,
+   "thread_signed_median": -0.01486522931011875
+  },
+  {
+   "deg": 53.0,
+   "head_within": 0.086825,
+   "head_median_abs": 0.1419043610118132,
+   "head_signed_median": 0.022321621112499447,
+   "thread_within": 0.1832,
+   "thread_median_abs": 0.05993256181612641,
+   "thread_signed_median": -0.014745628207227867
+  },
+  {
+   "deg": 54.0,
+   "head_within": 0.091,
+   "head_median_abs": 0.13903582719481516,
+   "head_signed_median": 0.026193651718888624,
+   "thread_within": 0.1831,
+   "thread_median_abs": 0.05990821706679911,
+   "thread_signed_median": -0.014432575518311144
+  },
+  {
+   "deg": 55.0,
+   "head_within": 0.094575,
+   "head_median_abs": 0.13363962237882807,
+   "head_signed_median": 0.02430026624499905,
+   "thread_within": 0.181475,
+   "thread_median_abs": 0.06095090931234611,
+   "thread_signed_median": -0.013856019091126815
+  },
+  {
+   "deg": 56.0,
+   "head_within": 0.100425,
+   "head_median_abs": 0.13557044481932967,
+   "head_signed_median": 0.015669624295095937,
+   "thread_within": 0.18275,
+   "thread_median_abs": 0.060121868833221445,
+   "thread_signed_median": -0.014628847310101856
+  },
+  {
+   "deg": 57.0,
+   "head_within": 0.106025,
+   "head_median_abs": 0.13355787324591234,
+   "head_signed_median": 0.004051545617209397,
+   "thread_within": 0.180375,
+   "thread_median_abs": 0.06100833387430035,
+   "thread_signed_median": -0.014807639910659932
+  },
+  {
+   "deg": 58.0,
+   "head_within": 0.117575,
+   "head_median_abs": 0.13014689516371844,
+   "head_signed_median": -0.006056555744772352,
+   "thread_within": 0.18095,
+   "thread_median_abs": 0.06076538810520997,
+   "thread_signed_median": -0.014274300486887055
+  },
+  {
+   "deg": 59.0,
+   "head_within": 0.13255,
+   "head_median_abs": 0.12562671481452903,
+   "head_signed_median": -0.019402857870959724,
+   "thread_within": 0.18085,
+   "thread_median_abs": 0.06095585478521356,
+   "thread_signed_median": -0.014023997606981572
+  },
+  {
+   "deg": 60.0,
+   "head_within": 0.141375,
+   "head_median_abs": 0.11538289695195139,
+   "head_signed_median": -0.028954101270765566,
+   "thread_within": 0.17955,
+   "thread_median_abs": 0.06109459825442215,
+   "thread_signed_median": -0.013238986093272148
+  },
+  {
+   "deg": 61.0,
+   "head_within": 0.143275,
+   "head_median_abs": 0.10620036330540952,
+   "head_signed_median": -0.03791240153357244,
+   "thread_within": 0.17955,
+   "thread_median_abs": 0.06127669671657872,
+   "thread_signed_median": -0.014216787251608184
+  },
+  {
+   "deg": 62.0,
+   "head_within": 0.158275,
+   "head_median_abs": 0.10398250718085152,
+   "head_signed_median": -0.03398991829714862,
+   "thread_within": 0.1813,
+   "thread_median_abs": 0.06085041565750582,
+   "thread_signed_median": -0.013707984269832975
+  },
+  {
+   "deg": 63.0,
+   "head_within": 0.1615,
+   "head_median_abs": 0.09919674146601774,
+   "head_signed_median": -0.03434482223663238,
+   "thread_within": 0.182125,
+   "thread_median_abs": 0.06067351617187934,
+   "thread_signed_median": -0.013841322657547665
+  },
+  {
+   "deg": 64.0,
+   "head_within": 0.148125,
+   "head_median_abs": 0.10325877370854095,
+   "head_signed_median": -0.03250729419147404,
+   "thread_within": 0.1809,
+   "thread_median_abs": 0.06104237145544158,
+   "thread_signed_median": -0.013892507264372838
+  },
+  {
+   "deg": 65.0,
+   "head_within": 0.1297,
+   "head_median_abs": 0.11047701617936637,
+   "head_signed_median": -0.026824843059601568,
+   "thread_within": 0.182825,
+   "thread_median_abs": 0.06029084391965392,
+   "thread_signed_median": -0.013630475347674694
+  },
+  {
+   "deg": 66.0,
+   "head_within": 0.115825,
+   "head_median_abs": 0.11838999574437906,
+   "head_signed_median": -0.01946526049443531,
+   "thread_within": 0.178625,
+   "thread_median_abs": 0.06115934480362417,
+   "thread_signed_median": -0.013257820722730128
+  },
+  {
+   "deg": 67.0,
+   "head_within": 0.105075,
+   "head_median_abs": 0.12519376467000426,
+   "head_signed_median": -0.016081847237122526,
+   "thread_within": 0.17935,
+   "thread_median_abs": 0.06100498630924666,
+   "thread_signed_median": -0.013889699757543634
+  },
+  {
+   "deg": 68.0,
+   "head_within": 0.0988,
+   "head_median_abs": 0.12744246836857537,
+   "head_signed_median": -0.012666619223552424,
+   "thread_within": 0.1809,
+   "thread_median_abs": 0.06100859330861764,
+   "thread_signed_median": -0.01463657901163844
+  },
+  {
+   "deg": 69.0,
+   "head_within": 0.094625,
+   "head_median_abs": 0.12925336510798058,
+   "head_signed_median": -0.010836207949941612,
+   "thread_within": 0.17935,
+   "thread_median_abs": 0.06157240541116531,
+   "thread_signed_median": -0.014453183494770344
+  },
+  {
+   "deg": 70.0,
+   "head_within": 0.092925,
+   "head_median_abs": 0.13095484188082115,
+   "head_signed_median": -0.009519251383892613,
+   "thread_within": 0.178375,
+   "thread_median_abs": 0.06172862305714796,
+   "thread_signed_median": -0.014507338079730203
+  },
+  {
+   "deg": 71.0,
+   "head_within": 0.091,
+   "head_median_abs": 0.13286015127535222,
+   "head_signed_median": -0.00898825808142566,
+   "thread_within": 0.17695,
+   "thread_median_abs": 0.062127915286080096,
+   "thread_signed_median": -0.01345090585265977
+  },
+  {
+   "deg": 72.0,
+   "head_within": 0.088,
+   "head_median_abs": 0.13457203874897034,
+   "head_signed_median": -0.013286521205943841,
+   "thread_within": 0.17715,
+   "thread_median_abs": 0.06198316060853786,
+   "thread_signed_median": -0.013583015786835129
+  },
+  {
+   "deg": 73.0,
+   "head_within": 0.0826,
+   "head_median_abs": 0.1356550300086516,
+   "head_signed_median": -0.017006672133659067,
+   "thread_within": 0.1769,
+   "thread_median_abs": 0.06215983514524374,
+   "thread_signed_median": -0.013483009174621223
+  },
+  {
+   "deg": 74.0,
+   "head_within": 0.079425,
+   "head_median_abs": 0.13515049401437293,
+   "head_signed_median": -0.021731941016626437,
+   "thread_within": 0.177475,
+   "thread_median_abs": 0.061785360905969505,
+   "thread_signed_median": -0.013470534077176613
+  },
+  {
+   "deg": 75.0,
+   "head_within": 0.077775,
+   "head_median_abs": 0.13614159278886384,
+   "head_signed_median": -0.02900955678686267,
+   "thread_within": 0.176225,
+   "thread_median_abs": 0.06212440132379908,
+   "thread_signed_median": -0.014491258011921582
+  },
+  {
+   "deg": 76.0,
+   "head_within": 0.077575,
+   "head_median_abs": 0.13944014332008212,
+   "head_signed_median": -0.037138619722455496,
+   "thread_within": 0.17675,
+   "thread_median_abs": 0.0621703579904381,
+   "thread_signed_median": -0.015699307177380755
+  },
+  {
+   "deg": 77.0,
+   "head_within": 0.075025,
+   "head_median_abs": 0.14109265134352483,
+   "head_signed_median": -0.03693561308792993,
+   "thread_within": 0.176275,
+   "thread_median_abs": 0.06225147417850168,
+   "thread_signed_median": -0.014689011818197957
+  },
+  {
+   "deg": 78.0,
+   "head_within": 0.07455,
+   "head_median_abs": 0.14439870221160644,
+   "head_signed_median": -0.03679300990804536,
+   "thread_within": 0.17685,
+   "thread_median_abs": 0.06212008451200927,
+   "thread_signed_median": -0.014539419504098174
+  },
+  {
+   "deg": 79.0,
+   "head_within": 0.073725,
+   "head_median_abs": 0.14616714910015932,
+   "head_signed_median": -0.03396645863421974,
+   "thread_within": 0.17875,
+   "thread_median_abs": 0.06160900559949181,
+   "thread_signed_median": -0.013671689455248414
+  },
+  {
+   "deg": 80.0,
+   "head_within": 0.0737,
+   "head_median_abs": 0.14528321726745225,
+   "head_signed_median": -0.023691989633071626,
+   "thread_within": 0.177475,
+   "thread_median_abs": 0.06230025576952224,
+   "thread_signed_median": -0.014597983951998685
+  },
+  {
+   "deg": 81.0,
+   "head_within": 0.074375,
+   "head_median_abs": 0.14216770377670992,
+   "head_signed_median": -0.015765050820480818,
+   "thread_within": 0.176875,
+   "thread_median_abs": 0.06223667505146673,
+   "thread_signed_median": -0.014614039343814722
+  },
+  {
+   "deg": 82.0,
+   "head_within": 0.077725,
+   "head_median_abs": 0.14238708763503477,
+   "head_signed_median": -0.007361674840732909,
+   "thread_within": 0.17675,
+   "thread_median_abs": 0.06265417154214951,
+   "thread_signed_median": -0.015028310729060588
+  },
+  {
+   "deg": 83.0,
+   "head_within": 0.078425,
+   "head_median_abs": 0.14243378660911277,
+   "head_signed_median": 0.003890489982336087,
+   "thread_within": 0.17645,
+   "thread_median_abs": 0.062150809021943525,
+   "thread_signed_median": -0.014367786861618544
+  },
+  {
+   "deg": 84.0,
+   "head_within": 0.077275,
+   "head_median_abs": 0.1430142341645194,
+   "head_signed_median": 0.01407432157101526,
+   "thread_within": 0.17585,
+   "thread_median_abs": 0.06200701735348831,
+   "thread_signed_median": -0.01343178774823447
+  },
+  {
+   "deg": 85.0,
+   "head_within": 0.0778,
+   "head_median_abs": 0.1445689300390172,
+   "head_signed_median": 0.020413753793953878,
+   "thread_within": 0.176375,
+   "thread_median_abs": 0.06198396245352834,
+   "thread_signed_median": -0.013350841425551142
+  },
+  {
+   "deg": 86.0,
+   "head_within": 0.08035,
+   "head_median_abs": 0.1440354550524072,
+   "head_signed_median": 0.02246632388259164,
+   "thread_within": 0.17595,
+   "thread_median_abs": 0.062473647955048395,
+   "thread_signed_median": -0.013348913270747966
+  },
+  {
+   "deg": 87.0,
+   "head_within": 0.087,
+   "head_median_abs": 0.13970575933393378,
+   "head_signed_median": 0.016900502607678333,
+   "thread_within": 0.176325,
+   "thread_median_abs": 0.062354698003615275,
+   "thread_signed_median": -0.014393243827500384
+  },
+  {
+   "deg": 88.0,
+   "head_within": 0.0959,
+   "head_median_abs": 0.1339391488042926,
+   "head_signed_median": 0.009787245901451053,
+   "thread_within": 0.174375,
+   "thread_median_abs": 0.06276542685299095,
+   "thread_signed_median": -0.014117201861497609
+  },
+  {
+   "deg": 89.0,
+   "head_within": 0.10375,
+   "head_median_abs": 0.12912334010003235,
+   "head_signed_median": 0.004146979332094587,
+   "thread_within": 0.1757,
+   "thread_median_abs": 0.062314914808769495,
+   "thread_signed_median": -0.013916943658205968
+  },
+  {
+   "deg": 90.0,
+   "head_within": 0.10895,
+   "head_median_abs": 0.12497186033092328,
+   "head_signed_median": -0.008929168370093053,
+   "thread_within": 0.17465,
+   "thread_median_abs": 0.06279758123248368,
+   "thread_signed_median": -0.012911549921250244
+  },
+  {
+   "deg": 91.0,
+   "head_within": 0.106975,
+   "head_median_abs": 0.12361356784105643,
+   "head_signed_median": -0.020662043088215912,
+   "thread_within": 0.1764,
+   "thread_median_abs": 0.06238495075569682,
+   "thread_signed_median": -0.012864037631007167
+  },
+  {
+   "deg": 92.0,
+   "head_within": 0.104,
+   "head_median_abs": 0.12330718620188852,
+   "head_signed_median": -0.022552011928631065,
+   "thread_within": 0.178075,
+   "thread_median_abs": 0.061957859580683054,
+   "thread_signed_median": -0.013184555320157708
+  },
+  {
+   "deg": 93.0,
+   "head_within": 0.107425,
+   "head_median_abs": 0.126318910692429,
+   "head_signed_median": -0.03000818550060125,
+   "thread_within": 0.17665,
+   "thread_median_abs": 0.06262068125747344,
+   "thread_signed_median": -0.014411603520648948
+  },
+  {
+   "deg": 94.0,
+   "head_within": 0.10935,
+   "head_median_abs": 0.12689925500798513,
+   "head_signed_median": -0.03349087495042259,
+   "thread_within": 0.176725,
+   "thread_median_abs": 0.06250983495701123,
+   "thread_signed_median": -0.014510119973407627
+  },
+  {
+   "deg": 95.0,
+   "head_within": 0.1072,
+   "head_median_abs": 0.12810794136835593,
+   "head_signed_median": -0.03270646172531143,
+   "thread_within": 0.17735,
+   "thread_median_abs": 0.06218196189193129,
+   "thread_signed_median": -0.012291207486765017
+  },
+  {
+   "deg": 96.0,
+   "head_within": 0.103325,
+   "head_median_abs": 0.13083594586677535,
+   "head_signed_median": -0.032649352550480966,
+   "thread_within": 0.1746,
+   "thread_median_abs": 0.06303408167635055,
+   "thread_signed_median": -0.011978172363925794
+  },
+  {
+   "deg": 97.0,
+   "head_within": 0.0979,
+   "head_median_abs": 0.1305523834138424,
+   "head_signed_median": -0.03442158672290847,
+   "thread_within": 0.17655,
+   "thread_median_abs": 0.06213242549645974,
+   "thread_signed_median": -0.013514992455265752
+  },
+  {
+   "deg": 98.0,
+   "head_within": 0.096825,
+   "head_median_abs": 0.13179376242391472,
+   "head_signed_median": -0.03304978891996694,
+   "thread_within": 0.17535,
+   "thread_median_abs": 0.06290879885648246,
+   "thread_signed_median": -0.013819974489932184
+  },
+  {
+   "deg": 99.0,
+   "head_within": 0.09775,
+   "head_median_abs": 0.13152880675732853,
+   "head_signed_median": -0.025471352210083956,
+   "thread_within": 0.1748,
+   "thread_median_abs": 0.06284230750528719,
+   "thread_signed_median": -0.013200100879127895
+  },
+  {
+   "deg": 100.0,
+   "head_within": 0.096975,
+   "head_median_abs": 0.13251186111524432,
+   "head_signed_median": -0.02383123167093601,
+   "thread_within": 0.1738,
+   "thread_median_abs": 0.06308866749689133,
+   "thread_signed_median": -0.013545319324332181
+  },
+  {
+   "deg": 101.0,
+   "head_within": 0.0911,
+   "head_median_abs": 0.13492001602828568,
+   "head_signed_median": -0.020981762659675635,
+   "thread_within": 0.172275,
+   "thread_median_abs": 0.0636340257037598,
+   "thread_signed_median": -0.014214035102695897
+  },
+  {
+   "deg": 102.0,
+   "head_within": 0.085,
+   "head_median_abs": 0.13512310246573525,
+   "head_signed_median": -0.020712512836614176,
+   "thread_within": 0.17495,
+   "thread_median_abs": 0.06290419230798311,
+   "thread_signed_median": -0.013922998679562208
+  },
+  {
+   "deg": 103.0,
+   "head_within": 0.08095,
+   "head_median_abs": 0.13711436829806628,
+   "head_signed_median": -0.01913028294861841,
+   "thread_within": 0.1734,
+   "thread_median_abs": 0.06351434497271775,
+   "thread_signed_median": -0.014795543593329477
+  },
+  {
+   "deg": 104.0,
+   "head_within": 0.0797,
+   "head_median_abs": 0.13908801035107826,
+   "head_signed_median": -0.021168806793500205,
+   "thread_within": 0.173025,
+   "thread_median_abs": 0.06351605450660035,
+   "thread_signed_median": -0.014045374936570456
+  },
+  {
+   "deg": 105.0,
+   "head_within": 0.083225,
+   "head_median_abs": 0.13996543370997433,
+   "head_signed_median": -0.02171455103360554,
+   "thread_within": 0.173125,
+   "thread_median_abs": 0.06318150678200077,
+   "thread_signed_median": -0.013136979590542126
+  },
+  {
+   "deg": 106.0,
+   "head_within": 0.086925,
+   "head_median_abs": 0.13800222348251792,
+   "head_signed_median": -0.024124891214026254,
+   "thread_within": 0.172775,
+   "thread_median_abs": 0.06347381027089485,
+   "thread_signed_median": -0.012829273121230337
+  },
+  {
+   "deg": 107.0,
+   "head_within": 0.087275,
+   "head_median_abs": 0.13186491656473756,
+   "head_signed_median": -0.029473194917899053,
+   "thread_within": 0.17415,
+   "thread_median_abs": 0.06325785924391664,
+   "thread_signed_median": -0.012338789966055894
+  },
+  {
+   "deg": 108.0,
+   "head_within": 0.08955,
+   "head_median_abs": 0.12727501498001284,
+   "head_signed_median": -0.03024100079705071,
+   "thread_within": 0.17355,
+   "thread_median_abs": 0.06332188949232383,
+   "thread_signed_median": -0.013126321435638143
+  },
+  {
+   "deg": 109.0,
+   "head_within": 0.090825,
+   "head_median_abs": 0.12840961987222316,
+   "head_signed_median": -0.027059068334837344,
+   "thread_within": 0.17295,
+   "thread_median_abs": 0.06339557836260017,
+   "thread_signed_median": -0.014019106438753051
+  },
+  {
+   "deg": 110.0,
+   "head_within": 0.090275,
+   "head_median_abs": 0.13196213011948704,
+   "head_signed_median": -0.025048596469605097,
+   "thread_within": 0.1732,
+   "thread_median_abs": 0.06332528360644696,
+   "thread_signed_median": -0.014461759685953802
+  },
+  {
+   "deg": 111.0,
+   "head_within": 0.08825,
+   "head_median_abs": 0.13226027801912946,
+   "head_signed_median": -0.024148687590358823,
+   "thread_within": 0.17325,
+   "thread_median_abs": 0.06359375707204545,
+   "thread_signed_median": -0.014251957088047556
+  },
+  {
+   "deg": 112.0,
+   "head_within": 0.08605,
+   "head_median_abs": 0.13438286316273285,
+   "head_signed_median": -0.018196056495129405,
+   "thread_within": 0.1725,
+   "thread_median_abs": 0.06353412158024421,
+   "thread_signed_median": -0.014082386277660137
+  },
+  {
+   "deg": 113.0,
+   "head_within": 0.082775,
+   "head_median_abs": 0.13727740897125013,
+   "head_signed_median": -0.01230256438215229,
+   "thread_within": 0.174,
+   "thread_median_abs": 0.0633882125496981,
+   "thread_signed_median": -0.013986936864201726
+  },
+  {
+   "deg": 114.0,
+   "head_within": 0.078525,
+   "head_median_abs": 0.14287892056735746,
+   "head_signed_median": -0.0079662325488104,
+   "thread_within": 0.172125,
+   "thread_median_abs": 0.063805346127493,
+   "thread_signed_median": -0.013612291262008375
+  },
+  {
+   "deg": 115.0,
+   "head_within": 0.0765,
+   "head_median_abs": 0.14789991351569556,
+   "head_signed_median": -0.007381682073702961,
+   "thread_within": 0.172025,
+   "thread_median_abs": 0.06400619368740552,
+   "thread_signed_median": -0.014269647618315739
+  },
+  {
+   "deg": 116.0,
+   "head_within": 0.074175,
+   "head_median_abs": 0.15023113174998587,
+   "head_signed_median": -0.0023395896808050525,
+   "thread_within": 0.171625,
+   "thread_median_abs": 0.06379355001637144,
+   "thread_signed_median": -0.013911496289023323
+  },
+  {
+   "deg": 117.0,
+   "head_within": 0.073925,
+   "head_median_abs": 0.14799342822303801,
+   "head_signed_median": 0.004196850736398946,
+   "thread_within": 0.171375,
+   "thread_median_abs": 0.06353649099728603,
+   "thread_signed_median": -0.013102531735159205
+  },
+  {
+   "deg": 118.0,
+   "head_within": 0.077875,
+   "head_median_abs": 0.14655329535936704,
+   "head_signed_median": 0.009432291569228878,
+   "thread_within": 0.169425,
+   "thread_median_abs": 0.06402502274633452,
+   "thread_signed_median": -0.013300708967551058
+  },
+  {
+   "deg": 119.0,
+   "head_within": 0.081275,
+   "head_median_abs": 0.14509574812865128,
+   "head_signed_median": 0.010674302381468243,
+   "thread_within": 0.1711,
+   "thread_median_abs": 0.06404274850731387,
+   "thread_signed_median": -0.013142109127767853
+  },
+  {
+   "deg": 120.0,
+   "head_within": 0.084775,
+   "head_median_abs": 0.14213790813054777,
+   "head_signed_median": 0.010974358417879889,
+   "thread_within": 0.17175,
+   "thread_median_abs": 0.06449714437396577,
+   "thread_signed_median": -0.012791285435121057
+  },
+  {
+   "deg": 121.0,
+   "head_within": 0.090725,
+   "head_median_abs": 0.13440516375467138,
+   "head_signed_median": 0.011985239052124376,
+   "thread_within": 0.170175,
+   "thread_median_abs": 0.06487099723325593,
+   "thread_signed_median": -0.011892214619513364
+  },
+  {
+   "deg": 122.0,
+   "head_within": 0.09735,
+   "head_median_abs": 0.12652832119319177,
+   "head_signed_median": 0.007813351029338856,
+   "thread_within": 0.1727,
+   "thread_median_abs": 0.06377629160004801,
+   "thread_signed_median": -0.012210135902931256
+  },
+  {
+   "deg": 123.0,
+   "head_within": 0.103225,
+   "head_median_abs": 0.12050753802328026,
+   "head_signed_median": 0.002989984415240455,
+   "thread_within": 0.172,
+   "thread_median_abs": 0.06416274080998319,
+   "thread_signed_median": -0.012675069248497983
+  },
+  {
+   "deg": 124.0,
+   "head_within": 0.101025,
+   "head_median_abs": 0.12015178118548382,
+   "head_signed_median": -0.008129028266496231,
+   "thread_within": 0.171175,
+   "thread_median_abs": 0.06431495872129304,
+   "thread_signed_median": -0.013977386375121442
+  },
+  {
+   "deg": 125.0,
+   "head_within": 0.0921,
+   "head_median_abs": 0.12675490300505182,
+   "head_signed_median": -0.026515979491756842,
+   "thread_within": 0.17285,
+   "thread_median_abs": 0.0634841117341794,
+   "thread_signed_median": -0.014509244929075571
+  },
+  {
+   "deg": 126.0,
+   "head_within": 0.08385,
+   "head_median_abs": 0.13646040446739907,
+   "head_signed_median": -0.04075884961448143,
+   "thread_within": 0.1728,
+   "thread_median_abs": 0.06361499679709332,
+   "thread_signed_median": -0.014274358837237338
+  },
+  {
+   "deg": 127.0,
+   "head_within": 0.079525,
+   "head_median_abs": 0.1421080258236172,
+   "head_signed_median": -0.049981078563792206,
+   "thread_within": 0.172825,
+   "thread_median_abs": 0.0632168051154175,
+   "thread_signed_median": -0.013293352659038424
+  },
+  {
+   "deg": 128.0,
+   "head_within": 0.08205,
+   "head_median_abs": 0.1423302854345071,
+   "head_signed_median": -0.052827018373535164,
+   "thread_within": 0.171775,
+   "thread_median_abs": 0.06309162689840139,
+   "thread_signed_median": -0.013420331507604936
+  },
+  {
+   "deg": 129.0,
+   "head_within": 0.085425,
+   "head_median_abs": 0.13771618982500586,
+   "head_signed_median": -0.04622210879809832,
+   "thread_within": 0.1706,
+   "thread_median_abs": 0.06399391469930356,
+   "thread_signed_median": -0.013930733695888722
+  },
+  {
+   "deg": 130.0,
+   "head_within": 0.0924,
+   "head_median_abs": 0.13173897116297273,
+   "head_signed_median": -0.03545834949226523,
+   "thread_within": 0.169125,
+   "thread_median_abs": 0.06455652074216978,
+   "thread_signed_median": -0.01361384124689613
+  },
+  {
+   "deg": 131.0,
+   "head_within": 0.0932,
+   "head_median_abs": 0.12836996635943002,
+   "head_signed_median": -0.025628302400287812,
+   "thread_within": 0.171075,
+   "thread_median_abs": 0.06423679963786241,
+   "thread_signed_median": -0.013788356650009579
+  },
+  {
+   "deg": 132.0,
+   "head_within": 0.090075,
+   "head_median_abs": 0.1278540444552463,
+   "head_signed_median": -0.020117510314210548,
+   "thread_within": 0.17175,
+   "thread_median_abs": 0.06368953715237295,
+   "thread_signed_median": -0.013873706589317204
+  },
+  {
+   "deg": 133.0,
+   "head_within": 0.088825,
+   "head_median_abs": 0.13025055618819398,
+   "head_signed_median": -0.014490786222884511,
+   "thread_within": 0.170175,
+   "thread_median_abs": 0.06424326639873233,
+   "thread_signed_median": -0.013499376355297531
+  },
+  {
+   "deg": 134.0,
+   "head_within": 0.0883,
+   "head_median_abs": 0.1338230797260594,
+   "head_signed_median": -0.012132753280325113,
+   "thread_within": 0.171975,
+   "thread_median_abs": 0.0638506528063755,
+   "thread_signed_median": -0.01388663856487428
+  },
+  {
+   "deg": 135.0,
+   "head_within": 0.088875,
+   "head_median_abs": 0.1355498082177813,
+   "head_signed_median": -0.013739845104766238,
+   "thread_within": 0.171175,
+   "thread_median_abs": 0.06424991137861306,
+   "thread_signed_median": -0.013122771281333809
+  },
+  {
+   "deg": 136.0,
+   "head_within": 0.08795,
+   "head_median_abs": 0.13894478505121172,
+   "head_signed_median": -0.009613258636747255,
+   "thread_within": 0.172725,
+   "thread_median_abs": 0.06363101607561568,
+   "thread_signed_median": -0.013563894132046192
+  },
+  {
+   "deg": 137.0,
+   "head_within": 0.090625,
+   "head_median_abs": 0.1430173112161603,
+   "head_signed_median": -0.01252298377738275,
+   "thread_within": 0.1728,
+   "thread_median_abs": 0.06335347689158227,
+   "thread_signed_median": -0.013080749926806107
+  },
+  {
+   "deg": 138.0,
+   "head_within": 0.090725,
+   "head_median_abs": 0.14293216263750447,
+   "head_signed_median": -0.019471644126802877,
+   "thread_within": 0.17165,
+   "thread_median_abs": 0.0639947656524423,
+   "thread_signed_median": -0.012144736025675017
+  },
+  {
+   "deg": 139.0,
+   "head_within": 0.091775,
+   "head_median_abs": 0.1409392111412192,
+   "head_signed_median": -0.029029591881876725,
+   "thread_within": 0.171825,
+   "thread_median_abs": 0.063831589800769,
+   "thread_signed_median": -0.01402498026016987
+  },
+  {
+   "deg": 140.0,
+   "head_within": 0.093125,
+   "head_median_abs": 0.1372120699261763,
+   "head_signed_median": -0.03443019343011047,
+   "thread_within": 0.173325,
+   "thread_median_abs": 0.06317102833961644,
+   "thread_signed_median": -0.013341179398926315
+  },
+  {
+   "deg": 141.0,
+   "head_within": 0.095475,
+   "head_median_abs": 0.13451717206733987,
+   "head_signed_median": -0.02810336699287272,
+   "thread_within": 0.1737,
+   "thread_median_abs": 0.06313395167028103,
+   "thread_signed_median": -0.012180657471501117
+  },
+  {
+   "deg": 142.0,
+   "head_within": 0.093825,
+   "head_median_abs": 0.129392745321424,
+   "head_signed_median": -0.01715381816708367,
+   "thread_within": 0.174175,
+   "thread_median_abs": 0.06328081439509553,
+   "thread_signed_median": -0.012146115320202636
+  },
+  {
+   "deg": 143.0,
+   "head_within": 0.086175,
+   "head_median_abs": 0.13265636351860624,
+   "head_signed_median": -0.005767449733595155,
+   "thread_within": 0.1731,
+   "thread_median_abs": 0.06298618192036592,
+   "thread_signed_median": -0.012468063511057042
+  },
+  {
+   "deg": 144.0,
+   "head_within": 0.0789,
+   "head_median_abs": 0.1365340403176901,
+   "head_signed_median": 0.004542193316810638,
+   "thread_within": 0.17515,
+   "thread_median_abs": 0.06279646790688816,
+   "thread_signed_median": -0.013489076096260428
+  },
+  {
+   "deg": 145.0,
+   "head_within": 0.0756,
+   "head_median_abs": 0.140932782060323,
+   "head_signed_median": 0.018075152421867222,
+   "thread_within": 0.174775,
+   "thread_median_abs": 0.06249665132125928,
+   "thread_signed_median": -0.013149475150632113
+  },
+  {
+   "deg": 146.0,
+   "head_within": 0.0726,
+   "head_median_abs": 0.14457282225357593,
+   "head_signed_median": 0.029026391889708535,
+   "thread_within": 0.1731,
+   "thread_median_abs": 0.06334845751117489,
+   "thread_signed_median": -0.013019420906792409
+  },
+  {
+   "deg": 147.0,
+   "head_within": 0.070675,
+   "head_median_abs": 0.1484954177505046,
+   "head_signed_median": 0.0342963262943281,
+   "thread_within": 0.1734,
+   "thread_median_abs": 0.06374791398301172,
+   "thread_signed_median": -0.012327349230796062
+  },
+  {
+   "deg": 148.0,
+   "head_within": 0.070075,
+   "head_median_abs": 0.15232246178157993,
+   "head_signed_median": 0.03901210748506902,
+   "thread_within": 0.17195,
+   "thread_median_abs": 0.06329051518329833,
+   "thread_signed_median": -0.012741612419704021
+  },
+  {
+   "deg": 149.0,
+   "head_within": 0.0702,
+   "head_median_abs": 0.15109162969842216,
+   "head_signed_median": 0.038238607055393566,
+   "thread_within": 0.171125,
+   "thread_median_abs": 0.06403597205389493,
+   "thread_signed_median": -0.013456753685517521
+  },
+  {
+   "deg": 150.0,
+   "head_within": 0.07265,
+   "head_median_abs": 0.1488044794399131,
+   "head_signed_median": 0.03528306514906588,
+   "thread_within": 0.1713,
+   "thread_median_abs": 0.06397210755740589,
+   "thread_signed_median": -0.012618333346972037
+  },
+  {
+   "deg": 151.0,
+   "head_within": 0.0765,
+   "head_median_abs": 0.14245293277402726,
+   "head_signed_median": 0.029440307814418355,
+   "thread_within": 0.1718,
+   "thread_median_abs": 0.06394725052964668,
+   "thread_signed_median": -0.012771345169564532
+  },
+  {
+   "deg": 152.0,
+   "head_within": 0.083225,
+   "head_median_abs": 0.13471649043990175,
+   "head_signed_median": 0.020383184611857574,
+   "thread_within": 0.17385,
+   "thread_median_abs": 0.06389736870317571,
+   "thread_signed_median": -0.012874607872073706
+  },
+  {
+   "deg": 153.0,
+   "head_within": 0.093675,
+   "head_median_abs": 0.12633833260158694,
+   "head_signed_median": 0.004783139448166406,
+   "thread_within": 0.173025,
+   "thread_median_abs": 0.06380825921928898,
+   "thread_signed_median": -0.012835196074431851
+  },
+  {
+   "deg": 154.0,
+   "head_within": 0.099925,
+   "head_median_abs": 0.12257489728665916,
+   "head_signed_median": -0.010661612171003651,
+   "thread_within": 0.17215,
+   "thread_median_abs": 0.064134277102044,
+   "thread_signed_median": -0.012403982217885903
+  },
+  {
+   "deg": 155.0,
+   "head_within": 0.101475,
+   "head_median_abs": 0.1262590743825878,
+   "head_signed_median": -0.03174550237149449,
+   "thread_within": 0.173775,
+   "thread_median_abs": 0.06362372295942172,
+   "thread_signed_median": -0.011468618623888106
+  },
+  {
+   "deg": 156.0,
+   "head_within": 0.08995,
+   "head_median_abs": 0.13421678141810284,
+   "head_signed_median": -0.05224051727538563,
+   "thread_within": 0.173625,
+   "thread_median_abs": 0.06343968698479599,
+   "thread_signed_median": -0.012473998827026399
+  },
+  {
+   "deg": 157.0,
+   "head_within": 0.0805,
+   "head_median_abs": 0.14052447038031451,
+   "head_signed_median": -0.0709073373166846,
+   "thread_within": 0.17325,
+   "thread_median_abs": 0.06353873577474234,
+   "thread_signed_median": -0.011866649636183757
+  },
+  {
+   "deg": 158.0,
+   "head_within": 0.0793,
+   "head_median_abs": 0.14331525916770985,
+   "head_signed_median": -0.07459232932830433,
+   "thread_within": 0.17445,
+   "thread_median_abs": 0.06344066028478898,
+   "thread_signed_median": -0.012419088346505038
+  },
+  {
+   "deg": 159.0,
+   "head_within": 0.084475,
+   "head_median_abs": 0.14015873958143538,
+   "head_signed_median": -0.06303009822682665,
+   "thread_within": 0.175825,
+   "thread_median_abs": 0.0627522011596105,
+   "thread_signed_median": -0.01162542460117143
+  },
+  {
+   "deg": 160.0,
+   "head_within": 0.093325,
+   "head_median_abs": 0.1351846242867351,
+   "head_signed_median": -0.04708581290668277,
+   "thread_within": 0.17625,
+   "thread_median_abs": 0.06242030633820709,
+   "thread_signed_median": -0.011699471537602276
+  },
+  {
+   "deg": 161.0,
+   "head_within": 0.09755,
+   "head_median_abs": 0.13008907546749132,
+   "head_signed_median": -0.02970335123627065,
+   "thread_within": 0.173475,
+   "thread_median_abs": 0.06317819155582524,
+   "thread_signed_median": -0.012291863613090839
+  },
+  {
+   "deg": 162.0,
+   "head_within": 0.09535,
+   "head_median_abs": 0.12841256607862714,
+   "head_signed_median": -0.01808919819375221,
+   "thread_within": 0.172025,
+   "thread_median_abs": 0.06412345175085485,
+   "thread_signed_median": -0.011369948548472456
+  },
+  {
+   "deg": 163.0,
+   "head_within": 0.092575,
+   "head_median_abs": 0.12933150504479848,
+   "head_signed_median": -0.009513596524761674,
+   "thread_within": 0.17465,
+   "thread_median_abs": 0.0636189592925332,
+   "thread_signed_median": -0.012050512697816818
+  },
+  {
+   "deg": 164.0,
+   "head_within": 0.093225,
+   "head_median_abs": 0.13096168369720973,
+   "head_signed_median": -0.003756498702469731,
+   "thread_within": 0.171125,
+   "thread_median_abs": 0.06416402473903876,
+   "thread_signed_median": -0.012625596104975993
+  },
+  {
+   "deg": 165.0,
+   "head_within": 0.09545,
+   "head_median_abs": 0.13126566922819508,
+   "head_signed_median": 0.0016758211046891919,
+   "thread_within": 0.171225,
+   "thread_median_abs": 0.06410877708374671,
+   "thread_signed_median": -0.013109649540875862
+  },
+  {
+   "deg": 166.0,
+   "head_within": 0.09915,
+   "head_median_abs": 0.1294812127093107,
+   "head_signed_median": 0.004317605613198537,
+   "thread_within": 0.171975,
+   "thread_median_abs": 0.06408681704545433,
+   "thread_signed_median": -0.013769013565885928
+  },
+  {
+   "deg": 167.0,
+   "head_within": 0.099675,
+   "head_median_abs": 0.12587647717224457,
+   "head_signed_median": 0.005004896812596529,
+   "thread_within": 0.1708,
+   "thread_median_abs": 0.06442566481552095,
+   "thread_signed_median": -0.013271193338326137
+  },
+  {
+   "deg": 168.0,
+   "head_within": 0.0989,
+   "head_median_abs": 0.12221590200635765,
+   "head_signed_median": 0.004718941681291321,
+   "thread_within": 0.173775,
+   "thread_median_abs": 0.06355322847164205,
+   "thread_signed_median": -0.013212948003445444
+  },
+  {
+   "deg": 169.0,
+   "head_within": 0.101575,
+   "head_median_abs": 0.12166913554781332,
+   "head_signed_median": 0.002569488132829042,
+   "thread_within": 0.1724,
+   "thread_median_abs": 0.06399536948792237,
+   "thread_signed_median": -0.012445850825596523
+  },
+  {
+   "deg": 170.0,
+   "head_within": 0.101475,
+   "head_median_abs": 0.12502809829035866,
+   "head_signed_median": 0.00046845025567086965,
+   "thread_within": 0.173325,
+   "thread_median_abs": 0.0635634030952473,
+   "thread_signed_median": -0.012314824469528385
+  },
+  {
+   "deg": 171.0,
+   "head_within": 0.098325,
+   "head_median_abs": 0.1279985457646305,
+   "head_signed_median": -0.004799629608498622,
+   "thread_within": 0.172025,
+   "thread_median_abs": 0.06436994898987122,
+   "thread_signed_median": -0.01318765331023208
+  },
+  {
+   "deg": 172.0,
+   "head_within": 0.095075,
+   "head_median_abs": 0.12975187633138985,
+   "head_signed_median": -0.010398518218121582,
+   "thread_within": 0.1723,
+   "thread_median_abs": 0.06372079978513996,
+   "thread_signed_median": -0.013756089935899532
+  },
+  {
+   "deg": 173.0,
+   "head_within": 0.0935,
+   "head_median_abs": 0.13121485827179752,
+   "head_signed_median": -0.008661831356749623,
+   "thread_within": 0.173625,
+   "thread_median_abs": 0.06348160937270966,
+   "thread_signed_median": -0.013276456292575636
+  },
+  {
+   "deg": 174.0,
+   "head_within": 0.09145,
+   "head_median_abs": 0.13126923616611472,
+   "head_signed_median": -0.0007867618283085685,
+   "thread_within": 0.17465,
+   "thread_median_abs": 0.06333251790278191,
+   "thread_signed_median": -0.013643111318981712
+  },
+  {
+   "deg": 175.0,
+   "head_within": 0.08785,
+   "head_median_abs": 0.1337190675818935,
+   "head_signed_median": 0.005090077409923517,
+   "thread_within": 0.17385,
+   "thread_median_abs": 0.06384503312429524,
+   "thread_signed_median": -0.013096360123241212
+  },
+  {
+   "deg": 176.0,
+   "head_within": 0.082375,
+   "head_median_abs": 0.1373092957663739,
+   "head_signed_median": 0.00908689863714612,
+   "thread_within": 0.1751,
+   "thread_median_abs": 0.06344650543068377,
+   "thread_signed_median": -0.012868815598991432
+  },
+  {
+   "deg": 177.0,
+   "head_within": 0.0767,
+   "head_median_abs": 0.14180380707410048,
+   "head_signed_median": 0.016469103387921725,
+   "thread_within": 0.176375,
+   "thread_median_abs": 0.0627103760917428,
+   "thread_signed_median": -0.012440115357280807
+  },
+  {
+   "deg": 178.0,
+   "head_within": 0.074275,
+   "head_median_abs": 0.147060965016709,
+   "head_signed_median": 0.022485332760243094,
+   "thread_within": 0.1737,
+   "thread_median_abs": 0.06319013571151046,
+   "thread_signed_median": -0.013137304061248752
+  },
+  {
+   "deg": 179.0,
+   "head_within": 0.074775,
+   "head_median_abs": 0.148321025597519,
+   "head_signed_median": 0.020019644026858553,
+   "thread_within": 0.177825,
+   "thread_median_abs": 0.0618480080960051,
+   "thread_signed_median": -0.012952103255494788
+  },
+  {
+   "deg": 180.0,
+   "head_within": 0.0765,
+   "head_median_abs": 0.1456385274683587,
+   "head_signed_median": 0.018872123261446376,
+   "thread_within": 0.177,
+   "thread_median_abs": 0.062120983344471296,
+   "thread_signed_median": -0.012324104504710307
+  }
+ ],
+ "axial": [
+  {
+   "shift": -0.5,
+   "head_within": 0.2173,
+   "head_median_abs": 0.08718535534306596,
+   "head_signed_median": -0.05570496801069674,
+   "thread_within": 0.0086,
+   "thread_median_abs": 0.145382956993951,
+   "thread_signed_median": 0.07311057781182391
+  },
+  {
+   "shift": -0.475,
+   "head_within": 0.2167,
+   "head_median_abs": 0.08736090326949753,
+   "head_signed_median": -0.05579450608385312,
+   "thread_within": 0.01045,
+   "thread_median_abs": 0.14379779564328393,
+   "thread_signed_median": 0.06673782663364666
+  },
+  {
+   "shift": -0.44999999999999996,
+   "head_within": 0.216675,
+   "head_median_abs": 0.08757708688314877,
+   "head_signed_median": -0.056009156488793885,
+   "thread_within": 0.0122,
+   "thread_median_abs": 0.14704796520284963,
+   "thread_signed_median": 0.0492734001224758
+  },
+  {
+   "shift": -0.42499999999999993,
+   "head_within": 0.216475,
+   "head_median_abs": 0.08789402826811718,
+   "head_signed_median": -0.05611352838234156,
+   "thread_within": 0.01485,
+   "thread_median_abs": 0.148156156331629,
+   "thread_signed_median": 0.04020879995164908
+  },
+  {
+   "shift": -0.3999999999999999,
+   "head_within": 0.21655,
+   "head_median_abs": 0.0880836001474086,
+   "head_signed_median": -0.05636871658917397,
+   "thread_within": 0.018825,
+   "thread_median_abs": 0.14582927014222422,
+   "thread_signed_median": 0.0243697357708907
+  },
+  {
+   "shift": -0.3749999999999999,
+   "head_within": 0.21665,
+   "head_median_abs": 0.08829481794485751,
+   "head_signed_median": -0.056383704314945056,
+   "thread_within": 0.024425,
+   "thread_median_abs": 0.14125997994859074,
+   "thread_signed_median": 0.012044721899103794
+  },
+  {
+   "shift": -0.34999999999999987,
+   "head_within": 0.216325,
+   "head_median_abs": 0.08850359851121375,
+   "head_signed_median": -0.05650099912391218,
+   "thread_within": 0.0319,
+   "thread_median_abs": 0.13441884999120943,
+   "thread_signed_median": -0.001327297519547287
+  },
+  {
+   "shift": -0.32499999999999984,
+   "head_within": 0.215775,
+   "head_median_abs": 0.0886149144358549,
+   "head_signed_median": -0.05658250784939105,
+   "thread_within": 0.03965,
+   "thread_median_abs": 0.12895649566099393,
+   "thread_signed_median": -0.012236166375459184
+  },
+  {
+   "shift": -0.2999999999999998,
+   "head_within": 0.215325,
+   "head_median_abs": 0.08889723289169912,
+   "head_signed_median": -0.056596997441437785,
+   "thread_within": 0.0488,
+   "thread_median_abs": 0.12202169104234425,
+   "thread_signed_median": -0.021579097597818685
+  },
+  {
+   "shift": -0.2749999999999998,
+   "head_within": 0.2151,
+   "head_median_abs": 0.08895019320887607,
+   "head_signed_median": -0.05681107271313828,
+   "thread_within": 0.059625,
+   "thread_median_abs": 0.11518459159074476,
+   "thread_signed_median": -0.02719224849743863
+  },
+  {
+   "shift": -0.24999999999999978,
+   "head_within": 0.2145,
+   "head_median_abs": 0.08877366251225077,
+   "head_signed_median": -0.057026792895167995,
+   "thread_within": 0.07135,
+   "thread_median_abs": 0.10768462284783398,
+   "thread_signed_median": -0.030829931407963578
+  },
+  {
+   "shift": -0.22499999999999976,
+   "head_within": 0.214175,
+   "head_median_abs": 0.08886982158073962,
+   "head_signed_median": -0.05720644912695363,
+   "thread_within": 0.083025,
+   "thread_median_abs": 0.1000775690516538,
+   "thread_signed_median": -0.03383085984568854
+  },
+  {
+   "shift": -0.19999999999999973,
+   "head_within": 0.213225,
+   "head_median_abs": 0.08904388117321378,
+   "head_signed_median": -0.05750745402722942,
+   "thread_within": 0.098125,
+   "thread_median_abs": 0.09255519174398846,
+   "thread_signed_median": -0.03405434476028213
+  },
+  {
+   "shift": -0.1749999999999997,
+   "head_within": 0.21355,
+   "head_median_abs": 0.0890079122808703,
+   "head_signed_median": -0.0577778392434402,
+   "thread_within": 0.114425,
+   "thread_median_abs": 0.08569225359226887,
+   "thread_signed_median": -0.03272558501000285
+  },
+  {
+   "shift": -0.1499999999999997,
+   "head_within": 0.21395,
+   "head_median_abs": 0.0888558602268302,
+   "head_signed_median": -0.05806859297774457,
+   "thread_within": 0.131875,
+   "thread_median_abs": 0.0798161195181651,
+   "thread_signed_median": -0.03234270429014749
+  },
+  {
+   "shift": -0.12499999999999967,
+   "head_within": 0.214025,
+   "head_median_abs": 0.08873015548160026,
+   "head_signed_median": -0.058226382026749235,
+   "thread_within": 0.147525,
+   "thread_median_abs": 0.07433419972563488,
+   "thread_signed_median": -0.02990940156721021
+  },
+  {
+   "shift": -0.09999999999999964,
+   "head_within": 0.21415,
+   "head_median_abs": 0.08850724941698346,
+   "head_signed_median": -0.05851357128208671,
+   "thread_within": 0.164275,
+   "thread_median_abs": 0.06905051815200784,
+   "thread_signed_median": -0.026885379475906523
+  },
+  {
+   "shift": -0.07499999999999962,
+   "head_within": 0.214125,
+   "head_median_abs": 0.0885337852380405,
+   "head_signed_median": -0.058831435756592235,
+   "thread_within": 0.174125,
+   "thread_median_abs": 0.06445631714390876,
+   "thread_signed_median": -0.023678618140641133
+  },
+  {
+   "shift": -0.0499999999999996,
+   "head_within": 0.21345,
+   "head_median_abs": 0.08871713654284669,
+   "head_signed_median": -0.05922445415310057,
+   "thread_within": 0.18335,
+   "thread_median_abs": 0.06141594253044789,
+   "thread_signed_median": -0.020979203330154787
+  },
+  {
+   "shift": -0.024999999999999578,
+   "head_within": 0.21295,
+   "head_median_abs": 0.08892594832512421,
+   "head_signed_median": -0.05954452884445385,
+   "thread_within": 0.190175,
+   "thread_median_abs": 0.0588774868962649,
+   "thread_signed_median": -0.018561583672584953
+  },
+  {
+   "shift": 4.440892098500626e-16,
+   "head_within": 0.21225,
+   "head_median_abs": 0.08926236565157887,
+   "head_signed_median": -0.05982337153281242,
+   "thread_within": 0.191125,
+   "thread_median_abs": 0.058000852665905614,
+   "thread_signed_median": -0.016179718013344634
+  },
+  {
+   "shift": 0.025000000000000466,
+   "head_within": 0.211975,
+   "head_median_abs": 0.08959800170592205,
+   "head_signed_median": -0.06035125545426417,
+   "thread_within": 0.1896,
+   "thread_median_abs": 0.0570492733888357,
+   "thread_signed_median": -0.012998760523595353
+  },
+  {
+   "shift": 0.05000000000000049,
+   "head_within": 0.210475,
+   "head_median_abs": 0.08990403907912341,
+   "head_signed_median": -0.0607031995591603,
+   "thread_within": 0.1845,
+   "thread_median_abs": 0.05736669811864039,
+   "thread_signed_median": -0.009801727380411435
+  },
+  {
+   "shift": 0.07500000000000051,
+   "head_within": 0.20875,
+   "head_median_abs": 0.09043115253780434,
+   "head_signed_median": -0.06116322783442108,
+   "thread_within": 0.175775,
+   "thread_median_abs": 0.058713448365567376,
+   "thread_signed_median": -0.006025699840360963
+  },
+  {
+   "shift": 0.10000000000000053,
+   "head_within": 0.20695,
+   "head_median_abs": 0.0908438750751035,
+   "head_signed_median": -0.06154849775530638,
+   "thread_within": 0.1646,
+   "thread_median_abs": 0.0602970149714462,
+   "thread_signed_median": -0.0023731672415704787
+  },
+  {
+   "shift": 0.12500000000000056,
+   "head_within": 0.205775,
+   "head_median_abs": 0.09131965144580789,
+   "head_signed_median": -0.06184138167974332,
+   "thread_within": 0.153075,
+   "thread_median_abs": 0.06274913625888165,
+   "thread_signed_median": 0.0007399995471089314
+  },
+  {
+   "shift": 0.15000000000000058,
+   "head_within": 0.20445,
+   "head_median_abs": 0.0918049481765789,
+   "head_signed_median": -0.06234446992823726,
+   "thread_within": 0.14015,
+   "thread_median_abs": 0.0653214514444643,
+   "thread_signed_median": 0.0042596105051589265
+  },
+  {
+   "shift": 0.1750000000000006,
+   "head_within": 0.204125,
+   "head_median_abs": 0.09231856619268776,
+   "head_signed_median": -0.06249863624651904,
+   "thread_within": 0.126775,
+   "thread_median_abs": 0.06790522290774141,
+   "thread_signed_median": 0.008020347489507368
+  },
+  {
+   "shift": 0.20000000000000062,
+   "head_within": 0.20285,
+   "head_median_abs": 0.09291875359688377,
+   "head_signed_median": -0.06281642259976014,
+   "thread_within": 0.114825,
+   "thread_median_abs": 0.07053163124951307,
+   "thread_signed_median": 0.011016198314600191
+  },
+  {
+   "shift": 0.22500000000000064,
+   "head_within": 0.202625,
+   "head_median_abs": 0.09332382587255855,
+   "head_signed_median": -0.06289351528979342,
+   "thread_within": 0.103125,
+   "thread_median_abs": 0.0734720039407631,
+   "thread_signed_median": 0.013473935636319934
+  },
+  {
+   "shift": 0.25000000000000067,
+   "head_within": 0.2022,
+   "head_median_abs": 0.0937238618216817,
+   "head_signed_median": -0.06307566337671089,
+   "thread_within": 0.092075,
+   "thread_median_abs": 0.07569582108661584,
+   "thread_signed_median": 0.016905561355366812
+  },
+  {
+   "shift": 0.2750000000000007,
+   "head_within": 0.20145,
+   "head_median_abs": 0.09404529325667928,
+   "head_signed_median": -0.06312205998442018,
+   "thread_within": 0.08205,
+   "thread_median_abs": 0.07803627186330996,
+   "thread_signed_median": 0.018488056099908157
+  },
+  {
+   "shift": 0.3000000000000007,
+   "head_within": 0.201375,
+   "head_median_abs": 0.0942988673896687,
+   "head_signed_median": -0.06332389658421338,
+   "thread_within": 0.073175,
+   "thread_median_abs": 0.07864727079474688,
+   "thread_signed_median": 0.021385439441825506
+  },
+  {
+   "shift": 0.32500000000000073,
+   "head_within": 0.2004,
+   "head_median_abs": 0.09463197711245455,
+   "head_signed_median": -0.06341776569364888,
+   "thread_within": 0.063575,
+   "thread_median_abs": 0.08126699751140799,
+   "thread_signed_median": 0.02507431903231139
+  },
+  {
+   "shift": 0.35000000000000075,
+   "head_within": 0.199825,
+   "head_median_abs": 0.0948019259196801,
+   "head_signed_median": -0.06342501802874849,
+   "thread_within": 0.056925,
+   "thread_median_abs": 0.08171605703879861,
+   "thread_signed_median": 0.0279825960811712
+  },
+  {
+   "shift": 0.3750000000000008,
+   "head_within": 0.19925,
+   "head_median_abs": 0.09508527086503388,
+   "head_signed_median": -0.06348602645569021,
+   "thread_within": 0.050325,
+   "thread_median_abs": 0.08312964747960366,
+   "thread_signed_median": 0.029740799847252718
+  },
+  {
+   "shift": 0.4000000000000008,
+   "head_within": 0.19755,
+   "head_median_abs": 0.09547789685323668,
+   "head_signed_median": -0.06341131826582867,
+   "thread_within": 0.043575,
+   "thread_median_abs": 0.08535685109418695,
+   "thread_signed_median": 0.03293604124815188
+  },
+  {
+   "shift": 0.4250000000000008,
+   "head_within": 0.196375,
+   "head_median_abs": 0.0957080807646997,
+   "head_signed_median": -0.06346601649115646,
+   "thread_within": 0.038925,
+   "thread_median_abs": 0.08409872882134506,
+   "thread_signed_median": 0.034726780827084525
+  },
+  {
+   "shift": 0.45000000000000084,
+   "head_within": 0.196025,
+   "head_median_abs": 0.09600661763103668,
+   "head_signed_median": -0.06362690086134733,
+   "thread_within": 0.034025,
+   "thread_median_abs": 0.08551061898144482,
+   "thread_signed_median": 0.0392026238918957
+  },
+  {
+   "shift": 0.47500000000000087,
+   "head_within": 0.195175,
+   "head_median_abs": 0.09614688077237261,
+   "head_signed_median": -0.06355204446000982,
+   "thread_within": 0.029775,
+   "thread_median_abs": 0.0869249928449969,
+   "thread_signed_median": 0.04279717777636359
+  },
+  {
+   "shift": 0.5000000000000009,
+   "head_within": 0.19455,
+   "head_median_abs": 0.09649817790745789,
+   "head_signed_median": -0.06377515783462372,
+   "thread_within": 0.025425,
+   "thread_median_abs": 0.08916218584107588,
+   "thread_signed_median": 0.04632555366463715
+  }
+ ]
+}

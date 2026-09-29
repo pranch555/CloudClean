@@ -1,0 +1,1899 @@
+/*
+ * Step 1 — Scan: scanner, live session, guidance, turntable (steps/capture/*), the live capture HUD over the 3D
+ * view (features/capture/GuidanceHud.tsx) and Settings → Scanner & turntable. v3 tokens only (styles/tokens.css).
+ */
+
+/* ============================================================ shared bits */
+.cap-subhead {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.cap-error {
+  margin: 0;
+}
+
+.warn-glyph {
+  color: var(--warn-glyph);
+}
+
+.cap-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.cap-conn.is-on {
+  color: var(--ok);
+}
+
+.cap-conn.is-warn {
+  color: var(--warn);
+}
+
+.cap-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.cap-callout > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--info);
+}
+
+.cap-callout b {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+
+.cap-callout.tone-warn {
+  background: var(--warn-soft);
+}
+
+.cap-callout.tone-warn > svg {
+  color: var(--warn-glyph);
+}
+
+.cap-callout.tone-danger {
+  background: var(--danger-soft);
+}
+
+.cap-callout.tone-danger > svg {
+  color: var(--danger);
+}
+
+.cap-reason-full {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--ink-3) 35%, transparent);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.cap-callout-action {
+  flex: none;
+  align-self: center;
+}
+
+.cap-skeleton {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.cap-skeleton span {
+  height: 58px;
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--surface-sunken) 20%, var(--surface-hover) 50%, var(--surface-sunken) 80%);
+  background-size: 250% 100%;
+  animation: cap-shimmer 1.4s var(--ease-in-out) infinite;
+}
+
+@keyframes cap-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* recording dot on Start / Resume */
+.cap-rec {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, currentColor 28%, transparent);
+  flex: none;
+}
+
+.btn-secondary .cap-rec {
+  background: var(--signal);
+  box-shadow: 0 0 0 2.5px var(--signal-soft);
+}
+
+.cap-foot-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cap-transport {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+}
+
+/* ============================================================ scanner chooser */
+.cap-driver .choice-text {
+  flex: 1;
+}
+
+.cap-driver .choice-title .truncate,
+.tt-device .choice-title .truncate {
+  min-width: 0;
+}
+
+/* long "Fine-tune" subtitles shrink instead of widening the panel */
+.cap-fine {
+  min-width: 0;
+}
+
+.cap-fine > summary .sub {
+  flex: 1;
+  min-width: 0;
+}
+
+.cap-driver .choice-title {
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.cap-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cap-avail.tone-ok {
+  color: var(--ok);
+}
+
+.cap-avail.tone-warn {
+  color: var(--warn);
+}
+
+.cap-avail.tone-off,
+.cap-avail.tone-danger {
+  color: var(--ink-3);
+}
+
+.cap-driver.is-unavailable .choice-icon {
+  color: var(--ink-3);
+}
+
+.cap-driver.is-unavailable .choice-title .truncate {
+  color: var(--ink-2);
+}
+
+.cap-driver.is-unavailable.is-on .choice-icon {
+  background: var(--surface-sunken);
+}
+
+.cap-more {
+  justify-self: start;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.cap-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.cap-summary .choice-icon {
+  flex: none;
+  background: var(--surface);
+}
+
+.cap-disconnect {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.cap-disconnect:disabled {
+  opacity: 0.45;
+  text-decoration: none;
+}
+
+.cap-change {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+/* ============================================================ live session */
+.cap-session {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--sp-3);
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+
+.cap-session.is-running {
+  border-color: var(--signal-line);
+  box-shadow: var(--shadow-1), 0 0 0 3px var(--signal-soft);
+}
+
+.cap-session.is-error {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
+}
+
+.cap-session-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.cap-tally {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-4);
+  flex: none;
+}
+
+.cap-tally.is-running {
+  border: 0;
+  background: var(--signal);
+  animation: tally 1.6s var(--ease) infinite;
+}
+
+.cap-tally.is-paused {
+  border: 0;
+  background: var(--warn-glyph);
+}
+
+.cap-tally.is-connected {
+  border-color: var(--ok);
+}
+
+.cap-tally.is-error {
+  border: 0;
+  background: var(--danger);
+}
+
+.cap-state {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.cap-session-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+  min-width: 0;
+}
+
+.cap-session-sub svg {
+  flex: none;
+}
+
+/* caliper-style readout strip */
+.cap-readouts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+}
+
+.cap-readout {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px 7px;
+  min-width: 0;
+}
+
+.cap-readout + .cap-readout {
+  border-left: 1px solid var(--line);
+}
+
+.cap-readout-value {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cap-readout-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+@container (max-width: 300px) {
+  .cap-readouts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cap-readout:nth-child(3) {
+    border-left: 0;
+  }
+  .cap-readout:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+}
+
+/* marker map steps (same language as the Settings stepper) */
+.cap-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cap-stages li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  line-height: 1.25;
+}
+
+.cap-stages li::before {
+  content: '';
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.cap-stages li.is-done::before {
+  background: var(--ink-1);
+}
+
+.cap-stages li.is-current::before {
+  background: var(--signal);
+}
+
+.cap-stages li.is-current {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+
+.cap-stage-n {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.cap-stages li.is-done .cap-stage-n {
+  color: var(--ok);
+}
+
+/* save while scanning: one quiet line */
+.cap-save-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 8px 8px 12px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.cap-save-line > svg {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.cap-save-line .cap-error {
+  flex-basis: 100%;
+}
+
+/* scans waiting for a decision (bridge / folder) */
+.cap-pending {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+/* guidance */
+.cap-complete {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.cap-guide {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cap-guide li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ink-1);
+}
+
+.cap-guide li svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.cap-guide .sev-ok svg {
+  color: var(--ok);
+}
+
+.cap-guide .sev-info svg {
+  color: var(--info);
+}
+
+.cap-guide .sev-warning {
+  background: var(--warn-soft);
+}
+
+.cap-guide .sev-warning svg {
+  color: var(--warn-glyph);
+}
+
+.cap-guide .sev-error {
+  background: var(--danger-soft);
+}
+
+.cap-guide .sev-error svg {
+  color: var(--danger);
+}
+
+.cap-holes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.cap-hole {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  min-width: 0;
+}
+
+.cap-hole:last-child {
+  border-bottom: 0;
+}
+
+.cap-hole-n {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  flex: none;
+  background: var(--warn-glyph);
+  color: var(--on-signal);
+}
+
+.cap-hole.kind-missing .cap-hole-n,
+.hole-label.kind-missing b {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+.cap-hole.kind-edge .cap-hole-n,
+.hole-label.kind-edge b {
+  background: var(--series-4);
+  color: var(--surface);
+}
+
+.cap-hole-hint {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink-1);
+}
+
+.cap-spark {
+  display: grid;
+  gap: 4px;
+}
+
+.cap-spark svg {
+  height: 64px;
+}
+
+.cap-spark-area {
+  fill: var(--ink-1);
+  opacity: 0.05;
+}
+
+.cap-spark-base {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.cap-spark-note {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ok);
+}
+
+/* live view */
+.cap-density-key {
+  display: grid;
+  gap: 4px;
+}
+
+.cap-density-ramp {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* how the Revo Metro bridge works */
+.cap-howto {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.cap-howto li {
+  display: flex;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.cap-howto li > div {
+  min-width: 0;
+}
+
+.cap-code {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 7px 5px 7px 10px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+}
+
+.cap-code code {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-1);
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================ dialogs */
+.cap-dialog {
+  display: grid;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+}
+
+.cap-dialog-text {
+  display: grid;
+  gap: var(--sp-2);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.cap-dialog-text b {
+  color: var(--ink-1);
+}
+
+.cap-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ============================================================ turntable (step block) */
+.tt-device .choice-text {
+  flex: 1;
+}
+
+.tt-device .choice-title .badge {
+  margin-left: auto;
+}
+
+.tt-device-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tt-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 10px;
+}
+
+.tt-bars i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+
+.tt-bars i:nth-child(1) {
+  height: 4px;
+}
+
+.tt-bars i:nth-child(2) {
+  height: 7px;
+}
+
+.tt-bars i:nth-child(3) {
+  height: 10px;
+}
+
+.tt-bars i.on {
+  background: var(--ink-2);
+}
+
+.tt-searching {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--line-strong);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+/* the instrument: dial + facts + Stop */
+.tt-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+
+.tt-side {
+  flex: 1;
+  min-width: 148px;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.tt-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.tt-facts {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tt-facts > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 26px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+}
+
+.tt-facts dt {
+  color: var(--ink-3);
+}
+
+.tt-facts dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 550;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.tt-facts dd .mono {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.tt-facts .unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.tt-facts dd.is-live {
+  color: var(--signal-ink);
+}
+
+.tt-stop {
+  margin-top: 2px;
+}
+
+.tt-stop.is-live {
+  background: var(--danger);
+  border-color: transparent;
+  color: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.tt-stop.is-live:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(1.06);
+}
+
+/* manual moves */
+.tt-nudges {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.tt-nudge {
+  height: 38px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-1);
+  border-left: 1px solid var(--line);
+  transition: background-color var(--dur-1) var(--ease);
+}
+
+.tt-nudge:first-child {
+  border-left: 0;
+}
+
+.tt-nudge:nth-child(4) {
+  border-left: 1.5px solid var(--line-strong);
+}
+
+.tt-nudge:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.tt-nudge:active:not(:disabled) {
+  background: var(--surface-press);
+}
+
+.tt-nudge:disabled {
+  color: var(--ink-4);
+  cursor: not-allowed;
+}
+
+/* the turntable scan (program) */
+.tt-program {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.tt-program.is-running {
+  border-color: var(--signal-line);
+  box-shadow: 0 0 0 3px var(--signal-soft);
+}
+
+.tt-program-head {
+  display: grid;
+  gap: 2px;
+}
+
+.tt-program-head.row {
+  display: flex;
+}
+
+.tt-program-head h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+}
+
+.tt-pct {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.tt-program-now {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px var(--sp-3);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.tt-program-now b {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+
+.tt-phase {
+  font-weight: 600;
+  color: var(--signal-ink);
+}
+
+.tt-turns {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.tt-turns-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+
+.tt-turn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.tt-turn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 4px 4px 4px 10px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 14px;
+}
+
+.tt-turns > .btn {
+  justify-self: start;
+}
+
+.tt-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warn);
+}
+
+.tt-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 6px 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 14px;
+}
+
+.tt-result > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.tt-result.tone-ok > svg {
+  color: var(--ok);
+}
+
+.tt-result.tone-info > svg {
+  color: var(--ink-3);
+}
+
+.tt-result.tone-danger > svg {
+  color: var(--danger);
+}
+
+/* ============================================================ turntable dial (SVG, 120 × 120 user units) */
+.tt-dial {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.tt-rim {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.tt-tick {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.tt-tick.t1 {
+  stroke: var(--ink-3);
+}
+
+.tt-tick.t2 {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+
+.tt-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  fill: var(--ink-3);
+}
+
+.tt-platter {
+  fill: var(--surface-sunken);
+  stroke: var(--line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.tt-platter-ring {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.tt-trail {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.32;
+}
+
+.tt-ghost-arc {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.3;
+  stroke-dasharray: 2 2.5;
+  opacity: 0.85;
+}
+
+.tt-ghost {
+  fill: var(--surface);
+  stroke: var(--signal);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.tt-stop-dot {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.tt-stop-dot.is-done {
+  fill: var(--ink-2);
+  stroke: none;
+}
+
+.tt-stop-dot.is-current {
+  fill: var(--signal);
+  stroke: none;
+}
+
+.tt-pointer-head {
+  fill: var(--signal);
+  stroke: var(--surface);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.tt-index {
+  stroke: var(--signal);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.tt-dial.is-moving .tt-pointer {
+  filter: drop-shadow(0 0 3px var(--signal-line));
+}
+
+.tt-hub {
+  fill: var(--ink-2);
+}
+
+.tt-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  fill: var(--ink-1);
+}
+
+.tt-caption {
+  font-size: 10px;
+  fill: var(--ink-3);
+}
+
+.tt-dial.is-moving .tt-caption {
+  fill: var(--signal-ink);
+}
+
+.tt-dial.is-off .tt-value {
+  fill: var(--ink-4);
+}
+
+.tt-dial.is-compact .tt-rim {
+  stroke: var(--ink-4);
+}
+
+.tt-dial.is-compact .tt-platter {
+  fill: none;
+  stroke: none;
+}
+
+.tt-needle {
+  stroke: var(--signal);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* tilt, seen from the side */
+.tt-tilt-glyph {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.tt-tilt-base {
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.tt-tilt-post {
+  stroke: var(--ink-4);
+  stroke-width: 1.5;
+}
+
+.tt-tilt-ref {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.tt-tilt-arc {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.2;
+}
+
+.tt-tilt-platter {
+  stroke: var(--ink-1);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.tt-tilt-pivot {
+  fill: var(--surface);
+  stroke: var(--ink-1);
+  stroke-width: 1.2;
+}
+
+/* ============================================================ live HUD over the 3D view */
+/* status pill, top centre (below the lead's banner stack when that stack is at the top and has something in it) */
+.cap-status {
+  top: 14px;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: fit-content;
+  max-width: min(640px, calc(100% - 300px));
+  padding: 9px 18px 9px 13px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.cap-status-icon {
+  flex: none;
+}
+
+.cap-status.sev-ok .cap-status-icon {
+  color: var(--ok);
+}
+
+.cap-status.sev-info .cap-status-icon {
+  color: var(--info);
+}
+
+.cap-status.sev-warning {
+  background: linear-gradient(var(--warn-soft), var(--warn-soft)), var(--hud-bg);
+  border-color: color-mix(in srgb, var(--warn-glyph) 45%, transparent);
+}
+
+.cap-status.sev-warning .cap-status-icon {
+  color: var(--warn-glyph);
+}
+
+.cap-status.sev-error {
+  background: linear-gradient(var(--danger-soft), var(--danger-soft)), var(--hud-bg);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.cap-status.sev-error .cap-status-icon {
+  color: var(--danger);
+}
+
+@container stage (min-width: 1101px) {
+  .viewport:has(.banner-stack > *) .cap-status {
+    top: 66px;
+  }
+}
+
+/* a model on stage brings its size readout top-left: step below it */
+.viewport:has(.size-tag) .cap-status {
+  top: 120px;
+}
+
+@container stage (max-width: 1100px) {
+  .cap-status {
+    max-width: calc(100% - 180px);
+    font-size: 14px;
+  }
+}
+
+/* a narrow view has no room between the size readout and the view cube: the message sits under the readout,
+   left-aligned, clear of the view controls on the right */
+@container stage (max-width: 720px) {
+  .cap-status {
+    top: 64px;
+    left: 14px;
+    right: auto;
+    margin-inline: 0;
+    max-width: calc(100% - 150px);
+    padding: 8px 14px 8px 11px;
+    font-size: 13.5px;
+  }
+  .viewport:has(.size-tag) .cap-status {
+    top: 128px;
+    max-width: calc(100% - 98px);
+  }
+}
+
+/* instrument cluster, bottom left (rises above the Ask bar when they would meet) */
+.cap-gauges {
+  left: 14px;
+  bottom: 16px;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--sp-3);
+  row-gap: 10px;
+  width: min(344px, calc(100% - 28px));
+  padding: 10px 14px 12px 10px;
+}
+
+.cap-gauges.is-placed {
+  transition: bottom var(--dur-2) var(--ease), left var(--dur-2) var(--ease);
+}
+
+.cap-gauges-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin: -4px -6px 0 -2px;
+  padding: 0 6px 8px 6px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 10px 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-1);
+  text-align: left;
+}
+
+.cap-gauges-head:hover .cap-gauges-chev {
+  color: var(--ink-1);
+}
+
+.cap-gauges-chev {
+  flex: none;
+  color: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.cap-gauges.is-folded {
+  grid-template-columns: minmax(0, 1fr);
+  width: auto;
+  min-width: 220px;
+  padding: 8px 12px 8px 10px;
+}
+
+.cap-gauges.is-folded .cap-gauges-head {
+  margin: 0;
+  padding: 0 2px;
+  border-bottom: 0;
+}
+
+.cap-gauges.is-folded .cap-gauges-chev {
+  transform: rotate(180deg);
+}
+
+.cap-gauges-pct {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-1);
+}
+
+.cap-gauges-tally {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-4);
+  flex: none;
+}
+
+.cap-gauges-head.is-running .cap-gauges-tally {
+  border: 0;
+  background: var(--signal);
+  animation: tally 1.6s var(--ease) infinite;
+}
+
+.cap-gauges-head.is-paused .cap-gauges-tally {
+  border: 0;
+  background: var(--warn-glyph);
+}
+
+.cap-gauges-head.is-error .cap-gauges-tally {
+  border: 0;
+  background: var(--danger);
+}
+
+.cap-gauges-state {
+  flex: 1;
+  min-width: 0;
+}
+
+.cap-gauges-clock {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.cap-ring {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  width: 62px;
+  flex: none;
+}
+
+.cap-ring > svg {
+  width: 56px;
+  height: 56px;
+}
+
+.cap-ring-track {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 5;
+}
+
+.cap-ring-fill {
+  fill: none;
+  stroke: var(--ink-1);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dasharray var(--dur-3) var(--ease);
+}
+
+.cap-ring.is-done .cap-ring-fill {
+  stroke: var(--ok);
+}
+
+.cap-ring-target {
+  fill: var(--ok);
+  stroke: var(--surface);
+  stroke-width: 1.2;
+}
+
+.cap-ring-value {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  right: 0;
+  translate: 0 -50%;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+}
+
+.cap-ring-value small {
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.cap-ring-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.cap-ring.is-done .cap-ring-label {
+  color: var(--ok);
+}
+
+.cap-gauge-rows {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cap-gauge {
+  display: grid;
+  grid-template-columns: 14px 62px minmax(0, 1fr) 56px;
+  align-items: center;
+  column-gap: 6px;
+  min-height: 23px;
+  font-size: 12.5px;
+}
+
+.cap-gauge-icon {
+  color: var(--ink-4);
+}
+
+.cap-gauge.tone-ok .cap-gauge-icon {
+  color: var(--ok);
+}
+
+.cap-gauge.tone-warn .cap-gauge-icon {
+  color: var(--warn-glyph);
+}
+
+.cap-gauge.tone-danger .cap-gauge-icon {
+  color: var(--danger);
+}
+
+.cap-gauge-label {
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.cap-gauge-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 3px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cap-gauge-value .mono {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-1);
+}
+
+.cap-gauge.tone-danger .cap-gauge-value .mono {
+  color: var(--danger);
+}
+
+.cap-gauge-word {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.cap-gauge.tone-warn .cap-gauge-word {
+  color: var(--warn);
+}
+
+.cap-gauge.tone-danger .cap-gauge-word {
+  color: var(--danger);
+}
+
+.cap-gauge-unit {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.cap-gauge-note {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.cap-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+.cap-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink-2);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.cap-gauge.tone-warn .cap-bar > span {
+  background: var(--warn-glyph);
+}
+
+.cap-gauge.tone-danger .cap-bar > span {
+  background: var(--danger);
+}
+
+.cap-range {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.cap-range-ok {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ok) 55%, transparent);
+}
+
+.cap-range-best {
+  position: absolute;
+  top: -3px;
+  width: 1.5px;
+  height: 10px;
+  background: var(--ink-3);
+  translate: -50% 0;
+}
+
+.cap-range-now {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--ink-1);
+  translate: -50% -50%;
+  transition: left var(--dur-2) var(--ease);
+}
+
+.cap-gauge.tone-danger .cap-range-now {
+  border-color: var(--danger);
+}
+
+/* gaps on the model (numbered like the list in the panel) */
+.cap-hole-labels .hole-label {
+  border-color: var(--warn-glyph);
+  color: var(--ink-1);
+}
+
+.cap-hole-labels .hole-label b {
+  background: var(--warn-glyph);
+  color: var(--on-signal);
+}
+
+.cap-hole-labels .hole-label.kind-missing {
+  border-color: var(--signal);
+}
+
+.cap-hole-labels .hole-label.kind-edge {
+  border-color: var(--series-4);
+}
+
+/* turntable widget, bottom right */
+.cap-tt {
+  right: 14px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 7px 7px 9px;
+  transition: box-shadow var(--dur-2) var(--ease);
+}
+
+.cap-tt.is-placed {
+  transition: bottom var(--dur-2) var(--ease), right var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+
+.cap-tt.is-live {
+  box-shadow: var(--shadow-2), 0 0 0 1.5px var(--signal-line);
+}
+
+.cap-tt-text {
+  display: grid;
+  gap: 1px;
+  min-width: 92px;
+}
+
+.cap-tt-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cap-tt-angle {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cap-tt-tilt {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.cap-tt-sub {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.cap-tt-sub b,
+.cap-tt-sub .is-live {
+  color: var(--signal-ink);
+  font-weight: 600;
+}
+
+.cap-tt-progress {
+  display: block;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+.cap-tt-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.cap-tt-stop {
+  color: var(--danger);
+  align-self: center;
+}
+
+.cap-tt-stop:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* ============================================================ Settings → Scanner & turntable */
+.cap-settings-title {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+}
+
+.cap-devices .status-line b {
+  font-weight: 600;
+}
+
+.cap-devices .status-line .btn {
+  flex: none;
+}
+
+.cap-driver-table {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.cap-driver-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.cap-driver-row + .cap-driver-row {
+  border-top: 1px solid var(--line);
+}
+
+.cap-driver-row .choice-icon {
+  flex: none;
+}
+
+.cap-driver-row > .btn,
+.cap-driver-row > .link {
+  flex: none;
+  align-self: center;
+}
+
+.cap-driver-detail {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.cap-devices-tt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
+.cap-log {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+
+/* make a 3D model from photos */
+.p3d-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+}
+
+.p3d-thumb,
+.p3d-more {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.p3d-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.p3d-more {
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.p3d-count {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-1);
+}
+
+.p3d-count > svg {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.p3d-running {
+  display: grid;
+  gap: 6px;
+}
+
+.p3d-tips {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* the printable scale sheet: true size from photos */
+.p3d-sheet {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 14px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.p3d-sheet-thumb {
+  align-self: start;
+  display: block;
+  margin-top: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #fff; /* a picture of paper: white in both themes */
+  box-shadow: 0 1px 2px rgba(23, 22, 26, 0.14), 0 6px 14px rgba(23, 22, 26, 0.1);
+  transform: rotate(-2.5deg);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.p3d-sheet-thumb:hover {
+  transform: rotate(0deg) translateY(-1px);
+}
+
+.p3d-sheet-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.p3d-sheet-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.p3d-sheet-body .hint-text,
+.p3d-sheet-body .err-text {
+  margin: 0;
+}
+
+.p3d-sheet-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.p3d-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.p3d-sheet-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.p3d-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13.5px;
+  color: var(--ink-1);
+}
+
+.p3d-bar-input {
+  width: 116px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3d-sheet-thumb {
+    transform: none;
+    transition: none;
+  }
+}

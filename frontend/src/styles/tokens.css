@@ -1,0 +1,232 @@
+/*
+ * CloudClean v3 design tokens — "technical drawing, alive" (docs/design/v3-design-brief.md).
+ *
+ * Two themes share one vocabulary: Paper (light, default) and Carbon (dark). Components only use these tokens.
+ * Contrast (WCAG 2.1) was computed for every text token on every surface it sits on:
+ *   Paper  ink-1 18.0 : 1, ink-2 8.6, ink-3 5.4 on --surface; signal-ink 5.5, ok 5.5, warn 6.0, danger 5.4, info 5.6 (all ≥ 4.6 on their -soft tints).
+ *   Carbon ink-1 15.7 : 1, ink-2 9.7, ink-3 5.3 on --surface; every status colour ≥ 6.2.
+ * The bright --signal is for fills, strokes and glyphs; text on a --signal fill is ink (4.9 : 1), never white (3.7).
+ * --assistant is the teal of the assistant's logo, used for its glyph and name (the global signal stays vermilion):
+ *   Paper 6.3 : 1 on --surface, ≥ 4.7 on every Paper fill; Carbon 9.8 : 1 on --surface, 7.0 on --surface-press;
+ *   --assistant-on-primary sits on the --primary pill: Paper 11.5 : 1, Carbon 5.6.
+ */
+:root {
+  /* ---- type */
+  --font-sans: 'Instrument Sans Variable', 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 15px;
+  --text-lg: 17px;
+  --text-xl: 21px;
+  --text-2xl: 28px;
+  --text-3xl: 40px;
+  --text-hero: clamp(44px, 5.2vw, 72px);
+  --lh-tight: 1.2;
+  --lh-normal: 1.45;
+
+  /* ---- 4 px grid */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 56px;
+  --sp-10: 72px;
+
+  /* ---- shape */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+  --h-sm: 30px;
+  --h-md: 38px;
+  --h-lg: 46px;
+
+  /* ---- motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+
+  /* ---- layout */
+  --topbar-h: 60px;
+  --z-hud: 20;
+  --z-panel: 30;
+  --z-popover: 60;
+  --z-dialog: 80;
+  --z-toast: 90;
+}
+
+/* ============================================================ Paper (light) */
+:root,
+:root[data-theme='paper'] {
+  color-scheme: light;
+  --bg: #f4f2ed;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f1eee8;
+  --surface-hover: #ece8e0;
+  --surface-press: #e4dfd5;
+  --line: #e6e2d9;
+  --line-strong: #d5d0c4;
+  --line-ink: rgba(23, 22, 26, 0.72);
+
+  --ink-1: #17161a;
+  --ink-2: #4f4c45;
+  --ink-3: #6e6a61;
+  --ink-4: #a19c91;
+  --ink-on-primary: #ffffff;
+
+  --primary: #17161a;
+  --primary-hover: #2e2c31;
+  --primary-press: #000000;
+
+  --signal: #ee4b1f;
+  --signal-ink: #c0390f;
+  --signal-soft: #fde8e0;
+  --signal-line: rgba(238, 75, 31, 0.42);
+  --on-signal: #17161a;
+
+  /* the assistant (teal from its logo tile) */
+  --assistant: #086a73;
+  --assistant-soft: #e3f1f1;
+  --assistant-line: rgba(8, 106, 115, 0.3);
+  --assistant-on-primary: #74e0d9;
+  --assistant-mark-ring: rgba(23, 22, 26, 0.07);
+  --assistant-mark-shadow: 0 1px 2px rgba(28, 64, 84, 0.12), 0 8px 18px -8px rgba(38, 110, 140, 0.45);
+
+  --ok: #16793f;
+  --ok-soft: #e3f3e9;
+  --warn: #8c5810;
+  --warn-glyph: #d9920f;
+  --warn-soft: #fbf0d9;
+  --danger: #c8302f;
+  --danger-soft: #fbe5e3;
+  --info: #2e5fd8;
+  --info-soft: #e6edfb;
+
+  --shadow-1: 0 1px 2px rgba(40, 32, 20, 0.06), 0 1px 1px rgba(40, 32, 20, 0.04);
+  --shadow-2: 0 6px 16px rgba(40, 32, 20, 0.08), 0 1px 3px rgba(40, 32, 20, 0.06);
+  --shadow-3: 0 18px 40px rgba(40, 32, 20, 0.14), 0 3px 8px rgba(40, 32, 20, 0.06);
+  --hud-bg: rgba(255, 255, 255, 0.9);
+  --hud-line: rgba(23, 22, 26, 0.08);
+  --scrim: rgba(28, 24, 18, 0.28);
+  --focus: 0 0 0 2px var(--surface), 0 0 0 4px rgba(238, 75, 31, 0.75);
+
+  /* viewport stage */
+  --vp-top: #f8f6f2;
+  --vp-bottom: #e2ded4;
+  --vp-grid: 0.2, 0.18, 0.15;
+  --vp-points: #45423c;
+  --vp-mesh: #b3ac9f;
+  --vp-highlight: #ee4b1f;
+
+  /* categorical model colours (fixed order, tuned for both themes) */
+  --series-1: #2f6fd6;
+  --series-2: #e0751f;
+  --series-3: #178f64;
+  --series-4: #8a57d4;
+  --series-5: #cc4577;
+  --series-6: #a88100;
+  --series-7: #2b97b0;
+  --series-8: #6d7887;
+  /* series colours as text on paper surfaces (>= 4.5:1 on the hover and selected fills) */
+  --series-3-ink: #0e7350;
+  --series-4-ink: #7442c4;
+  --series-5-ink: #b0305f;
+
+  --paper-grain: radial-gradient(rgba(60, 50, 30, 0.035) 1px, transparent 1px);
+}
+
+/* ============================================================ Carbon (dark) */
+:root[data-theme='carbon'] {
+  color-scheme: dark;
+  --bg: #0f0f10;
+  --surface: #18181a;
+  --surface-raised: #1d1d20;
+  --surface-sunken: #202023;
+  --surface-hover: #29292d;
+  --surface-press: #323237;
+  --line: #2c2c30;
+  --line-strong: #3b3b41;
+  --line-ink: rgba(243, 241, 236, 0.7);
+
+  --ink-1: #f3f1ec;
+  --ink-2: #c3bfb6;
+  --ink-3: #908c83;
+  --ink-4: #66635d;
+  --ink-on-primary: #17161a;
+
+  --primary: #f3f1ec;
+  --primary-hover: #ffffff;
+  --primary-press: #dedad2;
+
+  --signal: #ff6a3d;
+  --signal-ink: #ff8a63;
+  --signal-soft: rgba(255, 106, 61, 0.14);
+  --signal-line: rgba(255, 106, 61, 0.45);
+  --on-signal: #17161a;
+
+  --assistant: #6bd0d6;
+  --assistant-soft: rgba(107, 208, 214, 0.12);
+  --assistant-line: rgba(107, 208, 214, 0.36);
+  --assistant-on-primary: #086a73;
+  --assistant-mark-ring: rgba(190, 240, 240, 0.12);
+  --assistant-mark-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 24px -10px rgba(70, 200, 210, 0.4);
+
+  --ok: #4cc38a;
+  --ok-soft: rgba(76, 195, 138, 0.13);
+  --warn: #e6b04a;
+  --warn-glyph: #e6b04a;
+  --warn-soft: rgba(230, 176, 74, 0.13);
+  --danger: #ff7a70;
+  --danger-soft: rgba(255, 122, 112, 0.13);
+  --info: #7ba2ff;
+  --info-soft: rgba(123, 162, 255, 0.13);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 20px 48px rgba(0, 0, 0, 0.6), 0 3px 8px rgba(0, 0, 0, 0.4);
+  --hud-bg: rgba(24, 24, 26, 0.88);
+  --hud-line: rgba(255, 255, 255, 0.08);
+  --scrim: rgba(0, 0, 0, 0.55);
+  --focus: 0 0 0 2px var(--surface), 0 0 0 4px rgba(255, 106, 61, 0.8);
+
+  --vp-top: #1d1d20;
+  --vp-bottom: #0a0a0b;
+  --vp-grid: 0.85, 0.82, 0.76;
+  --vp-points: #dcd7cd;
+  --vp-mesh: #8e897f;
+  --vp-highlight: #ff6a3d;
+
+  --series-1: #6f9df0;
+  --series-2: #f0914a;
+  --series-3: #3cc190;
+  --series-4: #a98bf0;
+  --series-5: #ea6f9b;
+  --series-6: #d4b03a;
+  --series-7: #4fbfd6;
+  --series-8: #9aa4b2;
+  --series-3-ink: var(--series-3);
+  --series-4-ink: var(--series-4);
+  --series-5-ink: var(--series-5);
+
+  --paper-grain: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+/* Larger text preference (Settings → Appearance) scales the type ramp, not the layout grid. */
+:root[data-text='large'] {
+  --text-xs: 13px;
+  --text-sm: 14px;
+  --text-md: 16.5px;
+  --text-lg: 18.5px;
+  --text-xl: 23px;
+}

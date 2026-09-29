@@ -1,0 +1,3744 @@
+[
+ {
+  "part": "cylinder",
+  "step": "raw scan (outliers included)",
+  "measure": "diameter",
+  "value": 19.999868770636514,
+  "truth": 20.0,
+  "error_um": -0.13122936348608505,
+  "error_ppm": -6.561468174304252,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "raw scan (outliers included)",
+  "measure": "length",
+  "value": 65.0922745791475,
+  "truth": 60.0,
+  "error_um": 5092.274579147499,
+  "error_ppm": 84871.24298579166,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "raw scan (outliers included)",
+  "measure": "robust_extent_length",
+  "value": 69.23143861719895,
+  "truth": 60.0,
+  "error_um": 9231.438617198946,
+  "error_ppm": 153857.31028664912,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "raw scan (outliers included)",
+  "measure": "robust_extent_diameter",
+  "value": 35.39786746067677,
+  "truth": 20.0,
+  "error_um": 15397.86746067677,
+  "error_ppm": 769893.3730338386,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "clean light",
+  "measure": "diameter",
+  "value": 19.999868770636514,
+  "truth": 20.0,
+  "error_um": -0.13122936348608505,
+  "error_ppm": -6.561468174304252,
+  "note": "subset=1.0000 removed=1.890%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean light",
+  "measure": "length",
+  "value": 59.9998778621094,
+  "truth": 60.0,
+  "error_um": -0.1221378905995607,
+  "error_ppm": -2.0356315099926783,
+  "note": "subset=1.0000 removed=1.890%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean light",
+  "measure": "robust_extent_length",
+  "value": 60.149049231650324,
+  "truth": 60.0,
+  "error_um": 149.04923165032358,
+  "error_ppm": 2484.1538608387264,
+  "note": "subset=1.0000 removed=1.890%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean light",
+  "measure": "robust_extent_diameter",
+  "value": 20.106938634273234,
+  "truth": 20.0,
+  "error_um": 106.93863427323436,
+  "error_ppm": 5346.931713661717,
+  "note": "subset=1.0000 removed=1.890%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean standard",
+  "measure": "diameter",
+  "value": 19.999868770636514,
+  "truth": 20.0,
+  "error_um": -0.13122936348608505,
+  "error_ppm": -6.561468174304252,
+  "note": "subset=1.0000 removed=1.930%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean standard",
+  "measure": "length",
+  "value": 59.999877859310494,
+  "truth": 60.0,
+  "error_um": -0.12214068950555657,
+  "error_ppm": -2.035678158425943,
+  "note": "subset=1.0000 removed=1.930%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean standard",
+  "measure": "robust_extent_length",
+  "value": 60.14837992440923,
+  "truth": 60.0,
+  "error_um": 148.37992440922676,
+  "error_ppm": 2472.9987401537796,
+  "note": "subset=1.0000 removed=1.930%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean standard",
+  "measure": "robust_extent_diameter",
+  "value": 20.105958963896885,
+  "truth": 20.0,
+  "error_um": 105.9589638968852,
+  "error_ppm": 5297.94819484426,
+  "note": "subset=1.0000 removed=1.930%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean aggressive",
+  "measure": "diameter",
+  "value": 19.99985460877754,
+  "truth": 20.0,
+  "error_um": -0.1453912224604892,
+  "error_ppm": -7.2695611230244594,
+  "note": "subset=1.0000 removed=9.120%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean aggressive",
+  "measure": "length",
+  "value": 60.00006138507822,
+  "truth": 60.0,
+  "error_um": 0.06138507821873418,
+  "error_ppm": 1.023084636978903,
+  "note": "subset=1.0000 removed=9.120%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean aggressive",
+  "measure": "robust_extent_length",
+  "value": 60.149094870685424,
+  "truth": 60.0,
+  "error_um": 149.09487068542404,
+  "error_ppm": 2484.914511423734,
+  "note": "subset=1.0000 removed=9.120%"
+ },
+ {
+  "part": "cylinder",
+  "step": "clean aggressive",
+  "measure": "robust_extent_diameter",
+  "value": 20.110495997698198,
+  "truth": 20.0,
+  "error_um": 110.49599769819807,
+  "error_ppm": 5524.799884909904,
+  "note": "subset=1.0000 removed=9.120%"
+ },
+ {
+  "part": "cylinder",
+  "step": "on table: clean standard",
+  "measure": "height_above_table",
+  "value": 20.041432686397943,
+  "truth": 20.0,
+  "error_um": 41.432686397943286,
+  "error_ppm": 2071.6343198971645,
+  "note": "part on a table, bottom hidden; table kept, height measured from a plane fitted to it"
+ },
+ {
+  "part": "cylinder",
+  "step": "on table: clean standard",
+  "measure": "diameter_fit",
+  "value": 20.000664046074107,
+  "truth": 20.0,
+  "error_um": 0.66404607410675,
+  "error_ppm": 33.2023037053375,
+  "note": "part on a table, bottom hidden; table kept, height measured from a plane fitted to it"
+ },
+ {
+  "part": "cylinder",
+  "step": "on table: clean standard + remove_plane",
+  "measure": "height_extent_after_plane_removal",
+  "value": 19.68116262446188,
+  "truth": 20.0,
+  "error_um": -318.83737553812,
+  "error_ppm": -15941.868776906,
+  "note": "part on a table, bottom hidden; support plane removed (points within 3x spacing of it go too)"
+ },
+ {
+  "part": "cylinder",
+  "step": "on table: clean standard + remove_plane",
+  "measure": "diameter_fit",
+  "value": 20.000664046074107,
+  "truth": 20.0,
+  "error_um": 0.66404607410675,
+  "error_ppm": 33.2023037053375,
+  "note": "part on a table, bottom hidden; support plane removed (points within 3x spacing of it go too)"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (auto)",
+  "measure": "diameter",
+  "value": 20.000075652772587,
+  "truth": 20.0,
+  "error_um": 0.07565277258692049,
+  "error_ppm": 3.7826386293460246,
+  "note": "pose error 179.5311 deg, 0.8 um; flagged ambiguous"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (auto)",
+  "measure": "length",
+  "value": 59.99975248354791,
+  "truth": 60.0,
+  "error_um": -0.24751645209164508,
+  "error_ppm": -4.125274201527418,
+  "note": "pose error 179.5311 deg, 0.8 um; flagged ambiguous"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (auto)",
+  "measure": "robust_extent_length",
+  "value": 60.15797816840831,
+  "truth": 60.0,
+  "error_um": 157.97816840831302,
+  "error_ppm": 2632.9694734718837,
+  "note": "pose error 179.5311 deg, 0.8 um; flagged ambiguous"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (auto)",
+  "measure": "robust_extent_diameter",
+  "value": 19.96539849862418,
+  "truth": 20.0,
+  "error_um": -34.60150137582119,
+  "error_ppm": -1730.0750687910595,
+  "note": "pose error 179.5311 deg, 0.8 um; flagged ambiguous"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (approved)",
+  "measure": "diameter",
+  "value": 19.999984672468166,
+  "truth": 20.0,
+  "error_um": -0.015327531833975172,
+  "error_ppm": -0.7663765916987586,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (approved)",
+  "measure": "length",
+  "value": 59.99980153649984,
+  "truth": 60.0,
+  "error_um": -0.19846350016194947,
+  "error_ppm": -3.307725002699158,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (approved)",
+  "measure": "robust_extent_length",
+  "value": 60.156783101950126,
+  "truth": 60.0,
+  "error_um": 156.78310195012557,
+  "error_ppm": 2613.0516991687596,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge 2 views (approved)",
+  "measure": "robust_extent_diameter",
+  "value": 20.108274145248927,
+  "truth": 20.0,
+  "error_um": 108.27414524892731,
+  "error_ppm": 5413.707262446365,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "diameter",
+  "value": 20.049936251756428,
+  "truth": 20.0,
+  "error_um": 49.93625175642791,
+  "error_ppm": 2496.8125878213955,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "length",
+  "value": 60.04998542235413,
+  "truth": 60.0,
+  "error_um": 49.98542235413339,
+  "error_ppm": 833.0903725688898,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "robust_extent_length",
+  "value": 60.24410152658103,
+  "truth": 60.0,
+  "error_um": 244.10152658102646,
+  "error_ppm": 4068.3587763504406,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "robust_extent_diameter",
+  "value": 20.17409130497748,
+  "truth": 20.0,
+  "error_um": 174.09130497748038,
+  "error_ppm": 8704.56524887402,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "diameter",
+  "value": 20.049058604407172,
+  "truth": 20.0,
+  "error_um": 49.05860440717191,
+  "error_ppm": 2452.9302203585958,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "length",
+  "value": 60.05446688102162,
+  "truth": 60.0,
+  "error_um": 54.46688102161801,
+  "error_ppm": 907.7813503603,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "robust_extent_length",
+  "value": 60.13042180477004,
+  "truth": 60.0,
+  "error_um": 130.4218047700374,
+  "error_ppm": 2173.69674616729,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "robust_extent_diameter",
+  "value": 20.098945622877665,
+  "truth": 20.0,
+  "error_um": 98.94562287766462,
+  "error_ppm": 4947.281143883231,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson (trim)",
+  "measure": "diameter",
+  "value": 19.999349305122003,
+  "truth": 20.0,
+  "error_um": -0.6506948779971822,
+  "error_ppm": -32.53474389985911,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson (trim)",
+  "measure": "length",
+  "value": 60.00603989362554,
+  "truth": 60.0,
+  "error_um": 6.039893625541026,
+  "error_ppm": 100.6648937590171,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson (trim)",
+  "measure": "robust_extent_length",
+  "value": 60.060905021090036,
+  "truth": 60.0,
+  "error_um": 60.90502109003637,
+  "error_ppm": 1015.0836848339395,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson (trim)",
+  "measure": "robust_extent_diameter",
+  "value": 20.035293836283774,
+  "truth": 20.0,
+  "error_um": 35.29383628377403,
+  "error_ppm": 1764.6918141887013,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson watertight",
+  "measure": "diameter",
+  "value": 19.999481096514682,
+  "truth": 20.0,
+  "error_um": -0.518903485318134,
+  "error_ppm": -25.9451742659067,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson watertight",
+  "measure": "length",
+  "value": 60.006002846588125,
+  "truth": 60.0,
+  "error_um": 6.002846588124555,
+  "error_ppm": 100.04744313540925,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson watertight",
+  "measure": "robust_extent_length",
+  "value": 60.060910819004704,
+  "truth": 60.0,
+  "error_um": 60.91081900470385,
+  "error_ppm": 1015.1803167450643,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson watertight",
+  "measure": "robust_extent_diameter",
+  "value": 20.041112107857018,
+  "truth": 20.0,
+  "error_um": 41.11210785701758,
+  "error_ppm": 2055.605392850879,
+  "note": "deviation mean 18.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 5",
+  "measure": "diameter",
+  "value": 19.999485967653822,
+  "truth": 20.0,
+  "error_um": -0.5140323461780838,
+  "error_ppm": -25.70161730890419,
+  "note": "deviation mean 20.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 5",
+  "measure": "length",
+  "value": 60.00623445109359,
+  "truth": 60.0,
+  "error_um": 6.23445109359011,
+  "error_ppm": 103.90751822650182,
+  "note": "deviation mean 20.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 5",
+  "measure": "robust_extent_length",
+  "value": 60.05742414947275,
+  "truth": 60.0,
+  "error_um": 57.42414947275165,
+  "error_ppm": 957.0691578791941,
+  "note": "deviation mean 20.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 5",
+  "measure": "robust_extent_diameter",
+  "value": 20.036371070658966,
+  "truth": 20.0,
+  "error_um": 36.37107065896572,
+  "error_ppm": 1818.5535329482861,
+  "note": "deviation mean 20.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 20",
+  "measure": "diameter",
+  "value": 19.999610229492298,
+  "truth": 20.0,
+  "error_um": -0.3897705077022806,
+  "error_ppm": -19.48852538511403,
+  "note": "deviation mean 21.2 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 20",
+  "measure": "length",
+  "value": 60.005935367018786,
+  "truth": 60.0,
+  "error_um": 5.935367018786053,
+  "error_ppm": 98.92278364643421,
+  "note": "deviation mean 21.2 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 20",
+  "measure": "robust_extent_length",
+  "value": 60.064099994506584,
+  "truth": 60.0,
+  "error_um": 64.09999450658432,
+  "error_ppm": 1068.3332417764054,
+  "note": "deviation mean 21.2 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson + taubin 20",
+  "measure": "robust_extent_diameter",
+  "value": 20.055510155308806,
+  "truth": 20.0,
+  "error_um": 55.510155308805764,
+  "error_ppm": 2775.5077654402885,
+  "note": "deviation mean 21.2 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh bpa",
+  "measure": "diameter",
+  "value": 20.015897819991814,
+  "truth": 20.0,
+  "error_um": 15.897819991813833,
+  "error_ppm": 794.8909995906916,
+  "note": "deviation mean 9.8 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh bpa",
+  "measure": "length",
+  "value": 60.01704232645465,
+  "truth": 60.0,
+  "error_um": 17.04232645464998,
+  "error_ppm": 284.03877424416635,
+  "note": "deviation mean 9.8 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh bpa",
+  "measure": "robust_extent_length",
+  "value": 60.13452791659047,
+  "truth": 60.0,
+  "error_um": 134.52791659047136,
+  "error_ppm": 2242.131943174523,
+  "note": "deviation mean 9.8 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh bpa",
+  "measure": "robust_extent_diameter",
+  "value": 20.120456351366325,
+  "truth": 20.0,
+  "error_um": 120.45635136632526,
+  "error_ppm": 6022.8175683162635,
+  "note": "deviation mean 9.8 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson of the approved merge",
+  "measure": "diameter",
+  "value": 19.999220611354826,
+  "truth": 20.0,
+  "error_um": -0.7793886451743504,
+  "error_ppm": -38.96943225871752,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson of the approved merge",
+  "measure": "length",
+  "value": 60.00271354174536,
+  "truth": 60.0,
+  "error_um": 2.7135417453578725,
+  "error_ppm": 45.225695755964544,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson of the approved merge",
+  "measure": "robust_extent_length",
+  "value": 60.06059802473057,
+  "truth": 60.0,
+  "error_um": 60.598024730566635,
+  "error_ppm": 1009.9670788427773,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh poisson of the approved merge",
+  "measure": "robust_extent_diameter",
+  "value": 20.033095129244764,
+  "truth": 20.0,
+  "error_um": 33.095129244763655,
+  "error_ppm": 1654.7564622381826,
+  "note": ""
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud denoise",
+  "measure": "diameter",
+  "value": 19.990712886396388,
+  "truth": 20.0,
+  "error_um": -9.28711360361234,
+  "error_ppm": -464.355680180617,
+  "note": "moved mean 24.5 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud denoise",
+  "measure": "length",
+  "value": 60.000195496425206,
+  "truth": 60.0,
+  "error_um": 0.19549642520644284,
+  "error_ppm": 3.258273753440714,
+  "note": "moved mean 24.5 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud denoise",
+  "measure": "robust_extent_length",
+  "value": 60.02295230770661,
+  "truth": 60.0,
+  "error_um": 22.952307706610497,
+  "error_ppm": 382.53846177684164,
+  "note": "moved mean 24.5 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud denoise",
+  "measure": "robust_extent_diameter",
+  "value": 20.010345187915643,
+  "truth": 20.0,
+  "error_um": 10.345187915643095,
+  "error_ppm": 517.2593957821547,
+  "note": "moved mean 24.5 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "diameter",
+  "value": 19.99977059850481,
+  "truth": 20.0,
+  "error_um": -0.22940149519001807,
+  "error_ppm": -11.470074759500903,
+  "note": "moved mean 22.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "length",
+  "value": 60.00028477648418,
+  "truth": 60.0,
+  "error_um": 0.2847764841789058,
+  "error_ppm": 4.746274736315096,
+  "note": "moved mean 22.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "robust_extent_length",
+  "value": 60.046095343758054,
+  "truth": 60.0,
+  "error_um": 46.09534375805424,
+  "error_ppm": 768.255729300904,
+  "note": "moved mean 22.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "robust_extent_diameter",
+  "value": 20.030501603496116,
+  "truth": 20.0,
+  "error_um": 30.501603496116303,
+  "error_ppm": 1525.080174805815,
+  "note": "moved mean 22.1 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "diameter",
+  "value": 19.997356636232357,
+  "truth": 20.0,
+  "error_um": -2.643363767642626,
+  "error_ppm": -132.1681883821313,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "length",
+  "value": 60.00036011244579,
+  "truth": 60.0,
+  "error_um": 0.36011244579015056,
+  "error_ppm": 6.001874096502509,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "robust_extent_length",
+  "value": 60.04381116875864,
+  "truth": 60.0,
+  "error_um": 43.81116875863711,
+  "error_ppm": 730.1861459772852,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "robust_extent_diameter",
+  "value": 20.026190839707034,
+  "truth": 20.0,
+  "error_um": 26.190839707034286,
+  "error_ppm": 1309.5419853517142,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud remove_spikes",
+  "measure": "diameter",
+  "value": 19.999873302609597,
+  "truth": 20.0,
+  "error_um": -0.12669739040305217,
+  "error_ppm": -6.334869520152608,
+  "note": "moved mean 0.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud remove_spikes",
+  "measure": "length",
+  "value": 59.99996972221616,
+  "truth": 60.0,
+  "error_um": -0.03027778384279145,
+  "error_ppm": -0.5046297307131908,
+  "note": "moved mean 0.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud remove_spikes",
+  "measure": "robust_extent_length",
+  "value": 60.15010101854003,
+  "truth": 60.0,
+  "error_um": 150.10101854002755,
+  "error_ppm": 2501.6836423337927,
+  "note": "moved mean 0.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "cloud remove_spikes",
+  "measure": "robust_extent_diameter",
+  "value": 20.105473473966807,
+  "truth": 20.0,
+  "error_um": 105.47347396680706,
+  "error_ppm": 5273.6736983403525,
+  "note": "moved mean 0.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x5",
+  "measure": "diameter",
+  "value": 19.999463184066556,
+  "truth": 20.0,
+  "error_um": -0.5368159334437905,
+  "error_ppm": -26.840796672189526,
+  "note": "moved mean 25.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x5",
+  "measure": "length",
+  "value": 60.005844798875096,
+  "truth": 60.0,
+  "error_um": 5.8447988750955915,
+  "error_ppm": 97.41331458492652,
+  "note": "moved mean 25.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x5",
+  "measure": "robust_extent_length",
+  "value": 60.05641037803338,
+  "truth": 60.0,
+  "error_um": 56.410378033376674,
+  "error_ppm": 940.1729672229446,
+  "note": "moved mean 25.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x5",
+  "measure": "robust_extent_diameter",
+  "value": 20.030421381318508,
+  "truth": 20.0,
+  "error_um": 30.421381318507912,
+  "error_ppm": 1521.0690659253958,
+  "note": "moved mean 25.3 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x20",
+  "measure": "diameter",
+  "value": 19.999721359874933,
+  "truth": 20.0,
+  "error_um": -0.27864012506739755,
+  "error_ppm": -13.932006253369877,
+  "note": "moved mean 32.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x20",
+  "measure": "length",
+  "value": 60.00585193327957,
+  "truth": 60.0,
+  "error_um": 5.851933279572563,
+  "error_ppm": 97.53222132620938,
+  "note": "moved mean 32.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x20",
+  "measure": "robust_extent_length",
+  "value": 60.05679849834655,
+  "truth": 60.0,
+  "error_um": 56.79849834655215,
+  "error_ppm": 946.6416391092025,
+  "note": "moved mean 32.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth taubin x20",
+  "measure": "robust_extent_diameter",
+  "value": 20.045972913525073,
+  "truth": 20.0,
+  "error_um": 45.97291352507327,
+  "error_ppm": 2298.6456762536636,
+  "note": "moved mean 32.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth laplacian x5",
+  "measure": "diameter",
+  "value": 19.997500952104534,
+  "truth": 20.0,
+  "error_um": -2.4990478954656226,
+  "error_ppm": -124.95239477328113,
+  "note": "moved mean 33.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth laplacian x5",
+  "measure": "length",
+  "value": 60.00548621600181,
+  "truth": 60.0,
+  "error_um": 5.4862160018132045,
+  "error_ppm": 91.43693336355341,
+  "note": "moved mean 33.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth laplacian x5",
+  "measure": "robust_extent_length",
+  "value": 60.053950165697415,
+  "truth": 60.0,
+  "error_um": 53.95016569741529,
+  "error_ppm": 899.1694282902547,
+  "note": "moved mean 33.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh smooth laplacian x5",
+  "measure": "robust_extent_diameter",
+  "value": 20.05099607013323,
+  "truth": 20.0,
+  "error_um": 50.996070133230376,
+  "error_ppm": 2549.803506661519,
+  "note": "moved mean 33.4 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh denoise x5",
+  "measure": "diameter",
+  "value": 19.99921307632833,
+  "truth": 20.0,
+  "error_um": -0.7869236716686601,
+  "error_ppm": -39.346183583433,
+  "note": "moved mean 7.7 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh denoise x5",
+  "measure": "length",
+  "value": 60.005386289631275,
+  "truth": 60.0,
+  "error_um": 5.386289631275076,
+  "error_ppm": 89.7714938545846,
+  "note": "moved mean 7.7 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh denoise x5",
+  "measure": "robust_extent_length",
+  "value": 60.03898985286469,
+  "truth": 60.0,
+  "error_um": 38.989852864688146,
+  "error_ppm": 649.8308810781358,
+  "note": "moved mean 7.7 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh denoise x5",
+  "measure": "robust_extent_diameter",
+  "value": 20.01587527998597,
+  "truth": 20.0,
+  "error_um": 15.875279985969826,
+  "error_ppm": 793.7639992984913,
+  "note": "moved mean 7.7 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh remove_spikes",
+  "measure": "diameter",
+  "value": 19.9993989481746,
+  "truth": 20.0,
+  "error_um": -0.6010518253987129,
+  "error_ppm": -30.052591269935647,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh remove_spikes",
+  "measure": "length",
+  "value": 60.006079285300174,
+  "truth": 60.0,
+  "error_um": 6.07928530017432,
+  "error_ppm": 101.32142166957199,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh remove_spikes",
+  "measure": "robust_extent_length",
+  "value": 60.05972494182109,
+  "truth": 60.0,
+  "error_um": 59.724941821087896,
+  "error_ppm": 995.4156970181315,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "mesh remove_spikes",
+  "measure": "robust_extent_diameter",
+  "value": 20.031567927966613,
+  "truth": 20.0,
+  "error_um": 31.567927966612785,
+  "error_ppm": 1578.3963983306392,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "cylinder",
+  "step": "two-point measure on the cloud",
+  "measure": "distance",
+  "error_um": 0.7593026743516607,
+  "spread_um": 47.9907030293481,
+  "worst_um": 206.55937952555448,
+  "note": "400 random opposite-point pairs"
+ },
+ {
+  "part": "cylinder",
+  "step": "two-point measure on the mesh",
+  "measure": "distance",
+  "error_um": -0.29772148346981275,
+  "spread_um": 15.199015298116528,
+  "worst_um": 59.63190982086175,
+  "note": "400 random opposite-point pairs"
+ },
+ {
+  "part": "box",
+  "step": "raw scan (outliers included)",
+  "measure": "length_x",
+  "value": 57.330680036925145,
+  "truth": 40.0,
+  "error_um": 17330.680036925143,
+  "error_ppm": 433267.0009231286,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "raw scan (outliers included)",
+  "measure": "length_y",
+  "value": 39.4083131542954,
+  "truth": 30.0,
+  "error_um": 9408.3131542954,
+  "error_ppm": 313610.4384765133,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "raw scan (outliers included)",
+  "measure": "length_z",
+  "value": 30.76646524916799,
+  "truth": 20.0,
+  "error_um": 10766.46524916799,
+  "error_ppm": 538323.2624583994,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "raw scan (outliers included)",
+  "measure": "robust_extents",
+  "value": 41.98244984484577,
+  "truth": 30.0,
+  "error_um": 11982.449844845767,
+  "error_ppm": 399414.9948281923,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "clean light",
+  "measure": "length_x",
+  "value": 39.99867414026536,
+  "truth": 40.0,
+  "error_um": -1.3258597346421652,
+  "error_ppm": -33.14649336605413,
+  "note": "subset=1.0000 removed=1.710%"
+ },
+ {
+  "part": "box",
+  "step": "clean light",
+  "measure": "length_y",
+  "value": 29.998917387092664,
+  "truth": 30.0,
+  "error_um": -1.0826129073358004,
+  "error_ppm": -36.08709691119335,
+  "note": "subset=1.0000 removed=1.710%"
+ },
+ {
+  "part": "box",
+  "step": "clean light",
+  "measure": "length_z",
+  "value": 19.99942682584712,
+  "truth": 20.0,
+  "error_um": -0.5731741528798295,
+  "error_ppm": -28.658707643991477,
+  "note": "subset=1.0000 removed=1.710%"
+ },
+ {
+  "part": "box",
+  "step": "clean light",
+  "measure": "robust_extents",
+  "value": 30.282199897925636,
+  "truth": 30.0,
+  "error_um": 282.1998979256364,
+  "error_ppm": 9406.663264187879,
+  "note": "subset=1.0000 removed=1.710%"
+ },
+ {
+  "part": "box",
+  "step": "clean standard",
+  "measure": "length_x",
+  "value": 39.998674845700535,
+  "truth": 40.0,
+  "error_um": -1.3251542994652254,
+  "error_ppm": -33.128857486630636,
+  "note": "subset=1.0000 removed=1.770%"
+ },
+ {
+  "part": "box",
+  "step": "clean standard",
+  "measure": "length_y",
+  "value": 29.998917370012403,
+  "truth": 30.0,
+  "error_um": -1.0826299875965617,
+  "error_ppm": -36.08766625321872,
+  "note": "subset=1.0000 removed=1.770%"
+ },
+ {
+  "part": "box",
+  "step": "clean standard",
+  "measure": "length_z",
+  "value": 19.99942676363892,
+  "truth": 20.0,
+  "error_um": -0.5732363610810864,
+  "error_ppm": -28.661818054054322,
+  "note": "subset=1.0000 removed=1.770%"
+ },
+ {
+  "part": "box",
+  "step": "clean standard",
+  "measure": "robust_extents",
+  "value": 30.277112833376957,
+  "truth": 30.0,
+  "error_um": 277.1128333769575,
+  "error_ppm": 9237.094445898581,
+  "note": "subset=1.0000 removed=1.770%"
+ },
+ {
+  "part": "box",
+  "step": "clean aggressive",
+  "measure": "length_x",
+  "value": 39.99855411820185,
+  "truth": 40.0,
+  "error_um": -1.4458817981477523,
+  "error_ppm": -36.14704495369381,
+  "note": "subset=1.0000 removed=8.930%"
+ },
+ {
+  "part": "box",
+  "step": "clean aggressive",
+  "measure": "length_y",
+  "value": 29.998789896427613,
+  "truth": 30.0,
+  "error_um": -1.2101035723866005,
+  "error_ppm": -40.336785746220016,
+  "note": "subset=1.0000 removed=8.930%"
+ },
+ {
+  "part": "box",
+  "step": "clean aggressive",
+  "measure": "length_z",
+  "value": 19.999378652362363,
+  "truth": 20.0,
+  "error_um": -0.62134763763666,
+  "error_ppm": -31.067381881833,
+  "note": "subset=1.0000 removed=8.930%"
+ },
+ {
+  "part": "box",
+  "step": "clean aggressive",
+  "measure": "robust_extents",
+  "value": 30.38450179257022,
+  "truth": 30.0,
+  "error_um": 384.50179257021944,
+  "error_ppm": 12816.726419007313,
+  "note": "subset=1.0000 removed=8.930%"
+ },
+ {
+  "part": "box",
+  "step": "on table: clean standard",
+  "measure": "height_above_table",
+  "value": 20.077699855490636,
+  "truth": 20.0,
+  "error_um": 77.69985549063563,
+  "error_ppm": 3884.9927745317814,
+  "note": "part on a table, bottom hidden; table kept, height measured from a plane fitted to it"
+ },
+ {
+  "part": "box",
+  "step": "on table: clean standard + remove_plane",
+  "measure": "height_extent_after_plane_removal",
+  "value": 19.831162817483403,
+  "truth": 20.0,
+  "error_um": -168.8371825165973,
+  "error_ppm": -8441.859125829866,
+  "note": "part on a table, bottom hidden; support plane removed (points within 3x spacing of it go too)"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (auto)",
+  "measure": "length_x",
+  "value": 39.558986393564716,
+  "truth": 40.0,
+  "error_um": -441.0136064352841,
+  "error_ppm": -11025.340160882102,
+  "note": "pose error 179.9994 deg, 0.8 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (auto)",
+  "measure": "length_y",
+  "value": 29.999507044400264,
+  "truth": 30.0,
+  "error_um": -0.49295559973572267,
+  "error_ppm": -16.431853324524088,
+  "note": "pose error 179.9994 deg, 0.8 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (auto)",
+  "measure": "length_z",
+  "value": 19.761932691383286,
+  "truth": 20.0,
+  "error_um": -238.06730861671355,
+  "error_ppm": -11903.365430835676,
+  "note": "pose error 179.9994 deg, 0.8 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (auto)",
+  "measure": "robust_extents",
+  "value": 31.888451673888444,
+  "truth": 30.0,
+  "error_um": 1888.4516738884436,
+  "error_ppm": 62948.389129614785,
+  "note": "pose error 179.9994 deg, 0.8 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (approved)",
+  "measure": "length_x",
+  "value": 39.99805141924054,
+  "truth": 40.0,
+  "error_um": -1.948580759460583,
+  "error_ppm": -48.71451898651458,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (approved)",
+  "measure": "length_y",
+  "value": 29.999503695267705,
+  "truth": 30.0,
+  "error_um": -0.4963047322945613,
+  "error_ppm": -16.543491076485374,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (approved)",
+  "measure": "length_z",
+  "value": 19.998680781141577,
+  "truth": 20.0,
+  "error_um": -1.3192188584234543,
+  "error_ppm": -65.96094292117272,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "box",
+  "step": "merge 2 views (approved)",
+  "measure": "robust_extents",
+  "value": 30.20726895663311,
+  "truth": 30.0,
+  "error_um": 207.2689566331114,
+  "error_ppm": 6908.965221103713,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "box",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "length_x",
+  "value": 40.04834008930936,
+  "truth": 40.0,
+  "error_um": 48.340089309363066,
+  "error_ppm": 1208.5022327340766,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "length_y",
+  "value": 30.049137725299577,
+  "truth": 30.0,
+  "error_um": 49.13772529957683,
+  "error_ppm": 1637.9241766525608,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "length_z",
+  "value": 20.048919419321756,
+  "truth": 20.0,
+  "error_um": 48.9194193217557,
+  "error_ppm": 2445.9709660877847,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "robust_extents",
+  "value": 30.27271890131887,
+  "truth": 30.0,
+  "error_um": 272.7189013188713,
+  "error_ppm": 9090.630043962377,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "length_x",
+  "value": 40.05974499541462,
+  "truth": 40.0,
+  "error_um": 59.74499541461853,
+  "error_ppm": 1493.6248853654633,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "length_y",
+  "value": 30.049703664680752,
+  "truth": 30.0,
+  "error_um": 49.70366468075227,
+  "error_ppm": 1656.7888226917423,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "length_z",
+  "value": 20.04954339914212,
+  "truth": 20.0,
+  "error_um": 49.54339914212014,
+  "error_ppm": 2477.1699571060067,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "robust_extents",
+  "value": 30.23409016885294,
+  "truth": 30.0,
+  "error_um": 234.09016885294065,
+  "error_ppm": 7803.005628431355,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson (trim)",
+  "measure": "length_x",
+  "value": 39.997093024354314,
+  "truth": 40.0,
+  "error_um": -2.906975645686316,
+  "error_ppm": -72.6743911421579,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson (trim)",
+  "measure": "length_y",
+  "value": 30.00377488963681,
+  "truth": 30.0,
+  "error_um": 3.7748896368086093,
+  "error_ppm": 125.82965456028698,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson (trim)",
+  "measure": "length_z",
+  "value": 19.99992724767523,
+  "truth": 20.0,
+  "error_um": -0.07275232476899873,
+  "error_ppm": -3.6376162384499366,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson (trim)",
+  "measure": "robust_extents",
+  "value": 30.135810411618518,
+  "truth": 30.0,
+  "error_um": 135.81041161851815,
+  "error_ppm": 4527.013720617271,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson watertight",
+  "measure": "length_x",
+  "value": 39.99696560146873,
+  "truth": 40.0,
+  "error_um": -3.034398531269744,
+  "error_ppm": -75.8599632817436,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson watertight",
+  "measure": "length_y",
+  "value": 30.00379783782765,
+  "truth": 30.0,
+  "error_um": 3.797837827651307,
+  "error_ppm": 126.59459425504356,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson watertight",
+  "measure": "length_z",
+  "value": 19.999987351567803,
+  "truth": 20.0,
+  "error_um": -0.012648432196726844,
+  "error_ppm": -0.6324216098363422,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson watertight",
+  "measure": "robust_extents",
+  "value": 30.097327051353677,
+  "truth": 30.0,
+  "error_um": 97.32705135367681,
+  "error_ppm": 3244.2350451225607,
+  "note": "deviation mean 16.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 5",
+  "measure": "length_x",
+  "value": 39.996870413508155,
+  "truth": 40.0,
+  "error_um": -3.1295864918448046,
+  "error_ppm": -78.23966229612012,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 5",
+  "measure": "length_y",
+  "value": 30.00400306346036,
+  "truth": 30.0,
+  "error_um": 4.003063460359613,
+  "error_ppm": 133.43544867865376,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 5",
+  "measure": "length_z",
+  "value": 19.99996348157535,
+  "truth": 20.0,
+  "error_um": -0.03651842465046684,
+  "error_ppm": -1.825921232523342,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 5",
+  "measure": "robust_extents",
+  "value": 30.11258209609831,
+  "truth": 30.0,
+  "error_um": 112.58209609831127,
+  "error_ppm": 3752.7365366103754,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 20",
+  "measure": "length_x",
+  "value": 39.99687360725647,
+  "truth": 40.0,
+  "error_um": -3.1263927435318806,
+  "error_ppm": -78.15981858829701,
+  "note": "deviation mean 20.8 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 20",
+  "measure": "length_y",
+  "value": 30.004322704135866,
+  "truth": 30.0,
+  "error_um": 4.322704135866218,
+  "error_ppm": 144.09013786220726,
+  "note": "deviation mean 20.8 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 20",
+  "measure": "length_z",
+  "value": 20.000032863174972,
+  "truth": 20.0,
+  "error_um": 0.03286317497241953,
+  "error_ppm": 1.6431587486209764,
+  "note": "deviation mean 20.8 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson + taubin 20",
+  "measure": "robust_extents",
+  "value": 30.08858303444386,
+  "truth": 30.0,
+  "error_um": 88.58303444386095,
+  "error_ppm": 2952.767814795365,
+  "note": "deviation mean 20.8 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh bpa",
+  "measure": "length_x",
+  "value": 40.01514141322814,
+  "truth": 40.0,
+  "error_um": 15.141413228143108,
+  "error_ppm": 378.5353307035777,
+  "note": "deviation mean 8.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh bpa",
+  "measure": "length_y",
+  "value": 30.01461496005372,
+  "truth": 30.0,
+  "error_um": 14.614960053719983,
+  "error_ppm": 487.1653351239994,
+  "note": "deviation mean 8.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh bpa",
+  "measure": "length_z",
+  "value": 20.015527349290778,
+  "truth": 20.0,
+  "error_um": 15.527349290778147,
+  "error_ppm": 776.3674645389074,
+  "note": "deviation mean 8.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh bpa",
+  "measure": "robust_extents",
+  "value": 30.45720230882732,
+  "truth": 30.0,
+  "error_um": 457.2023088273198,
+  "error_ppm": 15240.07696091066,
+  "note": "deviation mean 8.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson of the approved merge",
+  "measure": "length_x",
+  "value": 40.00945673024186,
+  "truth": 40.0,
+  "error_um": 9.456730241858224,
+  "error_ppm": 236.4182560464556,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson of the approved merge",
+  "measure": "length_y",
+  "value": 30.00020466915839,
+  "truth": 30.0,
+  "error_um": 0.20466915838923683,
+  "error_ppm": 6.822305279641228,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson of the approved merge",
+  "measure": "length_z",
+  "value": 19.99978333211734,
+  "truth": 20.0,
+  "error_um": -0.2166678826611701,
+  "error_ppm": -10.833394133058505,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "mesh poisson of the approved merge",
+  "measure": "robust_extents",
+  "value": 30.14941827868037,
+  "truth": 30.0,
+  "error_um": 149.4182786803684,
+  "error_ppm": 4980.609289345613,
+  "note": ""
+ },
+ {
+  "part": "box",
+  "step": "cloud denoise",
+  "measure": "length_x",
+  "value": 39.99943719025441,
+  "truth": 40.0,
+  "error_um": -0.5628097455883108,
+  "error_ppm": -14.070243639707769,
+  "note": "moved mean 25.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud denoise",
+  "measure": "length_y",
+  "value": 29.999623025650145,
+  "truth": 30.0,
+  "error_um": -0.37697434985517475,
+  "error_ppm": -12.56581166183916,
+  "note": "moved mean 25.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud denoise",
+  "measure": "length_z",
+  "value": 19.99988117663448,
+  "truth": 20.0,
+  "error_um": -0.11882336551849448,
+  "error_ppm": -5.941168275924724,
+  "note": "moved mean 25.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud denoise",
+  "measure": "robust_extents",
+  "value": 30.181392659575625,
+  "truth": 30.0,
+  "error_um": 181.392659575625,
+  "error_ppm": 6046.421985854167,
+  "note": "moved mean 25.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "length_x",
+  "value": 39.99954240312436,
+  "truth": 40.0,
+  "error_um": -0.45759687564128626,
+  "error_ppm": -11.439921891032157,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "length_y",
+  "value": 29.99974173687269,
+  "truth": 30.0,
+  "error_um": -0.25826312731069834,
+  "error_ppm": -8.608770910356611,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "length_z",
+  "value": 20.00007971971479,
+  "truth": 20.0,
+  "error_um": 0.07971971479037165,
+  "error_ppm": 3.9859857395185827,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "robust_extents",
+  "value": 30.19967472641639,
+  "truth": 30.0,
+  "error_um": 199.67472641639006,
+  "error_ppm": 6655.824213879669,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "length_x",
+  "value": 39.99973778603928,
+  "truth": 40.0,
+  "error_um": -0.26221396071690606,
+  "error_ppm": -6.5553490179226515,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "length_y",
+  "value": 29.999851445810926,
+  "truth": 30.0,
+  "error_um": -0.14855418907444573,
+  "error_ppm": -4.951806302481525,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "length_z",
+  "value": 20.000160946460287,
+  "truth": 20.0,
+  "error_um": 0.1609464602871924,
+  "error_ppm": 8.04732301435962,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "robust_extents",
+  "value": 30.198172475594976,
+  "truth": 30.0,
+  "error_um": 198.1724755949763,
+  "error_ppm": 6605.749186499211,
+  "note": "moved mean 21.0 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud remove_spikes",
+  "measure": "length_x",
+  "value": 39.998744770218316,
+  "truth": 40.0,
+  "error_um": -1.2552297816839086,
+  "error_ppm": -31.380744542097716,
+  "note": "moved mean 0.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud remove_spikes",
+  "measure": "length_y",
+  "value": 29.99890820097826,
+  "truth": 30.0,
+  "error_um": -1.0917990217400586,
+  "error_ppm": -36.39330072466862,
+  "note": "moved mean 0.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud remove_spikes",
+  "measure": "length_z",
+  "value": 19.99943489009238,
+  "truth": 20.0,
+  "error_um": -0.5651099076189325,
+  "error_ppm": -28.255495380946627,
+  "note": "moved mean 0.5 um"
+ },
+ {
+  "part": "box",
+  "step": "cloud remove_spikes",
+  "measure": "robust_extents",
+  "value": 30.275476207676704,
+  "truth": 30.0,
+  "error_um": 275.47620767670367,
+  "error_ppm": 9182.540255890122,
+  "note": "moved mean 0.5 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x5",
+  "measure": "length_x",
+  "value": 39.997198821922474,
+  "truth": 40.0,
+  "error_um": -2.80117807752589,
+  "error_ppm": -70.02945193814725,
+  "note": "moved mean 16.7 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x5",
+  "measure": "length_y",
+  "value": 30.004030173849713,
+  "truth": 30.0,
+  "error_um": 4.030173849713492,
+  "error_ppm": 134.3391283237831,
+  "note": "moved mean 16.7 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x5",
+  "measure": "length_z",
+  "value": 19.999954453467065,
+  "truth": 20.0,
+  "error_um": -0.045546532934537254,
+  "error_ppm": -2.2773266467268627,
+  "note": "moved mean 16.7 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x5",
+  "measure": "robust_extents",
+  "value": 30.179638752601125,
+  "truth": 30.0,
+  "error_um": 179.63875260112516,
+  "error_ppm": 5987.958420037506,
+  "note": "moved mean 16.7 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x20",
+  "measure": "length_x",
+  "value": 39.9973806881067,
+  "truth": 40.0,
+  "error_um": -2.619311893298004,
+  "error_ppm": -65.4827973324501,
+  "note": "moved mean 22.5 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x20",
+  "measure": "length_y",
+  "value": 30.004417215372204,
+  "truth": 30.0,
+  "error_um": 4.417215372203742,
+  "error_ppm": 147.2405124067914,
+  "note": "moved mean 22.5 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x20",
+  "measure": "length_z",
+  "value": 19.999909991795615,
+  "truth": 20.0,
+  "error_um": -0.09000820438487267,
+  "error_ppm": -4.5004102192436335,
+  "note": "moved mean 22.5 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth taubin x20",
+  "measure": "robust_extents",
+  "value": 30.127476906923288,
+  "truth": 30.0,
+  "error_um": 127.47690692328817,
+  "error_ppm": 4249.230230776272,
+  "note": "moved mean 22.5 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth laplacian x5",
+  "measure": "length_x",
+  "value": 39.99727093011768,
+  "truth": 40.0,
+  "error_um": -2.7290698823208004,
+  "error_ppm": -68.22674705802001,
+  "note": "moved mean 24.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth laplacian x5",
+  "measure": "length_y",
+  "value": 30.004636256925114,
+  "truth": 30.0,
+  "error_um": 4.636256925113713,
+  "error_ppm": 154.54189750379044,
+  "note": "moved mean 24.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth laplacian x5",
+  "measure": "length_z",
+  "value": 19.999526846398243,
+  "truth": 20.0,
+  "error_um": -0.47315360175659293,
+  "error_ppm": -23.657680087829647,
+  "note": "moved mean 24.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh smooth laplacian x5",
+  "measure": "robust_extents",
+  "value": 30.078423464997133,
+  "truth": 30.0,
+  "error_um": 78.42346499713315,
+  "error_ppm": 2614.1154999044384,
+  "note": "moved mean 24.6 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh denoise x5",
+  "measure": "length_x",
+  "value": 39.99800524098304,
+  "truth": 40.0,
+  "error_um": -1.9947590169593354,
+  "error_ppm": -49.868975423983386,
+  "note": "moved mean 7.9 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh denoise x5",
+  "measure": "length_y",
+  "value": 30.00571520667364,
+  "truth": 30.0,
+  "error_um": 5.715206673638562,
+  "error_ppm": 190.50688912128538,
+  "note": "moved mean 7.9 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh denoise x5",
+  "measure": "length_z",
+  "value": 19.9994765875899,
+  "truth": 20.0,
+  "error_um": -0.5234124101001214,
+  "error_ppm": -26.17062050500607,
+  "note": "moved mean 7.9 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh denoise x5",
+  "measure": "robust_extents",
+  "value": 30.14718060554253,
+  "truth": 30.0,
+  "error_um": 147.18060554253043,
+  "error_ppm": 4906.020184751014,
+  "note": "moved mean 7.9 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh remove_spikes",
+  "measure": "length_x",
+  "value": 39.99712490110685,
+  "truth": 40.0,
+  "error_um": -2.875098893149186,
+  "error_ppm": -71.87747232872965,
+  "note": "moved mean 0.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh remove_spikes",
+  "measure": "length_y",
+  "value": 30.003783954860296,
+  "truth": 30.0,
+  "error_um": 3.783954860296035,
+  "error_ppm": 126.13182867653448,
+  "note": "moved mean 0.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh remove_spikes",
+  "measure": "length_z",
+  "value": 20.000024601652548,
+  "truth": 20.0,
+  "error_um": 0.024601652548028596,
+  "error_ppm": 1.2300826274014298,
+  "note": "moved mean 0.4 um"
+ },
+ {
+  "part": "box",
+  "step": "mesh remove_spikes",
+  "measure": "robust_extents",
+  "value": 30.151669982845345,
+  "truth": 30.0,
+  "error_um": 151.66998284534472,
+  "error_ppm": 5055.666094844824,
+  "note": "moved mean 0.4 um"
+ },
+ {
+  "part": "box",
+  "step": "two-point measure on the cloud",
+  "measure": "distance",
+  "error_um": 6.7252613934624605,
+  "spread_um": 44.164038821966386,
+  "worst_um": 134.1901757753945,
+  "note": "400 random opposite-point pairs"
+ },
+ {
+  "part": "box",
+  "step": "two-point measure on the mesh",
+  "measure": "distance",
+  "error_um": -1.383066370912509,
+  "spread_um": 16.69799754539618,
+  "worst_um": 60.28551738020127,
+  "note": "400 random opposite-point pairs"
+ },
+ {
+  "part": "spheres",
+  "step": "raw scan (outliers included)",
+  "measure": "diameter_a",
+  "value": 19.999304961260492,
+  "truth": 20.0,
+  "error_um": -0.695038739507936,
+  "error_ppm": -34.7519369753968,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "raw scan (outliers included)",
+  "measure": "diameter_b",
+  "value": 19.999201807270605,
+  "truth": 20.0,
+  "error_um": -0.7981927293947422,
+  "error_ppm": -39.90963646973711,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "raw scan (outliers included)",
+  "measure": "centre_distance",
+  "value": 59.99970845280615,
+  "truth": 60.0,
+  "error_um": -0.2915471938464975,
+  "error_ppm": -4.859119897441626,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "clean light",
+  "measure": "diameter_a",
+  "value": 19.999305578064785,
+  "truth": 20.0,
+  "error_um": -0.6944219352149616,
+  "error_ppm": -34.72109676074808,
+  "note": "subset=1.0000 removed=0.970%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean light",
+  "measure": "diameter_b",
+  "value": 19.99920212437787,
+  "truth": 20.0,
+  "error_um": -0.7978756221298511,
+  "error_ppm": -39.893781106492554,
+  "note": "subset=1.0000 removed=0.970%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean light",
+  "measure": "centre_distance",
+  "value": 59.99970858963392,
+  "truth": 60.0,
+  "error_um": -0.2914103660813794,
+  "error_ppm": -4.856839434689657,
+  "note": "subset=1.0000 removed=0.970%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean standard",
+  "measure": "diameter_a",
+  "value": 19.999307092118023,
+  "truth": 20.0,
+  "error_um": -0.6929078819766232,
+  "error_ppm": -34.64539409883116,
+  "note": "subset=1.0000 removed=2.700%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean standard",
+  "measure": "diameter_b",
+  "value": 19.999202617572013,
+  "truth": 20.0,
+  "error_um": -0.7973824279865482,
+  "error_ppm": -39.86912139932741,
+  "note": "subset=1.0000 removed=2.700%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean standard",
+  "measure": "centre_distance",
+  "value": 59.99970606660632,
+  "truth": 60.0,
+  "error_um": -0.2939333936780031,
+  "error_ppm": -4.898889894633385,
+  "note": "subset=1.0000 removed=2.700%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean aggressive",
+  "measure": "diameter_a",
+  "value": 19.999262018600355,
+  "truth": 20.0,
+  "error_um": -0.7379813996450935,
+  "error_ppm": -36.89906998225467,
+  "note": "subset=1.0000 removed=9.170%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean aggressive",
+  "measure": "diameter_b",
+  "value": 19.999185010165746,
+  "truth": 20.0,
+  "error_um": -0.8149898342537654,
+  "error_ppm": -40.74949171268827,
+  "note": "subset=1.0000 removed=9.170%"
+ },
+ {
+  "part": "spheres",
+  "step": "clean aggressive",
+  "measure": "centre_distance",
+  "value": 59.99977577075335,
+  "truth": 60.0,
+  "error_um": -0.22422924664766697,
+  "error_ppm": -3.7371541107944495,
+  "note": "subset=1.0000 removed=9.170%"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (auto)",
+  "measure": "diameter_a",
+  "value": 19.99919234044898,
+  "truth": 20.0,
+  "error_um": -0.8076595510182472,
+  "error_ppm": -40.38297755091236,
+  "note": "pose error 179.9998 deg, 0.8 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (auto)",
+  "measure": "diameter_b",
+  "value": 19.999500842703362,
+  "truth": 20.0,
+  "error_um": -0.4991572966375202,
+  "error_ppm": -24.95786483187601,
+  "note": "pose error 179.9998 deg, 0.8 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (auto)",
+  "measure": "centre_distance",
+  "value": 59.999956676718554,
+  "truth": 60.0,
+  "error_um": -0.043323281445850625,
+  "error_ppm": -0.7220546907641772,
+  "note": "pose error 179.9998 deg, 0.8 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (approved)",
+  "measure": "diameter_a",
+  "value": 19.999412809227266,
+  "truth": 20.0,
+  "error_um": -0.5871907727339476,
+  "error_ppm": -29.35953863669738,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (approved)",
+  "measure": "diameter_b",
+  "value": 19.999775020312967,
+  "truth": 20.0,
+  "error_um": -0.2249796870330556,
+  "error_ppm": -11.24898435165278,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge 2 views (approved)",
+  "measure": "centre_distance",
+  "value": 59.9999978913494,
+  "truth": 60.0,
+  "error_um": -0.0021086505981315895,
+  "error_ppm": -0.03514417663552649,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "diameter_a",
+  "value": 20.049620336646893,
+  "truth": 20.0,
+  "error_um": 49.62033664689258,
+  "error_ppm": 2481.0168323446287,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "diameter_b",
+  "value": 20.049832039416643,
+  "truth": 20.0,
+  "error_um": 49.832039416642715,
+  "error_ppm": 2491.6019708321355,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "centre_distance",
+  "value": 59.99956514524345,
+  "truth": 60.0,
+  "error_um": -0.43485475654847505,
+  "error_ppm": -7.247579275807917,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "diameter_a",
+  "value": 20.050106757776447,
+  "truth": 20.0,
+  "error_um": 50.10675777644735,
+  "error_ppm": 2505.3378888223674,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "diameter_b",
+  "value": 20.050767346603138,
+  "truth": 20.0,
+  "error_um": 50.76734660313775,
+  "error_ppm": 2538.367330156888,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "centre_distance",
+  "value": 59.99941501802637,
+  "truth": 60.0,
+  "error_um": -0.5849819736312156,
+  "error_ppm": -9.74969956052026,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson (trim)",
+  "measure": "diameter_a",
+  "value": 19.99978976724982,
+  "truth": 20.0,
+  "error_um": -0.21023275018094978,
+  "error_ppm": -10.511637509047489,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson (trim)",
+  "measure": "diameter_b",
+  "value": 19.9998544071542,
+  "truth": 20.0,
+  "error_um": -0.14559284580073495,
+  "error_ppm": -7.2796422900367475,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson (trim)",
+  "measure": "centre_distance",
+  "value": 59.9997236169285,
+  "truth": 60.0,
+  "error_um": -0.2763830715011295,
+  "error_ppm": -4.606384525018825,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson watertight",
+  "measure": "diameter_a",
+  "value": 19.999925464278093,
+  "truth": 20.0,
+  "error_um": -0.07453572190740942,
+  "error_ppm": -3.7267860953704712,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson watertight",
+  "measure": "diameter_b",
+  "value": 19.999948710414543,
+  "truth": 20.0,
+  "error_um": -0.0512895854569706,
+  "error_ppm": -2.56447927284853,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson watertight",
+  "measure": "centre_distance",
+  "value": 59.99967721696708,
+  "truth": 60.0,
+  "error_um": -0.3227830329208814,
+  "error_ppm": -5.379717215348023,
+  "note": "deviation mean 16.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 5",
+  "measure": "diameter_a",
+  "value": 19.99981032344772,
+  "truth": 20.0,
+  "error_um": -0.1896765522815258,
+  "error_ppm": -9.48382761407629,
+  "note": "deviation mean 18.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 5",
+  "measure": "diameter_b",
+  "value": 19.999682393242647,
+  "truth": 20.0,
+  "error_um": -0.3176067573527064,
+  "error_ppm": -15.880337867635319,
+  "note": "deviation mean 18.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 5",
+  "measure": "centre_distance",
+  "value": 59.99964512198223,
+  "truth": 60.0,
+  "error_um": -0.35487801776667993,
+  "error_ppm": -5.9146336294446655,
+  "note": "deviation mean 18.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 20",
+  "measure": "diameter_a",
+  "value": 19.999930985254373,
+  "truth": 20.0,
+  "error_um": -0.06901474562681642,
+  "error_ppm": -3.450737281340821,
+  "note": "deviation mean 19.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 20",
+  "measure": "diameter_b",
+  "value": 19.999856998118094,
+  "truth": 20.0,
+  "error_um": -0.1430018819057466,
+  "error_ppm": -7.150094095287329,
+  "note": "deviation mean 19.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson + taubin 20",
+  "measure": "centre_distance",
+  "value": 59.999665858966,
+  "truth": 60.0,
+  "error_um": -0.3341410340027551,
+  "error_ppm": -5.569017233379251,
+  "note": "deviation mean 19.2 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh bpa",
+  "measure": "diameter_a",
+  "value": 20.01329768426645,
+  "truth": 20.0,
+  "error_um": 13.29768426645117,
+  "error_ppm": 664.8842133225585,
+  "note": "deviation mean 7.7 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh bpa",
+  "measure": "diameter_b",
+  "value": 20.01398305015016,
+  "truth": 20.0,
+  "error_um": 13.983050150159215,
+  "error_ppm": 699.1525075079608,
+  "note": "deviation mean 7.7 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh bpa",
+  "measure": "centre_distance",
+  "value": 59.999970545440895,
+  "truth": 60.0,
+  "error_um": -0.02945455910463579,
+  "error_ppm": -0.49090931841059654,
+  "note": "deviation mean 7.7 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson of the approved merge",
+  "measure": "diameter_a",
+  "value": 20.000097794560848,
+  "truth": 20.0,
+  "error_um": 0.09779456084757499,
+  "error_ppm": 4.889728042378749,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson of the approved merge",
+  "measure": "diameter_b",
+  "value": 20.000686823034744,
+  "truth": 20.0,
+  "error_um": 0.6868230347443216,
+  "error_ppm": 34.34115173721608,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "mesh poisson of the approved merge",
+  "measure": "centre_distance",
+  "value": 59.99975845605959,
+  "truth": 60.0,
+  "error_um": -0.2415439404117592,
+  "error_ppm": -4.025732340195987,
+  "note": ""
+ },
+ {
+  "part": "spheres",
+  "step": "cloud denoise",
+  "measure": "diameter_a",
+  "value": 19.98095452037384,
+  "truth": 20.0,
+  "error_um": -19.04547962616121,
+  "error_ppm": -952.2739813080606,
+  "note": "moved mean 24.4 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud denoise",
+  "measure": "diameter_b",
+  "value": 19.98070028662537,
+  "truth": 20.0,
+  "error_um": -19.29971337462888,
+  "error_ppm": -964.985668731444,
+  "note": "moved mean 24.4 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud denoise",
+  "measure": "centre_distance",
+  "value": 59.99955617574957,
+  "truth": 60.0,
+  "error_um": -0.44382425043210105,
+  "error_ppm": -7.397070840535017,
+  "note": "moved mean 24.4 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "diameter_a",
+  "value": 19.99906458465038,
+  "truth": 20.0,
+  "error_um": -0.9354153496197171,
+  "error_ppm": -46.77076748098585,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "diameter_b",
+  "value": 19.99900548909289,
+  "truth": 20.0,
+  "error_um": -0.994510907109003,
+  "error_ppm": -49.72554535545015,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "centre_distance",
+  "value": 59.99953454576201,
+  "truth": 60.0,
+  "error_um": -0.4654542379896043,
+  "error_ppm": -7.757570633160072,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "diameter_a",
+  "value": 19.994302295213995,
+  "truth": 20.0,
+  "error_um": -5.6977047860051755,
+  "error_ppm": -284.8852393002588,
+  "note": "moved mean 21.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "diameter_b",
+  "value": 19.994160516249885,
+  "truth": 20.0,
+  "error_um": -5.839483750115448,
+  "error_ppm": -291.9741875057724,
+  "note": "moved mean 21.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "centre_distance",
+  "value": 59.99961822034711,
+  "truth": 60.0,
+  "error_um": -0.38177965289065696,
+  "error_ppm": -6.362994214844283,
+  "note": "moved mean 21.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud remove_spikes",
+  "measure": "diameter_a",
+  "value": 19.99930874250251,
+  "truth": 20.0,
+  "error_um": -0.6912574974897723,
+  "error_ppm": -34.562874874488614,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud remove_spikes",
+  "measure": "diameter_b",
+  "value": 19.999199296371184,
+  "truth": 20.0,
+  "error_um": -0.8007036288155689,
+  "error_ppm": -40.035181440778445,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "cloud remove_spikes",
+  "measure": "centre_distance",
+  "value": 59.99971106891491,
+  "truth": 60.0,
+  "error_um": -0.2889310850875404,
+  "error_ppm": -4.81551808479234,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x5",
+  "measure": "diameter_a",
+  "value": 19.999865933149575,
+  "truth": 20.0,
+  "error_um": -0.1340668504248299,
+  "error_ppm": -6.703342521241495,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x5",
+  "measure": "diameter_b",
+  "value": 19.999820447544298,
+  "truth": 20.0,
+  "error_um": -0.17955245570178135,
+  "error_ppm": -8.977622785089068,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x5",
+  "measure": "centre_distance",
+  "value": 59.99963286899697,
+  "truth": 60.0,
+  "error_um": -0.36713100303131796,
+  "error_ppm": -6.118850050521966,
+  "note": "moved mean 22.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x20",
+  "measure": "diameter_a",
+  "value": 20.00011492698138,
+  "truth": 20.0,
+  "error_um": 0.11492698137871571,
+  "error_ppm": 5.7463490689357855,
+  "note": "moved mean 27.6 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x20",
+  "measure": "diameter_b",
+  "value": 20.000129581327023,
+  "truth": 20.0,
+  "error_um": 0.12958132702323155,
+  "error_ppm": 6.479066351161578,
+  "note": "moved mean 27.6 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth taubin x20",
+  "measure": "centre_distance",
+  "value": 59.99960630652596,
+  "truth": 60.0,
+  "error_um": -0.3936934740380593,
+  "error_ppm": -6.561557900634322,
+  "note": "moved mean 27.6 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth laplacian x5",
+  "measure": "diameter_a",
+  "value": 19.996983931626428,
+  "truth": 20.0,
+  "error_um": -3.016068373572267,
+  "error_ppm": -150.80341867861335,
+  "note": "moved mean 29.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth laplacian x5",
+  "measure": "diameter_b",
+  "value": 19.99688111474461,
+  "truth": 20.0,
+  "error_um": -3.118885255389614,
+  "error_ppm": -155.9442627694807,
+  "note": "moved mean 29.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh smooth laplacian x5",
+  "measure": "centre_distance",
+  "value": 59.99958359379742,
+  "truth": 60.0,
+  "error_um": -0.41640620258220906,
+  "error_ppm": -6.940103376370151,
+  "note": "moved mean 29.1 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh denoise x5",
+  "measure": "diameter_a",
+  "value": 19.999195529702842,
+  "truth": 20.0,
+  "error_um": -0.804470297158133,
+  "error_ppm": -40.22351485790665,
+  "note": "moved mean 6.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh denoise x5",
+  "measure": "diameter_b",
+  "value": 19.99913071471392,
+  "truth": 20.0,
+  "error_um": -0.8692852860789912,
+  "error_ppm": -43.46426430394956,
+  "note": "moved mean 6.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh denoise x5",
+  "measure": "centre_distance",
+  "value": 59.999601764389986,
+  "truth": 60.0,
+  "error_um": -0.3982356100138418,
+  "error_ppm": -6.637260166897363,
+  "note": "moved mean 6.5 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh remove_spikes",
+  "measure": "diameter_a",
+  "value": 19.999904603761642,
+  "truth": 20.0,
+  "error_um": -0.09539623835763678,
+  "error_ppm": -4.769811917881839,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh remove_spikes",
+  "measure": "diameter_b",
+  "value": 19.999873291458563,
+  "truth": 20.0,
+  "error_um": -0.12670854143692623,
+  "error_ppm": -6.335427071846311,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "spheres",
+  "step": "mesh remove_spikes",
+  "measure": "centre_distance",
+  "value": 59.99962847605006,
+  "truth": 60.0,
+  "error_um": -0.3715239499371137,
+  "error_ppm": -6.192065832285229,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "raw scan (outliers included)",
+  "measure": "pitch_ppm",
+  "value": 115.88375010074259,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 115.88375010074259,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "raw scan (outliers included)",
+  "measure": "major",
+  "value": 25.40235592041172,
+  "truth": 25.4,
+  "error_um": 2.3559204117198362,
+  "error_ppm": 92.75277211495418,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "raw scan (outliers included)",
+  "measure": "minor",
+  "value": 21.962842167491083,
+  "truth": 21.9630625,
+  "error_um": -0.22033250891695388,
+  "error_ppm": -10.031957470273277,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "raw scan (outliers included)",
+  "measure": "pitch_diameter",
+  "value": 23.55071855844764,
+  "truth": 23.3378375,
+  "error_um": 212.8810584476426,
+  "error_ppm": 9121.713117063337,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "clean light",
+  "measure": "pitch_ppm",
+  "value": -20.444414452480686,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -20.444414452480686,
+  "note": "subset=1.0000 removed=1.490%"
+ },
+ {
+  "part": "thread",
+  "step": "clean light",
+  "measure": "major",
+  "value": 25.40005239343506,
+  "truth": 25.4,
+  "error_um": 0.05239343506246996,
+  "error_ppm": 2.06273366387677,
+  "note": "subset=1.0000 removed=1.490%"
+ },
+ {
+  "part": "thread",
+  "step": "clean light",
+  "measure": "minor",
+  "value": 21.96255885673001,
+  "truth": 21.9630625,
+  "error_um": -0.503643269990306,
+  "error_ppm": -22.93137716975062,
+  "note": "subset=1.0000 removed=1.490%"
+ },
+ {
+  "part": "thread",
+  "step": "clean light",
+  "measure": "pitch_diameter",
+  "value": 23.33752094726828,
+  "truth": 23.3378375,
+  "error_um": -0.31655273171793397,
+  "error_ppm": -13.563927322655065,
+  "note": "subset=1.0000 removed=1.490%"
+ },
+ {
+  "part": "thread",
+  "step": "clean standard",
+  "measure": "pitch_ppm",
+  "value": -0.9796710813692044,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -0.9796710813692044,
+  "note": "subset=1.0000 removed=1.550%"
+ },
+ {
+  "part": "thread",
+  "step": "clean standard",
+  "measure": "major",
+  "value": 25.399961291044278,
+  "truth": 25.4,
+  "error_um": -0.038708955720778704,
+  "error_ppm": -1.523974634676327,
+  "note": "subset=1.0000 removed=1.550%"
+ },
+ {
+  "part": "thread",
+  "step": "clean standard",
+  "measure": "minor",
+  "value": 21.962591016758537,
+  "truth": 21.9630625,
+  "error_um": -0.4714832414620673,
+  "error_ppm": -21.467099201765116,
+  "note": "subset=1.0000 removed=1.550%"
+ },
+ {
+  "part": "thread",
+  "step": "clean standard",
+  "measure": "pitch_diameter",
+  "value": 23.337686521379304,
+  "truth": 23.3378375,
+  "error_um": -0.15097862069524126,
+  "error_ppm": -6.469263516606509,
+  "note": "subset=1.0000 removed=1.550%"
+ },
+ {
+  "part": "thread",
+  "step": "clean aggressive",
+  "measure": "pitch_ppm",
+  "value": -9.291752184226176,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -9.291752184226176,
+  "note": "subset=1.0000 removed=8.690%"
+ },
+ {
+  "part": "thread",
+  "step": "clean aggressive",
+  "measure": "major",
+  "value": 25.399462209267046,
+  "truth": 25.4,
+  "error_um": -0.5377907329524589,
+  "error_ppm": -21.17286350206531,
+  "note": "subset=1.0000 removed=8.690%"
+ },
+ {
+  "part": "thread",
+  "step": "clean aggressive",
+  "measure": "minor",
+  "value": 21.962005669670695,
+  "truth": 21.9630625,
+  "error_um": -1.056830329304148,
+  "error_ppm": -48.11853216299631,
+  "note": "subset=1.0000 removed=8.690%"
+ },
+ {
+  "part": "thread",
+  "step": "clean aggressive",
+  "measure": "pitch_diameter",
+  "value": 23.337969704906826,
+  "truth": 23.3378375,
+  "error_um": 0.1322049068264164,
+  "error_ppm": 5.664831063564326,
+  "note": "subset=1.0000 removed=8.690%"
+ },
+ {
+  "part": "thread",
+  "step": "single view (one flank)",
+  "measure": "pitch_ppm",
+  "value": 12.399707466581589,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 12.399707466581589,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "single view (one flank)",
+  "measure": "major",
+  "value": 25.400317687644428,
+  "truth": 25.4,
+  "error_um": 0.31768764442929864,
+  "error_ppm": 12.50738757595664,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "single view (one flank)",
+  "measure": "minor",
+  "value": 21.963508540751533,
+  "truth": 21.9630625,
+  "error_um": 0.44604075153387157,
+  "error_ppm": 20.308677423008362,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (auto)",
+  "measure": "pitch_ppm",
+  "value": -6.317541928257953,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -6.317541928257953,
+  "note": "pose error 179.9993 deg, 97.9 um; flagged ambiguous"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (auto)",
+  "measure": "major",
+  "value": 25.39995308451586,
+  "truth": 25.4,
+  "error_um": -0.046915484137599606,
+  "error_ppm": -1.8470663046299058,
+  "note": "pose error 179.9993 deg, 97.9 um; flagged ambiguous"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (auto)",
+  "measure": "minor",
+  "value": 21.96352051583201,
+  "truth": 21.9630625,
+  "error_um": 0.45801583200955065,
+  "error_ppm": 20.853914703814674,
+  "note": "pose error 179.9993 deg, 97.9 um; flagged ambiguous"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (approved)",
+  "measure": "pitch_ppm",
+  "value": 10.426577641053925,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 10.426577641053925,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (approved)",
+  "measure": "major",
+  "value": 25.400536906565222,
+  "truth": 25.4,
+  "error_um": 0.5369065652232052,
+  "error_ppm": 21.13805374894509,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (approved)",
+  "measure": "minor",
+  "value": 21.963765032156715,
+  "truth": 21.9630625,
+  "error_um": 0.7025321567155629,
+  "error_ppm": 31.98698527200216,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "merge 2 views (approved)",
+  "measure": "pitch_diameter",
+  "value": 23.33580718113137,
+  "truth": 23.3378375,
+  "error_um": -2.0303188686305873,
+  "error_ppm": -86.99687229506964,
+  "note": "pose error 0.0000 deg, 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B placed 0.05 mm off along the axis",
+  "measure": "pitch_ppm",
+  "value": 4.512898826858347,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 4.512898826858347,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B placed 0.05 mm off along the axis",
+  "measure": "major",
+  "value": 25.400189693146302,
+  "truth": 25.4,
+  "error_um": 0.18969314630368217,
+  "error_ppm": 7.46823410644418,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B placed 0.05 mm off along the axis",
+  "measure": "minor",
+  "value": 21.963817366577125,
+  "truth": 21.9630625,
+  "error_um": 0.7548665771253127,
+  "error_ppm": 34.36982329423835,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B placed 0.05 mm off along the axis",
+  "measure": "pitch_diameter",
+  "value": 23.250934599269584,
+  "truth": 23.3378375,
+  "error_um": -86.90290073041496,
+  "error_ppm": -3723.6912259079254,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "pitch_ppm",
+  "value": -14.292799348503138,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -14.292799348503138,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "major",
+  "value": 25.44984681772175,
+  "truth": 25.4,
+  "error_um": 49.84681772175037,
+  "error_ppm": 1962.4731386515896,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "minor",
+  "value": 22.0142523209122,
+  "truth": 21.9630625,
+  "error_um": 51.18982091219948,
+  "error_ppm": 2330.723272867774,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "merge, view B 0.05 mm thicker (doubled skin)",
+  "measure": "pitch_diameter",
+  "value": 23.43418627557235,
+  "truth": 23.3378375,
+  "error_um": 96.348775572352,
+  "error_ppm": 4128.436303164422,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "pitch_ppm",
+  "value": 31.828447920601022,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 31.828447920601022,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "major",
+  "value": 25.45193782174644,
+  "truth": 25.4,
+  "error_um": 51.937821746442125,
+  "error_ppm": 2044.79613174969,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "minor",
+  "value": 22.008079695782598,
+  "truth": 21.9630625,
+  "error_um": 45.01719578259866,
+  "error_ppm": 2049.677533932195,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "  -> poisson mesh of the doubled skin",
+  "measure": "pitch_diameter",
+  "value": 23.430984446660556,
+  "truth": 23.3378375,
+  "error_um": 93.146946660557,
+  "error_ppm": 3991.241547575135,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson (trim)",
+  "measure": "pitch_ppm",
+  "value": 29.582955866302996,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 29.582955866302996,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson (trim)",
+  "measure": "major",
+  "value": 25.408270671784116,
+  "truth": 25.4,
+  "error_um": 8.270671784117667,
+  "error_ppm": 325.6169993747113,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson (trim)",
+  "measure": "minor",
+  "value": 21.947473457224355,
+  "truth": 21.9630625,
+  "error_um": -15.589042775644657,
+  "error_ppm": -709.7845655925561,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson (trim)",
+  "measure": "pitch_diameter",
+  "value": 23.33359744511113,
+  "truth": 23.3378375,
+  "error_um": -4.240054888867917,
+  "error_ppm": -181.6815670632687,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson watertight",
+  "measure": "pitch_ppm",
+  "value": 72.31713124555839,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 72.31713124555839,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson watertight",
+  "measure": "major",
+  "value": 25.408480569323874,
+  "truth": 25.4,
+  "error_um": 8.480569323875642,
+  "error_ppm": 333.8806820423481,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson watertight",
+  "measure": "minor",
+  "value": 21.94796764486769,
+  "truth": 21.9630625,
+  "error_um": -15.094855132311125,
+  "error_ppm": -687.2837124745753,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson watertight",
+  "measure": "pitch_diameter",
+  "value": 23.321850383332105,
+  "truth": 23.3378375,
+  "error_um": -15.987116667893986,
+  "error_ppm": -685.0299076722076,
+  "note": "deviation mean 19.3 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 5",
+  "measure": "pitch_ppm",
+  "value": 29.233150298013655,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 29.233150298013655,
+  "note": "deviation mean 20.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 5",
+  "measure": "major",
+  "value": 25.40896756239447,
+  "truth": 25.4,
+  "error_um": 8.967562394470718,
+  "error_ppm": 353.0536375775873,
+  "note": "deviation mean 20.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 5",
+  "measure": "minor",
+  "value": 21.94628697929302,
+  "truth": 21.9630625,
+  "error_um": -16.775520706978853,
+  "error_ppm": -763.8060815507333,
+  "note": "deviation mean 20.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 5",
+  "measure": "pitch_diameter",
+  "value": 23.332801173885162,
+  "truth": 23.3378375,
+  "error_um": -5.036326114836953,
+  "error_ppm": -215.8008904996855,
+  "note": "deviation mean 20.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 20",
+  "measure": "pitch_ppm",
+  "value": 25.37287404758004,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 25.37287404758004,
+  "note": "deviation mean 21.8 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 20",
+  "measure": "major",
+  "value": 25.409772821939157,
+  "truth": 25.4,
+  "error_um": 9.772821939158405,
+  "error_ppm": 384.75676925820494,
+  "note": "deviation mean 21.8 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 20",
+  "measure": "minor",
+  "value": 21.94083781695243,
+  "truth": 21.9630625,
+  "error_um": -22.224683047568305,
+  "error_ppm": -1011.9118427845983,
+  "note": "deviation mean 21.8 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson + taubin 20",
+  "measure": "pitch_diameter",
+  "value": 23.332915565694776,
+  "truth": 23.3378375,
+  "error_um": -4.921934305222919,
+  "error_ppm": -210.89933054949583,
+  "note": "deviation mean 21.8 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh bpa",
+  "measure": "pitch_ppm",
+  "value": 3.727433022016058,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 3.727433022016058,
+  "note": "deviation mean 14.6 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh bpa",
+  "measure": "major",
+  "value": 25.407937181266792,
+  "truth": 25.4,
+  "error_um": 7.937181266793658,
+  "error_ppm": 312.48745144856923,
+  "note": "deviation mean 14.6 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh bpa",
+  "measure": "minor",
+  "value": 21.97951895430359,
+  "truth": 21.9630625,
+  "error_um": 16.456454303590107,
+  "error_ppm": 749.278672024455,
+  "note": "deviation mean 14.6 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh bpa",
+  "measure": "pitch_diameter",
+  "value": 23.367409091226833,
+  "truth": 23.3378375,
+  "error_um": 29.571591226833505,
+  "error_ppm": 1267.1093123702444,
+  "note": "deviation mean 14.6 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson of the approved merge",
+  "measure": "pitch_ppm",
+  "value": 25.655981459760113,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 25.655981459760113,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson of the approved merge",
+  "measure": "major",
+  "value": 25.402353097042734,
+  "truth": 25.4,
+  "error_um": 2.3530970427358966,
+  "error_ppm": 92.64161585574396,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson of the approved merge",
+  "measure": "minor",
+  "value": 21.9588331912318,
+  "truth": 21.9630625,
+  "error_um": -4.229308768199047,
+  "error_ppm": -192.56461926468802,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "mesh poisson of the approved merge",
+  "measure": "pitch_diameter",
+  "value": 23.331218959915628,
+  "truth": 23.3378375,
+  "error_um": -6.61854008437146,
+  "error_ppm": -283.5969735572741,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "cloud denoise",
+  "measure": "pitch_ppm",
+  "value": -6.427825789856456,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -6.427825789856456,
+  "note": "moved mean 40.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud denoise",
+  "measure": "major",
+  "value": 25.269274945641357,
+  "truth": 25.4,
+  "error_um": -130.725054358642,
+  "error_ppm": -5146.6556834111025,
+  "note": "moved mean 40.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud denoise",
+  "measure": "minor",
+  "value": 22.001028561682958,
+  "truth": 21.9630625,
+  "error_um": 37.96606168295824,
+  "error_ppm": 1728.6324110291196,
+  "note": "moved mean 40.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud denoise",
+  "measure": "pitch_diameter",
+  "value": 23.331888589269173,
+  "truth": 23.3378375,
+  "error_um": -5.948910730825929,
+  "error_ppm": -254.90411143817116,
+  "note": "moved mean 40.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "pitch_ppm",
+  "value": -2.792697018194623,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -2.792697018194623,
+  "note": "moved mean 23.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "major",
+  "value": 25.407397376498523,
+  "truth": 25.4,
+  "error_um": 7.397376498524011,
+  "error_ppm": 291.23529521748077,
+  "note": "moved mean 23.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "minor",
+  "value": 21.955021736282617,
+  "truth": 21.9630625,
+  "error_um": -8.040763717382049,
+  "error_ppm": -366.1039400758455,
+  "note": "moved mean 23.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth (MLS quadratic)",
+  "measure": "pitch_diameter",
+  "value": 23.337948863968194,
+  "truth": 23.3378375,
+  "error_um": 0.11136396819466654,
+  "error_ppm": 4.771820362305057,
+  "note": "moved mean 23.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "pitch_ppm",
+  "value": -2.9193890566103775,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -2.9193890566103775,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "major",
+  "value": 25.392384447653008,
+  "truth": 25.4,
+  "error_um": -7.615552346990739,
+  "error_ppm": -299.8248955508165,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "minor",
+  "value": 21.960768641787183,
+  "truth": 21.9630625,
+  "error_um": -2.2938582128162466,
+  "error_ppm": -104.44163753648867,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud smooth_points (plane MLS)",
+  "measure": "pitch_diameter",
+  "value": 23.334589800599495,
+  "truth": 23.3378375,
+  "error_um": -3.247699400503734,
+  "error_ppm": -139.16025426536345,
+  "note": "moved mean 22.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud remove_spikes",
+  "measure": "pitch_ppm",
+  "value": -0.7024976170777464,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -0.7024976170777464,
+  "note": "moved mean 0.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud remove_spikes",
+  "measure": "major",
+  "value": 25.40000798467669,
+  "truth": 25.4,
+  "error_um": 0.007984676692274206,
+  "error_ppm": 0.3143573500895357,
+  "note": "moved mean 0.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud remove_spikes",
+  "measure": "minor",
+  "value": 21.962582961797327,
+  "truth": 21.9630625,
+  "error_um": -0.4795382026721029,
+  "error_ppm": -21.833849567750534,
+  "note": "moved mean 0.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "cloud remove_spikes",
+  "measure": "pitch_diameter",
+  "value": 23.337498789767693,
+  "truth": 23.3378375,
+  "error_um": -0.3387102323060276,
+  "error_ppm": -14.513351217996423,
+  "note": "moved mean 0.2 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x5",
+  "measure": "pitch_ppm",
+  "value": 21.75799178272264,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 21.75799178272264,
+  "note": "moved mean 27.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x5",
+  "measure": "major",
+  "value": 25.40935373106126,
+  "truth": 25.4,
+  "error_um": 9.353731061260362,
+  "error_ppm": 368.2571283960773,
+  "note": "moved mean 27.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x5",
+  "measure": "minor",
+  "value": 21.945348469847392,
+  "truth": 21.9630625,
+  "error_um": -17.714030152607307,
+  "error_ppm": -806.5373466294742,
+  "note": "moved mean 27.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x5",
+  "measure": "pitch_diameter",
+  "value": 23.332832822207777,
+  "truth": 23.3378375,
+  "error_um": -5.004677792221912,
+  "error_ppm": -214.44479559093304,
+  "note": "moved mean 27.7 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x20",
+  "measure": "pitch_ppm",
+  "value": 23.59967725373835,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 23.59967725373835,
+  "note": "moved mean 34.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x20",
+  "measure": "major",
+  "value": 25.414681093405935,
+  "truth": 25.4,
+  "error_um": 14.681093405936707,
+  "error_ppm": 577.995803383335,
+  "note": "moved mean 34.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x20",
+  "measure": "minor",
+  "value": 21.93738440651357,
+  "truth": 21.9630625,
+  "error_um": -25.678093486430242,
+  "error_ppm": -1169.1490422353552,
+  "note": "moved mean 34.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth taubin x20",
+  "measure": "pitch_diameter",
+  "value": 23.33325539390777,
+  "truth": 23.3378375,
+  "error_um": -4.58210609222931,
+  "error_ppm": -196.33807512068373,
+  "note": "moved mean 34.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth laplacian x5",
+  "measure": "pitch_ppm",
+  "value": 29.346685022524355,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 29.346685022524355,
+  "note": "moved mean 37.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth laplacian x5",
+  "measure": "major",
+  "value": 25.358642012453075,
+  "truth": 25.4,
+  "error_um": -41.35798754692388,
+  "error_ppm": -1628.2672262568458,
+  "note": "moved mean 37.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth laplacian x5",
+  "measure": "minor",
+  "value": 21.953389020847748,
+  "truth": 21.9630625,
+  "error_um": -9.673479152251474,
+  "error_ppm": -440.4430917706251,
+  "note": "moved mean 37.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh smooth laplacian x5",
+  "measure": "pitch_diameter",
+  "value": 23.332544790571152,
+  "truth": 23.3378375,
+  "error_um": -5.2927094288470755,
+  "error_ppm": -226.78662617507194,
+  "note": "moved mean 37.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh denoise x5",
+  "measure": "pitch_ppm",
+  "value": 20.532151077112815,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 20.532151077112815,
+  "note": "moved mean 9.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh denoise x5",
+  "measure": "major",
+  "value": 25.38637596427113,
+  "truth": 25.4,
+  "error_um": -13.624035728867057,
+  "error_ppm": -536.3793594042148,
+  "note": "moved mean 9.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh denoise x5",
+  "measure": "minor",
+  "value": 21.92923131011893,
+  "truth": 21.9630625,
+  "error_um": -33.831189881070145,
+  "error_ppm": -1540.3676004232173,
+  "note": "moved mean 9.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh denoise x5",
+  "measure": "pitch_diameter",
+  "value": 23.332368037378735,
+  "truth": 23.3378375,
+  "error_um": -5.469462621263688,
+  "error_ppm": -234.36030100319655,
+  "note": "moved mean 9.9 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh remove_spikes",
+  "measure": "pitch_ppm",
+  "value": 29.582955866302996,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 29.582955866302996,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh remove_spikes",
+  "measure": "major",
+  "value": 25.408270671784116,
+  "truth": 25.4,
+  "error_um": 8.270671784117667,
+  "error_ppm": 325.6169993747113,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh remove_spikes",
+  "measure": "minor",
+  "value": 21.947473457224355,
+  "truth": 21.9630625,
+  "error_um": -15.589042775644657,
+  "error_ppm": -709.7845655925561,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "mesh remove_spikes",
+  "measure": "pitch_diameter",
+  "value": 23.33359744511113,
+  "truth": 23.3378375,
+  "error_um": -4.240054888867917,
+  "error_ppm": -181.6815670632687,
+  "note": "moved mean 0.0 um"
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: random sampling",
+  "measure": "pitch_ppm",
+  "value": -25.22845219621317,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -25.22845219621317,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: random sampling",
+  "measure": "major",
+  "value": 25.40814489552038,
+  "truth": 25.4,
+  "error_um": 8.144895520381112,
+  "error_ppm": 320.66517796776037,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: random sampling",
+  "measure": "minor",
+  "value": 21.949466366499923,
+  "truth": 21.9630625,
+  "error_um": -13.59613350007649,
+  "error_ppm": -619.0454313953935,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: Revo-like voxel sampling",
+  "measure": "pitch_ppm",
+  "value": 26.05034797897865,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": 26.05034797897865,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: Revo-like voxel sampling",
+  "measure": "major",
+  "value": 25.40996667236616,
+  "truth": 25.4,
+  "error_um": 9.966672366161333,
+  "error_ppm": 392.3886758331234,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: Revo-like voxel sampling",
+  "measure": "minor",
+  "value": 21.949449989790033,
+  "truth": 21.9630625,
+  "error_um": -13.6125102099669,
+  "error_ppm": -619.7910792252628,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit (accuracy.fit_thread): Revo-like sampling",
+  "measure": "pitch_ppm",
+  "value": -7.778063011554259,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -7.778063011554259,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit (accuracy.fit_thread): Revo-like sampling",
+  "measure": "major",
+  "value": 25.404515214325706,
+  "truth": 25.4,
+  "error_um": 4.5152143257070065,
+  "error_ppm": 177.7643435317719,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit (accuracy.fit_thread): Revo-like sampling",
+  "measure": "minor",
+  "value": 21.964118320072494,
+  "truth": 21.9630625,
+  "error_um": 1.0558200724943845,
+  "error_ppm": 48.07253416933019,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit (accuracy.fit_thread): Revo-like sampling",
+  "measure": "pitch_diameter",
+  "value": 23.339323202731162,
+  "truth": 23.3378375,
+  "error_um": 1.4857027311627746,
+  "error_ppm": 63.66068540681092,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "app thread tool: one flank visible",
+  "measure": "error",
+  "note": "No thread found: only 0 complete crest(s) in the selection - select at least three threads"
+ },
+ {
+  "part": "thread",
+  "step": "helix fit: one flank visible",
+  "measure": "pitch_ppm",
+  "value": -18.269430532846798,
+  "truth": 0.0,
+  "error_um": null,
+  "error_ppm": -18.269430532846798,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit: one flank visible",
+  "measure": "major",
+  "value": 25.184213022830498,
+  "truth": 25.4,
+  "error_um": -215.78697716950046,
+  "error_ppm": -8495.550282263799,
+  "note": ""
+ },
+ {
+  "part": "thread",
+  "step": "helix fit: one flank visible",
+  "measure": "minor",
+  "value": 22.16687956507103,
+  "truth": 21.9630625,
+  "error_um": 203.81706507103203,
+  "error_ppm": 9279.992945930562,
+  "note": ""
+ }
+]
