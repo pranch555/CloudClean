@@ -1,0 +1,35 @@
+{
+ "03264af7e9f5": {
+  "method": "helix fit",
+  "pitch": 3.1765007620892494,
+  "major_diameter": 25.07845819427854,
+  "minor_diameter": 21.30481395793671,
+  "pitch_diameter": null,
+  "flank_angle_deg": null,
+  "crest_count": 21,
+  "confidence": "medium",
+  "missing_flank": "+axis"
+ },
+ "ecce23d3a40c": {
+  "method": "helix fit",
+  "pitch": 3.1774924270743923,
+  "major_diameter": 25.09577321368024,
+  "minor_diameter": 21.206661264913308,
+  "pitch_diameter": null,
+  "flank_angle_deg": null,
+  "crest_count": 21,
+  "confidence": "medium",
+  "missing_flank": "+axis"
+ },
+ "36a13a3e43aa": {
+  "method": "crest by crest",
+  "pitch": 3.17740819085753,
+  "major_diameter": 25.145927671315135,
+  "minor_diameter": 21.22396671203119,
+  "pitch_diameter": 23.520068877348844,
+  "flank_angle_deg": 56.39108975760017,
+  "crest_count": 20,
+  "confidence": "high",
+  "missing_flank": null
+ }
+}

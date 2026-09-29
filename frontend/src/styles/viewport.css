@@ -1,0 +1,873 @@
+/* ============================================================ stage */
+.stage {
+  position: relative;
+  overflow: hidden;
+  container: stage / size;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  background:
+    radial-gradient(120% 90% at 50% 30%, var(--vp-top) 0%, var(--vp-bottom) 100%);
+  min-width: 0;
+  min-height: 0;
+}
+
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--paper-grain);
+  background-size: 3px 3px;
+  pointer-events: none;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.viewport-canvas {
+  position: absolute;
+  display: block;
+  touch-action: none;
+}
+
+.viewport.tool-box .viewport-canvas,
+.viewport.tool-lasso .viewport-canvas {
+  cursor: crosshair;
+}
+
+.viewport.tool-measure .viewport-canvas,
+.viewport.tool-pivot .viewport-canvas {
+  cursor: cell;
+}
+
+.viewport.tool-brush .viewport-canvas {
+  cursor: none;
+}
+
+/* ---- floating HUD surfaces */
+.hud {
+  position: absolute;
+  z-index: var(--z-hud);
+  background: var(--hud-bg);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--hud-line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-2);
+}
+
+/* ---- size readout (caliper display) */
+.size-tag {
+  top: 14px;
+  left: 14px;
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px 10px;
+  min-width: min(300px, calc(100% - 150px));
+  max-width: min(480px, calc(100% - 150px));
+}
+
+.size-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  min-width: 0;
+}
+
+.size-head .truncate {
+  color: var(--ink-2);
+}
+
+.size-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.size-dim {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.size-axis {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.size-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+}
+
+.size-unit {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.size-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.size-foot .segmented {
+  padding: 2px;
+  flex: none;
+}
+
+.size-foot .segmented button {
+  flex: none;
+}
+
+.size-foot .segmented button {
+  height: 24px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+/* ---- tool rail (left) */
+/* both rails stop above the ask bar's lane at the bottom and scroll if the view is too short for them */
+.tool-rail {
+  top: max(196px, calc(50% - 170px));
+  left: 14px;
+  max-height: calc(100% - max(196px, calc(50% - 170px)) - 84px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 6px;
+}
+
+.tool-rail .icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.tool-rail .rail-sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--line);
+}
+
+
+/* ---- view controls (right, under the view cube) */
+.view-rail {
+  top: 132px;
+  right: 14px;
+  max-height: calc(100% - 132px - 84px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 6px;
+}
+
+.view-rail .icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+
+.rec-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+.icon-btn.is-recording {
+  background: var(--signal-soft);
+}
+
+.icon-btn.is-recording .rec-dot {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.view-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+}
+
+.view-btn {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 10px 6px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.view-btn:hover {
+  background: var(--surface-hover);
+}
+
+.kbd-soft {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+/* ---- top-centre banners */
+/* centred with auto margins, not left: 50% (which would also cap the width at half the view) */
+.banner-stack {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: fit-content;
+  z-index: var(--z-hud);
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: min(720px, calc(100% - 640px));
+  pointer-events: none;
+}
+
+.banner-stack > .banner {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.banner-stack > .banner .truncate {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.banner-stack > * {
+  pointer-events: auto;
+  position: relative;
+}
+
+/* a narrower 3D view: banners move below the view cube's row, above the ask bar */
+@container stage (max-width: 1100px) {
+  .banner-stack {
+    top: auto;
+    bottom: 92px;
+    max-width: calc(100% - 140px);
+  }
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+  animation: rise var(--dur-2) var(--ease) both;
+}
+
+.banner .muted {
+  font-weight: 450;
+}
+
+.banner-ink {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: transparent;
+}
+
+.banner-ink .btn-ghost {
+  color: var(--ink-on-primary);
+  opacity: 0.8;
+}
+
+.banner-ink .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink-on-primary);
+  opacity: 1;
+}
+
+.loading-pill {
+  padding: 8px 14px;
+}
+
+/* ---- selection actions */
+.selection-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 14px;
+  border-radius: var(--r-pill);
+}
+
+.sel-count {
+  display: grid;
+  line-height: 1.2;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.sel-count b {
+  font-size: 14px;
+}
+
+.sel-on {
+  font-size: 12px;
+  color: var(--ink-3);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/* ---- ask bar (assistant entry point) */
+.ask-bar {
+  left: 50%;
+  bottom: 16px;
+  translate: -50% 0;
+  width: min(640px, calc(100% - 150px));
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.ask-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.ask-status .truncate {
+  min-width: 0;
+}
+
+.ask-reply {
+  padding: 10px 16px 0;
+  font-size: 14px;
+  color: var(--ink-1);
+  line-height: 1.45;
+  max-height: 88px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  cursor: pointer;
+}
+
+.ask-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 7px 7px 16px;
+}
+
+.ask-row .assistant-glyph {
+  color: var(--assistant);
+}
+
+.ask-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border: 0;
+  background: none;
+  font-size: 15px;
+  color: var(--ink-1);
+}
+
+.ask-input::placeholder {
+  color: var(--ink-3);
+}
+
+.ask-send {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  flex: none;
+  transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+
+.ask-send:disabled {
+  opacity: 0.25;
+}
+
+.ask-send:not(:disabled):hover {
+  transform: scale(1.05);
+}
+
+.ask-chips {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ask-chip {
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ask-chip:hover {
+  background: var(--surface-hover);
+  color: var(--ink-1);
+}
+
+/* ---- legend (data fields) */
+.hud-legend {
+  left: 14px;
+  bottom: 16px;
+  width: min(300px, calc(100% - 28px));
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.legend-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.legend-title {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.legend-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.legend-band {
+  position: absolute;
+  top: 0;
+  height: 10px;
+  border: 1.5px solid var(--ink-1);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.legend-wrap {
+  position: relative;
+}
+
+.legend-ticks {
+  position: relative;
+  height: 14px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.legend-ticks span {
+  position: absolute;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.legend-ticks span:first-child {
+  translate: 0 0;
+}
+
+.legend-ticks span:last-child {
+  translate: -100% 0;
+}
+
+.legend-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.legend-keys .swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.swatch.neg {
+  background: #5598e7;
+}
+
+.swatch.mid {
+  background: #aab0b9;
+}
+
+.swatch.pos {
+  background: #e66767;
+}
+
+.mini-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* ---- 3D labels: dimension tags, measure labels, annotations */
+.labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.labels-layer > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.dim-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 4px;
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+}
+
+.dim-tag b {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--signal);
+  color: var(--on-signal);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dim-tag .unit {
+  opacity: 0.7;
+  font-size: 11.5px;
+}
+
+.dim-tag .axis-tag {
+  font-size: 10.5px;
+  opacity: 0.75;
+}
+
+.note-tag {
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--hud-bg);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-2);
+  font-size: 13px;
+  color: var(--ink-1);
+  white-space: normal;
+}
+
+.note-tag::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.hole-label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 9px 3px 4px;
+  border-radius: var(--r-pill);
+  background: var(--hud-bg);
+  border: 1.5px solid;
+  font-size: 12.5px;
+  font-weight: 550;
+  box-shadow: var(--shadow-1);
+}
+
+.hole-label b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  font-size: 11px;
+}
+
+.pair-label {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.selection-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.selection-svg path {
+  fill: var(--signal-soft);
+  fill-opacity: 0.55;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.brush-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  border: 2px solid var(--signal);
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.photo-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+  object-fit: fill;
+}
+
+/* ---- comparison panes */
+.pane-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.pane-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 12px;
+}
+
+.pane-frame.is-result {
+  border-color: var(--signal);
+}
+
+/* centred at the top of each view: clear of the rails on the left and right */
+.pane-label {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  top: 10px;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--hud-bg);
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--hud-line);
+}
+
+/* while comparing, the size readout (of one model) would sit over the first view */
+.stage:has(.pane-overlay) .size-tag {
+  display: none;
+}
+
+/* ---- empty stage */
+.stage-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.stage-empty > * {
+  pointer-events: auto;
+}
+
+.stage-empty .empty-title {
+  font-size: 34px;
+}
+
+/* ---- measure summary card (bottom right) */
+.hud-measure {
+  right: 14px;
+  bottom: 16px;
+  width: min(280px, calc(100% - 28px));
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.hud-measure .kv td {
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+
+.pane-exit {
+  top: auto;
+  bottom: 92px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.pane-exit:hover {
+  background: var(--surface);
+}
+
+/* full screen: the stage fills the screen, rounded corners go */
+.stage:fullscreen {
+  border-radius: 0;
+  border: 0;
+}
+
+/* ============================================================ narrow 3D view
+   The view's width, not the window's, decides: panels docked beside it take their share first. */
+@container stage (max-width: 640px) {
+  .size-tag {
+    min-width: 0;
+    padding: 8px 12px;
+  }
+  .size-value {
+    font-size: 18px;
+  }
+  .size-row {
+    gap: 10px;
+  }
+  .size-foot > :not(.segmented):not(button) {
+    display: none;
+  }
+  .ask-bar {
+    width: calc(100% - 28px);
+  }
+  .banner-stack {
+    max-width: calc(100% - 28px);
+  }
+  .banner .muted.small {
+    display: none;
+  }
+}
+
+@container stage (max-width: 460px) {
+  .size-tag {
+    max-width: calc(100% - 136px);
+  }
+  .size-value {
+    font-size: 15px;
+  }
+  .size-axis {
+    font-size: 10.5px;
+  }
+  .size-head {
+    display: none;
+  }
+  .ask-chips {
+    display: none;
+  }
+}
+
+/* a short 3D view: compact rails */
+@container stage (max-height: 680px) {
+  .tool-rail .icon-btn,
+  .view-rail .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .tool-rail,
+  .view-rail {
+    gap: 2px;
+    padding: 4px;
+  }
+  .view-rail {
+    top: 120px;
+    max-height: calc(100% - 120px - 84px);
+  }
+}

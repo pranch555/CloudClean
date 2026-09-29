@@ -1,0 +1,16 @@
+{
+ "T_ours": {
+  "head_top_t": -66.60643332660294,
+  "head_height": 25.49885060245896,
+  "overall_length": 107.36077555682496,
+  "axis_angle_deg": 0.037309328625140234,
+  "axis_lateral_mm": 0.02312298892236874
+ },
+ "T_merge": {
+  "head_top_t": -66.34724669014895,
+  "head_height": 25.23966396600497,
+  "overall_length": 107.10158892037097,
+  "axis_angle_deg": 0.06790743569810076,
+  "axis_lateral_mm": 0.01651357877647258
+ }
+}

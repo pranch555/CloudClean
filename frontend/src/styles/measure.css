@@ -1,0 +1,1542 @@
+/*
+ * Step 5 — Measure & inspect (steps/measure/**). v3 tokens only (styles/tokens.css); layout primitives such as
+ * .tiles, .block, .result-card, .verdict, .stat-grid and .data-table come from steps.css / primitives.css.
+ */
+
+/* ============================================================ layout guards
+   Grid tracks default to their content's min-content width: a wide table or an unbreakable number would widen the
+   whole step beyond the panel. Every grid in this step shrinks to the panel instead. */
+.step:has(> .meas-nav),
+.meas-insp,
+.meas-latest,
+.meas-thread,
+.meas-cad,
+.meas-size,
+.meas-profile,
+.meas-section,
+.acc-check-body,
+.meas-step-body,
+.acc-check .result-card,
+.acc-check .result-body,
+.meas-cad .block,
+.meas-thread .block {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.meas-nowrap {
+  white-space: nowrap;
+}
+
+.meas-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ============================================================ sub navigation: Dimensions · Thread · CAD · Accuracy */
+.meas-nav .segmented {
+  padding: 4px;
+  gap: 4px;
+  border-radius: 14px;
+}
+
+.meas-nav .segmented button {
+  height: auto;
+  min-height: 56px;
+  padding: 8px 4px 7px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.meas-tab {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.meas-tab > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meas-tab svg {
+  color: var(--ink-3);
+  transition: color var(--dur-1) var(--ease);
+}
+
+.meas-nav .segmented button:hover .meas-tab svg {
+  color: var(--ink-1);
+}
+
+.meas-nav .segmented button.is-on .meas-tab svg {
+  color: var(--signal-ink);
+}
+
+/* ============================================================ part size (caliper display) */
+.meas-size {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+.meas-size-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.meas-size-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.meas-size-title svg {
+  color: var(--signal);
+}
+
+.meas-size-note {
+  margin-top: -2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.meas-size-note .mono {
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.meas-size-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.meas-size-dim {
+  display: grid;
+  gap: 2px;
+}
+
+.meas-size-axis {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink-3);
+}
+
+.meas-size-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+}
+
+.meas-size-unit {
+  padding-bottom: 3px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* a ruler under the readout: a tick every 4 px, a long one every 20 px */
+.meas-size-scale {
+  height: 8px;
+  margin-top: -3px;
+  border-top: 1px solid var(--line-strong);
+  background:
+    repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 20px) top left / 100% 7px no-repeat,
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 4px) top left / 100% 4px no-repeat;
+}
+
+.meas-size-desc {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.meas-found {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.meas-found-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.meas-found-title .muted {
+  font-weight: 450;
+}
+
+.meas-feature {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.meas-feature svg {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.meas-feature:hover svg {
+  color: var(--signal-ink);
+}
+
+/* ============================================================ tools grid and the inspector under the chosen tile */
+.meas-tools .tile-icon svg {
+  display: block;
+}
+
+/* tools the server behind this page does not have yet stay readable but step back */
+.meas-tools.is-limited > .tile:not(:first-child):not(.is-active) .tile-icon {
+  opacity: 0.5;
+}
+
+.meas-tools.is-limited > .tile:not(:first-child):not(.is-active) .tile-label {
+  color: var(--ink-2);
+}
+
+.meas-insp {
+  grid-column: 1 / -1;
+  position: relative;
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+  margin: 6px 0 4px;
+  padding: 14px 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1.5px solid var(--ink-1);
+  box-shadow: var(--shadow-2);
+  scroll-margin: 16px;
+  animation: rise var(--dur-2) var(--ease) both;
+}
+
+/* the notch points at the chosen tile */
+.meas-insp::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  width: 13px;
+  height: 13px;
+  background: var(--surface);
+  border-left: 1.5px solid var(--ink-1);
+  border-top: 1.5px solid var(--ink-1);
+  border-top-left-radius: 3px;
+  transform: rotate(45deg);
+}
+
+.meas-insp.notch-left::before {
+  left: calc(25% - 8px);
+}
+
+.meas-insp.notch-right::before {
+  left: calc(75% - 5px);
+}
+
+.meas-insp-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meas-insp-glyph {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--signal-soft);
+  color: var(--signal-ink);
+}
+
+.meas-insp-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+}
+
+.meas-insp-lead {
+  margin-top: -4px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* segmented controls sized by their words (directions, axes) instead of equal slots */
+.meas-fit .segmented button {
+  flex: 1 1 auto;
+  padding: 0 10px;
+}
+
+/* ---- numbered guidance */
+.meas-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meas-step {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+
+.meas-step-n {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: -1px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+
+.meas-step.is-done .meas-step-n {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.meas-step.is-locked {
+  color: var(--ink-3);
+}
+
+.meas-step.is-locked .meas-step-n {
+  background: var(--surface-sunken);
+  color: var(--ink-3);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.meas-step-body {
+  min-width: 0;
+}
+
+.meas-step-body > :is(div, p) + :is(div, p) {
+  margin-top: 8px;
+}
+
+.meas-step-body b {
+  font-weight: 650;
+}
+
+/* ---- box / lasso and what is selected */
+.meas-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.meas-pick-tools {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.meas-pick .chip .kbd,
+.meas-pick-tools .chip .kbd {
+  height: 18px;
+  min-width: 18px;
+  margin-left: 2px;
+  font-size: 10.5px;
+}
+
+.meas-pick-tools .chip.is-on .kbd {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+  opacity: 0.7;
+}
+
+.meas-pick-tools .chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.meas-picked {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--ok);
+}
+
+.meas-picked svg {
+  flex: none;
+}
+
+.meas-picked .mono {
+  color: var(--ink-1);
+}
+
+.meas-picked .link {
+  margin-left: 4px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.meas-picked.is-warn {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+  color: var(--warn);
+}
+
+.meas-picked.is-warn svg {
+  margin-top: 2px;
+}
+
+/* ---- switch with its explanation */
+.meas-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.meas-switch .switch {
+  margin-top: 1px;
+}
+
+.meas-switch-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.meas-switch-label {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--ink-1);
+}
+
+.meas-switch.is-disabled .meas-switch-label {
+  color: var(--ink-3);
+}
+
+/* ---- latest result of a tool: a large readout */
+.meas-latest {
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  scroll-margin: 16px;
+  animation: rise var(--dur-2) var(--ease) both;
+}
+
+.meas-readout {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.meas-readout + .meas-readout {
+  padding-top: 8px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.meas-readout-title {
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-3);
+}
+
+.meas-readout-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meas-readout-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+}
+
+.meas-unit {
+  margin-left: 5px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 450;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+.meas-readout-actions {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.meas-latest-detail {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* dimension label, as on the model's tags */
+.meas-tag {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--r-pill);
+  background: var(--signal);
+  color: var(--on-signal);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* ---- calm "not on this server yet" */
+.meas-unavail {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px dashed var(--line-strong);
+  background: var(--surface-sunken);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.meas-unavail > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-3);
+}
+
+.meas-unavail-title {
+  margin-bottom: 2px;
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.meas-unavail p + p {
+  margin-top: 4px;
+}
+
+/* ============================================================ results list */
+.meas-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  vertical-align: 1px;
+}
+
+.meas-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meas-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 10px 8px 6px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  background: var(--surface-sunken);
+  transition: border-color var(--dur-1) var(--ease);
+  animation: rise var(--dur-2) var(--ease) both;
+}
+
+.meas-row:hover {
+  border-color: var(--line-strong);
+}
+
+.meas-row.has-warn {
+  box-shadow: inset 3px 0 0 var(--warn-glyph);
+}
+
+.meas-row > .meas-tag {
+  margin-top: 1px;
+}
+
+.meas-row-main {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.meas-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+.meas-kind {
+  display: inline-flex;
+  flex: none;
+  color: var(--ink-3);
+}
+
+.meas-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.meas-by {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--assistant);
+}
+
+.meas-value {
+  flex: none;
+  margin-left: auto;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 16.5px;
+  font-weight: 500;
+  color: var(--ink-1);
+}
+
+.meas-value .meas-unit {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.meas-row-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.meas-detail {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.meas-actions {
+  display: inline-flex;
+  flex: none;
+  margin-right: -2px;
+}
+
+.meas-actions .icon-btn,
+.meas-readout-actions .icon-btn {
+  color: var(--ink-3);
+}
+
+.meas-actions .icon-btn:hover:not(:disabled),
+.meas-readout-actions .icon-btn:hover:not(:disabled) {
+  color: var(--ink-1);
+}
+
+.meas-actions .meas-delete:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.icon-btn.is-copied,
+.meas-actions .icon-btn.is-copied,
+.meas-readout-actions .icon-btn.is-copied {
+  color: var(--ok);
+}
+
+.meas-aside {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.meas-pitch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 4px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.meas-pitch .input {
+  height: 30px;
+}
+
+.meas-pitch b {
+  font-size: 14px;
+  color: var(--ink-1);
+}
+
+.meas-empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.meas-empty-art {
+  flex: none;
+  width: 64px;
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============================================================ section: where to cut, and the cut as a drawing */
+.meas-profile {
+  display: grid;
+  gap: 8px;
+}
+
+.meas-profile-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.prof-centre {
+  stroke: var(--ink-4);
+  stroke-width: 0.8;
+  stroke-dasharray: 10 3 2 3;
+}
+
+.prof-body {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+.prof-end {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.prof-cut-hit {
+  stroke: transparent;
+  stroke-width: 18;
+}
+
+.prof-cut {
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+
+.prof-cut-mark {
+  fill: var(--signal);
+}
+
+.meas-profile-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -4px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.meas-section {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.meas-section svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sec-hatch {
+  stroke: var(--ink-3);
+  stroke-width: 0.7;
+}
+
+.sec-fill {
+  stroke: none;
+}
+
+.sec-outline {
+  fill: none;
+  stroke: var(--ink-1);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sec-outline.is-open {
+  stroke: var(--ink-2);
+}
+
+.sec-centre {
+  stroke: var(--ink-4);
+  stroke-width: 0.8;
+  stroke-dasharray: 10 3 2 3;
+}
+
+.sec-dim {
+  stroke: var(--ink-2);
+  stroke-width: 0.9;
+}
+
+.sec-ext {
+  stroke: var(--ink-3);
+  stroke-width: 0.7;
+}
+
+.sec-arrow {
+  fill: var(--ink-2);
+}
+
+.sec-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--ink-1);
+}
+
+.sec-unit {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+}
+
+/* ============================================================ thread */
+.meas-thread,
+.meas-cad {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+  animation: rise var(--dur-3) var(--ease) both;
+}
+
+.meas-thread .verdict .badge {
+  flex: none;
+}
+
+.meas-ok-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ok);
+}
+
+.meas-ok-line svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.meas-table {
+  font-size: 12.5px;
+}
+
+.meas-table th,
+.meas-table td {
+  padding-left: 6px;
+  padding-right: 6px;
+  white-space: nowrap;
+}
+
+.meas-table th:first-child,
+.meas-table td:first-child {
+  padding-left: 0;
+}
+
+.meas-table th:last-child,
+.meas-table td:last-child {
+  padding-right: 0;
+}
+
+.meas-table th:not(:first-child),
+.meas-table td:not(:first-child) {
+  text-align: right;
+}
+
+.pc-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.pc-nominal {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.pc-tick {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-3);
+}
+
+.pc-line {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.pc-hit,
+.hist-hit {
+  fill: transparent;
+}
+
+.pc-dot {
+  fill: var(--signal);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.pc-dot.is-on {
+  stroke: var(--ink-1);
+  stroke-width: 1.5;
+}
+
+.pitch-chart g:focus,
+.histogram g:focus {
+  outline: none;
+}
+
+.meas-values > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.meas-values > summary::-webkit-details-marker {
+  display: none;
+}
+
+.meas-values > summary:hover {
+  color: var(--ink-1);
+}
+
+.meas-values > summary .chev {
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.meas-values[open] > summary .chev {
+  transform: rotate(180deg);
+}
+
+.meas-values .data-table {
+  margin-top: 6px;
+}
+
+/* ============================================================ compare to CAD */
+.meas-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.meas-legend .swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  border-radius: 2px;
+}
+
+.meas-legend .swatch:first-child {
+  margin-left: 0;
+}
+
+/* ============================================================ accuracy */
+.acc-check > summary {
+  gap: 10px;
+}
+
+.acc-check-title {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.acc-check-title .sub {
+  font-size: 12px;
+  font-weight: 450;
+  color: var(--ink-3);
+}
+
+.acc-check-status {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.acc-check > summary .chev {
+  margin-left: 0;
+}
+
+.acc-check-body {
+  gap: var(--sp-3);
+}
+
+.acc-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--info-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+
+.acc-note > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--info);
+}
+
+.acc-made {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+}
+
+.acc-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.acc-loading svg {
+  flex: none;
+}
+
+.acc-chain {
+  display: grid;
+  gap: 6px;
+}
+
+.acc-chain-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+  font-size: 13.5px;
+}
+
+.acc-steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.acc-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* the line joining the steps */
+.acc-steps li::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--line-strong);
+}
+
+.acc-steps li:first-child::before {
+  top: 50%;
+}
+
+.acc-steps li:last-child::before {
+  bottom: 50%;
+}
+
+.acc-step-dot {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-3);
+  background: var(--surface);
+}
+
+.acc-steps li.is-current .acc-step-dot {
+  border-color: var(--signal);
+  background: var(--signal);
+}
+
+.acc-step-name {
+  font-weight: 550;
+  color: var(--ink-1);
+}
+
+.acc-step-op {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.acc-step-verdict {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.acc-progress {
+  display: grid;
+  gap: 6px;
+}
+
+.acc-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.acc-hero-value {
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink-1);
+}
+
+.acc-hero-unit {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.acc-hero-pm {
+  margin-left: 4px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.acc-hero.is-muted .acc-hero-value {
+  color: var(--ink-3);
+}
+
+.acc-gauge-wrap {
+  display: grid;
+  gap: 4px;
+}
+
+.acc-gauge {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gauge-out {
+  fill: var(--danger-soft);
+}
+
+.gauge-close {
+  fill: var(--warn-soft);
+}
+
+.gauge-ok {
+  fill: var(--ok-soft);
+}
+
+.gauge-zero {
+  stroke: var(--ok);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.gauge-tick {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.gauge-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+}
+
+.gauge-needle {
+  stroke: var(--ink-1);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.gauge-dot {
+  fill: var(--ink-1);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.gauge-unc line {
+  stroke: var(--ink-2);
+  stroke-width: 1.3;
+}
+
+.gauge-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink-1);
+}
+
+.gauge-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.gauge-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gauge-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.gauge-key.is-ok {
+  background: var(--ok-soft);
+  box-shadow: inset 0 0 0 1px var(--ok);
+}
+
+.gauge-key.is-close {
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 1px var(--warn-glyph);
+}
+
+.gauge-key.is-out {
+  background: var(--danger-soft);
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.gauge-key.is-unc {
+  height: 2px;
+  border-radius: 0;
+  background: var(--ink-2);
+}
+
+.acc-explain {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.acc-explain b {
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.acc-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.acc-tip > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--signal-ink);
+}
+
+.acc-tip b {
+  color: var(--ink-1);
+}
+
+/* Measure -> Golden model (steps/measure/GoldenCheck.tsx) */
+.gold-summary {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.gold-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.gold-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+
+.gold-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+
+.gold-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.gold-area {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--sp-3);
+  row-gap: 4px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.gold-area > :not(.gold-num) {
+  grid-column: 2;
+}
+
+.gold-num {
+  grid-row: 1 / span 4;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-3);
+  display: grid;
+  place-items: center;
+  font: 600 12px var(--font-mono);
+  color: var(--ink-1);
+  background: var(--surface-raised, var(--surface));
+}
+
+.gold-area-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.gold-area-name {
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.gold-area-size {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+
+.gold-why,
+.gold-advice {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--lh-normal);
+}
+
+.gold-why {
+  color: var(--ink-2);
+}
+
+.gold-advice {
+  color: var(--ink-1);
+}
+
+.gold-area .btn {
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.gold-meas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gold-m {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--sp-2);
+  row-gap: 2px;
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.gold-m:last-child {
+  border-bottom: 0;
+}
+
+.gold-m-name {
+  font-size: var(--text-sm);
+  font-weight: 550;
+  color: var(--ink-1);
+}
+
+.gold-m-vals,
+.gold-m-note {
+  grid-column: 1 / -1;
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+
+.gold-m-vals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.gold-m-vals b,
+.gold-m-note b {
+  font-weight: 500;
+  color: var(--ink-1);
+}
+
+.gold-m-off .gold-m-vals span:nth-child(3) b {
+  color: var(--danger);
+}
+
+.gold-fill {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+}
+
+.gold-fill .hint-text {
+  margin: 0;
+}

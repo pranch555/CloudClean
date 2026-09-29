@@ -1,0 +1,17 @@
+# docker compose up -d   ->   http://localhost:8765   (projects and accounts are kept in ./workspace)
+services:
+  cloudclean:
+    build: .
+    image: cloudclean:latest
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./workspace:/workspace
+    environment:
+      # the assistant's OpenAI-compatible LLM server; host.docker.internal is this machine
+      CLOUDCLEAN_LLM_BASE_URL: ${CLOUDCLEAN_LLM_BASE_URL:-http://host.docker.internal:8000/v1}
+      CLOUDCLEAN_LLM_MODEL: ${CLOUDCLEAN_LLM_MODEL:-}
+      CLOUDCLEAN_LLM_API_KEY: ${CLOUDCLEAN_LLM_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

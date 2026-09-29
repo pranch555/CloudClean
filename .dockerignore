@@ -1,0 +1,10 @@
+.git
+.venv
+workspace
+frontend
+tests
+tools
+docs
+**/__pycache__
+*.egg-info
+.pytest_cache
