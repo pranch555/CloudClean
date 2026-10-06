@@ -205,7 +205,16 @@ def parse_version(reply: Reply | str | None) -> str | None:
     text = reply.value if isinstance(reply, Reply) else reply
     if not text:
         return None
-    m = re.search(r"[Vv](\d+\.\d+)", text) or re.search(r"(\d+\.\d+)", text)
+    # the user's table (2026-10-06) answers '+DATA=HW.V0.02,SW.V3.28;': hardware first, the firmware ("SW") second
+    sw = re.search(r"SW\.?\s*[Vv]?(\d+\.\d+)", text, re.IGNORECASE)
+    if sw:
+        return sw.group(1)
+    parts = [p for p in text.split(",") if p.strip()]
+    for part in parts[1:2] + parts:
+        m = re.search(r"[Vv](\d+\.\d+)", part)
+        if m:
+            return m.group(1)
+    m = re.search(r"(\d+\.\d+)", text)
     return m.group(1) if m else None
 
 

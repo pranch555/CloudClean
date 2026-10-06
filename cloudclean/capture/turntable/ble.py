@@ -130,6 +130,9 @@ class RevopointBleTurntable(TurntableDriver):
         self.address = address
         self.id = address
         self.kind = kind
+        # the dual-axis table was driven by CloudClean on the user's table on 2026-10-06 (fw SW 3.28: turn +-10 deg
+        # with '+OK,TURNANGLE=' completion, tilt 5 -> 0); the large TA500 never has
+        self.validated = kind == "dual_axis"
         self.name = name or (P.NAME_DUAL_AXIS if kind == "dual_axis" else P.NAME_LARGE)
         self._loop: _BleLoop | None = None
         self._client = None
