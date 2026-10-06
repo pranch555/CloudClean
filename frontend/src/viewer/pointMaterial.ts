@@ -1,12 +1,58 @@
 import * as THREE from 'three';
 
 /*
+ * The scan-beam reveal (Viewer: a model's first appearance), shared by the mesh and point shaders. A laser plane
+ * sweeps along an axis in model space: what it has not reached yet is not drawn, a thin bright band in the signal
+ * colour (uHighlight) flickers right at the front and a faint afterglow fades behind it. uReveal 0..1 is the plane's
+ * progress; at 1, the resting value, the `uReveal < 1.0` test skips all of it (uniform branch: free once finished).
+ */
+export const REVEAL_VERTEX_PARS = /* glsl */ `
+  uniform vec3 uRevealAxis;
+  uniform float uRevealMin;
+  uniform float uRevealMax;
+  varying float vRevealT;`;
+
+/** model-space `position` -> 0 where the sweep starts, 1 where it ends */
+export const REVEAL_VERTEX = /* glsl */ `
+  vRevealT = (dot(position, uRevealAxis) - uRevealMin) / max(uRevealMax - uRevealMin, 1e-6);`;
+
+export const REVEAL_FRAGMENT_PARS = /* glsl */ `
+  uniform float uReveal;
+  uniform float uBeamWidth;
+  uniform float uRevealTime;
+  varying float vRevealT;
+  float revealHash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+  // discards what the plane has not reached; x: the hot core of the beam, y: its coloured halo, z: the afterglow
+  vec3 revealBeam() {
+    float w = uBeamWidth;
+    float front = mix(-2.0 * w, 1.0 + 8.0 * w, uReveal);
+    float d = front - vRevealT;
+    if (d < 0.0) discard;
+    float flicker = 0.72 + 0.28 * revealHash(floor(gl_FragCoord.xy / 2.0) + floor(uRevealTime * 40.0));
+    float core = (1.0 - smoothstep(0.0, w * 0.35, d)) * flicker;
+    float halo = (1.0 - smoothstep(0.0, w * 1.4, d)) * (0.55 + 0.45 * flicker);
+    float after = exp(-d / (w * 3.5)) * 0.2 * (1.0 - smoothstep(0.75, 1.0, uReveal));
+    return vec3(core, halo, after);
+  }`;
+
+/** fresh reveal uniforms at rest (fully drawn) */
+export const revealUniforms = () => ({
+  uReveal: { value: 1 },
+  uRevealAxis: { value: new THREE.Vector3(1, 0, 0) },
+  uRevealMin: { value: 0 },
+  uRevealMax: { value: 1 },
+  uBeamWidth: { value: 0.016 },
+  uRevealTime: { value: 0 },
+});
+
+/*
  * Points are round splats sized in world units (density looks right at any zoom) and lit by a headlight
  * using their normals, which makes the surface shape readable. The same material renders a pick pass that
  * writes world position into a float target (exact 3D picking for pivots, measuring and point pairs).
  */
 const VERT = /* glsl */ `
   #include <clipping_planes_pars_vertex>
+  ${REVEAL_VERTEX_PARS}
   attribute vec3 color;
   attribute float scalar;
   attribute float selected;
@@ -34,6 +80,7 @@ const VERT = /* glsl */ `
     gl_PointSize = clamp(px, 1.0, 64.0);
     vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
     vSelected = selected;
+    ${REVEAL_VERTEX}
     if (uPick == 1) { vColor = vec3(0.0); return; }
     vec3 base = uColor;
     bool unlitColor = false;
@@ -60,6 +107,7 @@ const VERT = /* glsl */ `
 
 const FRAG = /* glsl */ `
   #include <clipping_planes_pars_fragment>
+  ${REVEAL_FRAGMENT_PARS}
   uniform int uPick;
   uniform vec3 uHighlight;
   varying vec3 vColor;
@@ -69,8 +117,13 @@ const FRAG = /* glsl */ `
     #include <clipping_planes_fragment>
     vec2 c = gl_PointCoord - 0.5;
     if (dot(c, c) > 0.25) discard;
+    // picking sees every point, revealed or not
     if (uPick == 1) { gl_FragColor = vec4(vWorld, 1.0); return; }
     vec3 col = vSelected > 0.5 ? mix(vColor, uHighlight, 0.65) : vColor;
+    if (uReveal < 1.0) {
+      vec3 beam = revealBeam();
+      col = mix(col, uHighlight, clamp(beam.y + beam.z, 0.0, 1.0)) + (uHighlight * 0.9 + 0.12) * beam.x;
+    }
     gl_FragColor = vec4(col, 1.0);
     #include <colorspace_fragment>
   }`;
@@ -94,6 +147,7 @@ export function createPointMaterial(): THREE.ShaderMaterial {
       uNanColor: { value: new THREE.Color('#4a505b') },
       uPick: { value: 0 },
       uHighlight: { value: new THREE.Color('#ffb547') },
+      ...revealUniforms(),
     },
     vertexShader: VERT,
     fragmentShader: FRAG,

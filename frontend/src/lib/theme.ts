@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useStore } from '../store';
 
 export type ResolvedTheme = 'paper' | 'carbon';
@@ -31,6 +32,44 @@ export function useThemeEffect(): ResolvedTheme {
     document.documentElement.dataset.text = textSize;
   }, [textSize]);
   return resolved;
+}
+
+type TransitionDoc = Document & { startViewTransition?: (update: () => Promise<void>) => { ready: Promise<void>; finished: Promise<void> } };
+
+/**
+ * Paper <-> Carbon with an iris: the new theme opens as a circle from `origin` (the toggle) until it covers the
+ * window. Uses the View Transitions API (the old page is a still picture, the new one is live underneath the
+ * circle, so clicks are never blocked for long); without it, or with reduced motion, the theme simply switches.
+ */
+export function switchTheme(next: ResolvedTheme, origin?: Element | null) {
+  const apply = () => {
+    document.documentElement.dataset.theme = next;
+    flushSync(() => useStore.getState().set({ theme: next }));
+  };
+  const doc = document as TransitionDoc;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (!doc.startViewTransition || reduce || !origin) {
+    apply();
+    return;
+  }
+  const r = origin.getBoundingClientRect();
+  const x = r.left + r.width / 2;
+  const y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+  const root = document.documentElement;
+  root.classList.add('theme-iris');
+  // (rendering is paused while this runs, so it must not wait for frames: the new view is live and the 3D view
+  // repaints in the new colours as soon as the circle starts to open)
+  const vt = doc.startViewTransition(async () => apply());
+  vt.ready
+    .then(() => {
+      root.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 720, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', pseudoElement: '::view-transition-new(root)' },
+      );
+    })
+    .catch(() => undefined);
+  vt.finished.finally(() => root.classList.remove('theme-iris'));
 }
 
 /** Current value of a CSS custom property on <html> (theme-aware colours for the WebGL viewer). */

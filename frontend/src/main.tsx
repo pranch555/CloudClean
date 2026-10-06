@@ -15,6 +15,7 @@ import './styles/home.css';
 import './styles/settings.css';
 import './styles/capture.css';
 import './styles/measure.css';
+import './styles/golden.css';
 import './styles/auth.css';
 import App from './App';
 import { AuthGate } from './shell/AuthScreen';

@@ -1208,3 +1208,121 @@
     max-height: calc(100% - 120px - 84px);
   }
 }
+
+/* ============================================================ golden check: dimension line on the 3D view
+   viewport/GoldenDimension.tsx: the size the Golden model panel points at, drawn like a dimension on an engineering
+   drawing (line, arrowheads, end ticks) with its value in a pill beside the middle. Lines and pill take the tone of
+   the size; a pale casing under every stroke keeps it readable over any colour of the model. Never takes a click. */
+.gold-dim {
+  --dim: var(--ink-1);
+  --dim-casing: var(--surface);
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gold-dim[data-tone='pass'] {
+  --dim: var(--ok);
+}
+
+.gold-dim[data-tone='fail'] {
+  --dim: var(--danger);
+}
+
+.gold-dim[data-tone='warn'] {
+  --dim: var(--warn-glyph);
+}
+
+.gold-dim-art,
+.gold-dim-svg {
+  position: absolute;
+  inset: 0;
+}
+
+.gold-dim-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gold-dim-casing {
+  stroke: var(--dim-casing);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-opacity: 0.88;
+  fill: none;
+}
+
+.gold-dim-ink {
+  stroke: var(--dim);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.gold-dim-tick {
+  stroke-width: 1.5;
+}
+
+.gold-dim-head {
+  fill: var(--dim);
+  stroke: var(--dim-casing);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.gold-dim-dot circle {
+  fill: var(--dim);
+  stroke: var(--dim-casing);
+  stroke-width: 2.5;
+  paint-order: stroke;
+}
+
+.gold-dim-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.gold-dim-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--dim);
+  background: var(--hud-bg);
+  color: var(--ink-1);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(6px);
+}
+
+.gold-dim-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  flex: none;
+}
+
+.gold-dim-to {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+}
+
+/* golden check pins (viewport/GoldenPins.tsx, styled in measure.css): a new set pops up from the anchors; the
+   individual `scale` property composes with the hover / active `transform` scale instead of replacing it */
+.gold-pins .gold-pin3d span {
+  scale: var(--pin-pop, 1);
+}

@@ -74,6 +74,8 @@ def job_golden_check(ws: Workspace, payload: dict, log) -> list[str]:
                    description="0 matches, 1 not scanned, 2 too few points, 3 rough, 4 off outside, 5 off inside")
     ws.add_scalars(check["id"], "check_region", result["vertex_region"], unit="",
                    description="The listed problem region this point belongs to (-1: none)")
+    ws.add_scalars(check["id"], "check_face", result["vertex_face"], unit="",
+                   description="The golden face (flat or round) this point belongs to (-1: none)")
 
     counts = report["counts"]
     if hasattr(log, "output"):

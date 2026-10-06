@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import { cancelJob, lastLog } from '../lib/jobs';
 import { fmtDuration } from '../lib/format';
 import { useStore } from '../store';
 import { Badge, Button, IconButton, Progress } from '../ui/primitives';
+import { TickLoader } from '../ui/motion/TickLoader';
+import { enter } from '../lib/motion';
 
 const TONE = { queued: 'neutral', running: 'signal', done: 'good', failed: 'critical', cancelled: 'warning' } as const;
 const LABEL = { queued: 'waiting', running: 'running', done: 'done', failed: 'failed', cancelled: 'cancelled' } as const;
@@ -20,6 +22,22 @@ export function JobsDrawer() {
     if (pre.current) pre.current.scrollTop = pre.current.scrollHeight;
   }, [openJob?.logs.length]);
 
+  // rows arrive in a short stagger when the drawer opens; later only a new job slides in
+  const body = useRef<HTMLDivElement>(null);
+  const seen = useRef<Set<string> | null>(null);
+  const ids = jobs.map(j => j.id).join(',');
+  useLayoutEffect(() => {
+    const el = body.current;
+    if (!open || !el) {
+      seen.current = null;
+      return;
+    }
+    const rows = [...el.querySelectorAll<HTMLElement>('.job')];
+    if (!seen.current) enter(rows.slice(0, 10), { y: 8, step: 40, delay: 60, duration: 420 });
+    else enter(rows.filter(r => !seen.current!.has(r.dataset.job ?? '')), { y: -10, duration: 460 });
+    seen.current = new Set(jobs.map(j => j.id));
+  }, [open, ids]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!open) return null;
   return (
     <section className="jobs-drawer" aria-label="Jobs">
@@ -31,15 +49,16 @@ export function JobsDrawer() {
           <X size={16} />
         </IconButton>
       </header>
-      <div className="jobs-body">
+      <div className="jobs-body" ref={body}>
         {jobs.length === 0 && <div className="caption" style={{ padding: 16 }}>Operations you start appear here with their full logs.</div>}
         {jobs.map(j => {
           const isOpen = j.id === expanded;
           const duration = j.started ? (j.finished || Date.now() / 1000) - j.started : 0;
           return (
-            <div key={j.id} className="job">
+            <div key={j.id} className="job" data-job={j.id}>
               <button type="button" className="job-head" onClick={() => useStore.setState({ expandedJob: isOpen ? null : j.id })} aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown size={15} aria-hidden /> : <ChevronRight size={15} aria-hidden />}
+                <TickLoader state={j.status} fraction={j.status === 'running' ? j.progress?.fraction ?? null : null} />
                 <Badge tone={TONE[j.status]}>{LABEL[j.status]}</Badge>
                 <span className="job-title">
                   {j.title}

@@ -2,10 +2,13 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type { Asset, ColorMode, ResolvedRegion, ViewName } from '../lib/types';
+import type { Vec3 } from '../lib/golden';
+import type { JSAnimation } from 'animejs';
+import { animate, reducedMotion } from '../lib/motion';
 import { shapeTester } from '../lib/regions';
 import { FreeControls, type RotatePivot, type RotateStyle } from './controls';
 import { lutTexture, scalarColor, type ScalarStyle } from './colormaps';
-import { createMeshPickMaterial, createPointMaterial } from './pointMaterial';
+import { createMeshPickMaterial, createPointMaterial, REVEAL_FRAGMENT_PARS, REVEAL_VERTEX, REVEAL_VERTEX_PARS, revealUniforms } from './pointMaterial';
 import { ViewCube } from './ViewCube';
 
 export interface DisplaySettings {
@@ -54,9 +57,55 @@ interface Item {
   originalColors?: THREE.BufferAttribute;
   scalarName?: string;
   scalars?: Float32Array;
-  /** spotlight(): this mesh shows one area in colour and greys out the rest */
+  /** highlight(): this mesh shows some areas in colour and greys out the rest (the target; uFocus fades to it) */
   focused?: boolean;
+  /** the highlight's shader uniforms, kept on the item so a rebuilt material picks up where the old one was */
+  fx: FocusFx;
 }
+
+/**
+ * Shader state of one model, shared by every material it gets (meshes rebuild theirs on a colour mode change).
+ * highlight(): uFocus 0..1 greys out what is outside the `focus` mask, uGlow lifts what is in it.
+ * Scan-beam reveal: uReveal 0..1 sweeps a laser plane along uRevealAxis (model space, from uRevealMin to uRevealMax);
+ * at 1 (the resting value) the shader skips the reveal entirely.
+ */
+interface FocusFx {
+  uFocus: { value: number };
+  uGlow: { value: number };
+  fade: JSAnimation | null;
+  glowFade: JSAnimation | null;
+  uReveal: { value: number };
+  uRevealAxis: { value: THREE.Vector3 };
+  uRevealMin: { value: number };
+  uRevealMax: { value: number };
+  uBeamWidth: { value: number };
+  uRevealTime: { value: number };
+  reveal: JSAnimation | null;
+  /** performance.now() by which the reveal must be over (a stalled animation is finished by the frame loop) */
+  revealDeadline: number;
+}
+
+const newFx = (focus = 0): FocusFx => ({
+  uFocus: { value: focus },
+  uGlow: { value: 0 },
+  fade: null,
+  glowFade: null,
+  ...revealUniforms(),
+  reveal: null,
+  revealDeadline: 0,
+});
+
+/** The reveal uniforms of a model's shader state, by name (the same objects the materials read). */
+const REVEAL_UNIFORMS = ['uReveal', 'uRevealAxis', 'uRevealMin', 'uRevealMax', 'uBeamWidth', 'uRevealTime'] as const;
+
+/** The scan-beam reveal: how long the laser plane takes to cross a model the first time it appears. */
+const REVEAL_MS = 1100;
+
+/** highlight(): how long the rest of the model takes to grey out / come back, and the glow's breathing. */
+const FOCUS_MS = 200;
+const GLOW_PERIOD_MS = 1600;
+const GLOW_MAX = 0.18;
+const GLOW_STEADY = 0.1;
 
 type Listener = () => void;
 
@@ -119,6 +168,18 @@ export class Viewer {
   private mapMarkers: THREE.Points | null = null;
   private panes: Pane[] = [];
   private resizeObserver: ResizeObserver;
+  /** downloaded per-vertex scalars by asset + name (highlight() runs on hover: it must not fetch again) */
+  private scalarCache = new Map<string, Promise<Float32Array | null>>();
+  /** the latest highlight() call (an older one still downloading must not win) */
+  private highlightToken = 0;
+  /** the mesh whose highlighted vertices breathe (highlight(..., { glow: true })), and when it started */
+  private glowItem: Item | null = null;
+  private glowStart = 0;
+  /** what the last applied highlight() lights (frameHighlight() flies to it); null when nothing is highlighted */
+  private lit: { it: Item; name: string; values: number[] } | null = null;
+  /** models the scan beam is sweeping right now, and every asset that has had its reveal this session */
+  private revealing = new Set<Item>();
+  private revealed = new Set<string>();
 
   constructor(readonly canvas: HTMLCanvasElement, readonly container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
@@ -192,6 +253,7 @@ export class Viewer {
   }
 
   dispose() {
+    for (const it of this.items.values()) this.finishReveal(it);
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();
     this.renderer.dispose();
@@ -243,6 +305,14 @@ export class Viewer {
   }
 
   private frame = (now: number) => {
+    if (this.glowItem) {
+      // a slow sine from 0 up to GLOW_MAX and back: drawn every frame only while a glowing highlight is on screen
+      const t = (now - this.glowStart) / GLOW_PERIOD_MS;
+      this.glowItem.fx.uGlow.value = GLOW_MAX * 0.5 * (1 - Math.cos(2 * Math.PI * t));
+      if (this.glowItem.object.visible) this.dirty = true;
+    }
+    // a reveal whose animation stalled (its engine paused, a tab put away mid-sweep) must not leave a model half drawn
+    for (const it of this.revealing) if (now > it.fx.revealDeadline) this.finishReveal(it);
     const moving = this.controls.update(now);
     if (!this.dirty && !moving) return;
     this.dirty = false;
@@ -519,7 +589,11 @@ export class Viewer {
     }
     if (token !== this.syncToken) return false;
     for (const [id, it] of this.items) {
-      it.object.visible = wanted.has(id);
+      const show = wanted.has(id);
+      // a model's very first appearance this session gets the scan-beam reveal (not later toggles or reloads); the
+      // sweep starts hidden in this same task, so no frame ever shows it whole first
+      if (show && !it.object.visible && !this.revealed.has(id)) this.startReveal(it);
+      it.object.visible = show;
       const meta = metas.find(m => m.id === id);
       if (meta) it.meta = meta;
     }
@@ -538,12 +612,18 @@ export class Viewer {
   forget(id: string) {
     const it = this.items.get(id);
     if (it) {
+      it.fx.fade?.cancel();
+      it.fx.glowFade?.cancel();
+      this.finishReveal(it);
+      if (this.glowItem === it) this.glowItem = null;
+      if (this.lit?.it === it) this.lit = null;
       this.scene.remove(it.object);
       it.geometry.dispose();
       (it.object.material as THREE.Material).dispose();
       this.items.delete(id);
     }
     this.loading.delete(id);
+    for (const key of [...this.scalarCache.keys()]) if (key.startsWith(`${id}/`)) this.scalarCache.delete(key);
     this.invalidate();
   }
 
@@ -558,47 +638,123 @@ export class Viewer {
     return n;
   }
 
+  // ------------------------------------------------------------------ scan-beam reveal
+  /**
+   * A model's first appearance: a thin laser plane in the signal colour sweeps across it along its longest axis as
+   * seen on screen (top to bottom when that axis stands up in the view, else left to right), drawing the model as it
+   * passes (shader part in pointMaterial.ts). Not under reduced motion. The frame loop redraws only while it runs.
+   */
+  private startReveal(it: Item) {
+    this.revealed.add(it.meta.id);
+    if (reducedMotion()) return;
+    const box = it.geometry.boundingBox;
+    if (!box || box.isEmpty()) return;
+    const size = box.getSize(new THREE.Vector3());
+    it.object.updateMatrixWorld();
+    const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+    const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+    // the model axis that looks longest on screen (an axis pointing at the camera would sweep unseen)
+    let best = { k: 0, score: -1, up: 0, right: 0 };
+    for (let k = 0; k < 3; k++) {
+      const w = new THREE.Vector3().setComponent(k, 1).transformDirection(it.object.matrixWorld);
+      const up = w.dot(camUp), right = w.dot(camRight);
+      const score = size.getComponent(k) * Math.hypot(up, right);
+      if (score > best.score) best = { k, score, up, right };
+    }
+    if (!(best.score > 0)) return;
+    // t grows downward on screen (or rightward): the plane starts at the top (or left) end
+    const sign = Math.abs(best.up) > Math.abs(best.right) ? (best.up > 0 ? -1 : 1) : best.right >= 0 ? 1 : -1;
+    const fx = it.fx;
+    fx.reveal?.cancel();
+    fx.uRevealAxis.value.set(0, 0, 0).setComponent(best.k, sign);
+    const a = box.min.getComponent(best.k) * sign, b = box.max.getComponent(best.k) * sign;
+    fx.uRevealMin.value = Math.min(a, b);
+    fx.uRevealMax.value = Math.max(a, b);
+    fx.uReveal.value = 0;
+    fx.uRevealTime.value = 0;
+    const t0 = performance.now();
+    fx.revealDeadline = t0 + REVEAL_MS + 1500;
+    this.revealing.add(it);
+    const sweep = { p: 0 };
+    fx.reveal = animate(sweep, {
+      p: 1,
+      duration: REVEAL_MS,
+      ease: 'inOut(1.6)',
+      onUpdate: () => {
+        fx.uReveal.value = Math.min(sweep.p, 0.9999); // 1 switches the reveal off: only onComplete gets there
+        fx.uRevealTime.value = (performance.now() - t0) / 1000;
+        this.invalidate();
+      },
+      onComplete: () => this.finishReveal(it),
+    });
+    this.invalidate();
+  }
+
+  /** End a reveal now, fully drawn (also on forget / dispose / a stalled animation). */
+  private finishReveal(it: Item) {
+    const fx = it.fx;
+    fx.reveal?.cancel();
+    fx.reveal = null;
+    fx.uReveal.value = 1;
+    this.revealing.delete(it);
+    this.invalidate();
+  }
+
   private build(meta: Asset, geom: THREE.BufferGeometry): Item {
     const hasColor = !!geom.attributes.color;
     geom.computeBoundingBox();
     geom.computeBoundingSphere();
     let object: THREE.Points | THREE.Mesh;
+    const fx = newFx();
     if (meta.kind === 'mesh' && geom.index) {
       if (!geom.attributes.normal) geom.computeVertexNormals();
       // PLYLoader already turns the file's sRGB colours into the linear ones lit materials expect (kept as normalised
       // bytes for uchar colours): converting them again scrambled every coloured mesh
-      object = new THREE.Mesh(geom, this.meshMaterial());
+      object = new THREE.Mesh(geom, this.meshMaterial(fx));
     } else {
-      object = new THREE.Points(geom, createPointMaterial());
+      const mat = createPointMaterial();
+      for (const name of REVEAL_UNIFORMS) mat.uniforms[name] = fx[name];
+      object = new THREE.Points(geom, mat);
     }
     object.userData.assetId = meta.id;
     // every model carries a (zeroed) selection mask: a shader attribute with no buffer reads a stale generic value
     // from whatever used that attribute slot last, which painted whole meshes in the highlight colour
     geom.setAttribute('selected', new THREE.BufferAttribute(new Float32Array(geom.attributes.position.count), 1));
     geom.setAttribute('focus', new THREE.BufferAttribute(new Float32Array(geom.attributes.position.count), 1));
-    const it: Item = { meta, object, geometry: geom, hasColor, hasNormal: !!geom.attributes.normal };
+    const it: Item = { meta, object, geometry: geom, hasColor, hasNormal: !!geom.attributes.normal, fx };
     this.applyMaterial(it);
     return it;
   }
 
-  private meshMaterial(focused = false): THREE.MeshStandardMaterial {
+  private meshMaterial(fx: FocusFx): THREE.MeshStandardMaterial {
     const mat = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.04, side: THREE.DoubleSide });
-    // spotlight(): 1 turns every vertex outside the focus mask the plain model colour
-    const uFocus = { value: focused ? 1 : 0 };
-    mat.userData.uFocus = uFocus;
+    // highlight(): uFocus 1 turns every vertex outside the focus mask the plain model colour; uGlow lifts the ones
+    // inside it toward white and makes them faintly emissive (both fade with uFocus). The scan-beam reveal
+    // (pointMaterial.ts) cuts away what its plane has not reached and lights the band at its front.
     mat.onBeforeCompile = shader => {
       shader.uniforms.uHighlight = { value: HIGHLIGHT };
-      shader.uniforms.uFocus = uFocus;
+      shader.uniforms.uFocus = fx.uFocus;
+      shader.uniforms.uGlow = fx.uGlow;
       shader.uniforms.uFocusRest = { value: FOCUS_REST };
+      for (const name of REVEAL_UNIFORMS) shader.uniforms[name] = fx[name];
       shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', '#include <common>\nattribute float selected;\nattribute float focus;\nvarying float vSelected;\nvarying float vFocus;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSelected = selected;\nvFocus = focus;');
+        .replace('#include <common>', `#include <common>\nattribute float selected;\nattribute float focus;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_VERTEX_PARS}`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>\nvSelected = selected;\nvFocus = focus;\n${REVEAL_VERTEX}`);
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform vec3 uHighlight;\nuniform float uFocus;\nuniform vec3 uFocusRest;\nvarying float vSelected;\nvarying float vFocus;')
+        .replace('#include <common>', `#include <common>\nuniform vec3 uHighlight;\nuniform float uFocus;\nuniform float uGlow;\nuniform vec3 uFocusRest;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_FRAGMENT_PARS}`)
         .replace(
           '#include <color_fragment>',
           '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, step(0.5, vSelected) * 0.65);\n' +
-            'diffuseColor.rgb = mix(diffuseColor.rgb, uFocusRest, uFocus * (1.0 - smoothstep(0.25, 0.75, vFocus)) * 0.85);',
+            'float focusIn = smoothstep(0.25, 0.75, vFocus);\n' +
+            'diffuseColor.rgb = mix(diffuseColor.rgb, uFocusRest, uFocus * (1.0 - focusIn) * 0.85);\n' +
+            'float focusGlow = uGlow * uFocus * focusIn;\n' +
+            'diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0), focusGlow * 0.4);\n' +
+            'totalEmissiveRadiance += diffuseColor.rgb * focusGlow * 0.6;\n' +
+            'if (uReveal < 1.0) {\n' +
+            '  vec3 beam = revealBeam();\n' +
+            '  diffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, clamp(beam.y + beam.z, 0.0, 1.0));\n' +
+            '  totalEmissiveRadiance += uHighlight * (beam.x * 1.15 + beam.y * 0.35);\n' +
+            '}',
         );
     };
     return mat;
@@ -634,7 +790,7 @@ export class Viewer {
     } else {
       if (!(mesh.material instanceof THREE.MeshStandardMaterial)) {
         (mesh.material as THREE.Material).dispose();
-        mesh.material = this.meshMaterial(!!it.focused);
+        mesh.material = this.meshMaterial(it.fx);
       }
       const mat = mesh.material as THREE.MeshStandardMaterial;
       const useVertex = scalarOn || (colorMode === 'original' && it.hasColor);
@@ -1327,35 +1483,226 @@ export class Viewer {
    * plain model colour (Measure -> Golden model: "Show me"). spotlight(null) ends it on every model. Returns how
    * many vertices are in the spotlight.
    */
-  async spotlight(assetId: string | null, name = 'check_region', value = -1): Promise<number> {
-    for (const it of this.items.values()) {
-      if (!it.focused) continue;
-      it.focused = false;
-      const u = (it.object.material as THREE.Material).userData?.uFocus;
-      if (u) u.value = 0;
-    }
-    this.invalidate();
+  spotlight(assetId: string | null, name = 'check_region', value = -1): Promise<number> {
+    return this.highlight(assetId, name, assetId == null ? [] : [value]);
+  }
+
+  /**
+   * Highlight part of a mesh: vertices whose per-vertex scalar `name` is one of `values` keep their colours, the rest
+   * fade to the plain model colour (Measure -> Golden model: hovering a bar, an area or a size; "Show me"). With
+   * `glow` the highlighted vertices also breathe softly so the eye finds them. highlight(null) (or no values) fades
+   * every model back. Calls may come fast (the mouse moving along a bar): the newest wins, the fade is re-targeted
+   * rather than restarted, and going from one highlighted set to another keeps the rest grey and swaps the mask.
+   * Resolves to the number of highlighted vertices (0 when the scalar is missing or nothing matches: then nothing is
+   * greyed out).
+   */
+  async highlight(assetId: string | null, name = 'check_region', values: number[] = [], opts: { glow?: boolean } = {}): Promise<number> {
+    const token = ++this.highlightToken;
     const it = assetId ? this.items.get(assetId) : undefined;
-    if (!it || !(it.object instanceof THREE.Mesh)) return 0;
-    const res = await fetch(`/api/assets/${it.meta.id}/scalars/${name}`);
-    if (!res.ok) return 0;
-    const values = new Float32Array(await res.arrayBuffer());
-    const n = it.geometry.attributes.position.count;
-    if (values.length !== n || this.items.get(it.meta.id) !== it) return 0;
-    const mask = new Float32Array(n);
-    let count = 0;
-    for (let i = 0; i < n; i++) {
-      if (values[i] === value) {
-        mask[i] = 1;
-        count++;
-      }
+    if (!it || !values.length || !(it.object instanceof THREE.Mesh)) {
+      this.endHighlights();
+      return 0;
     }
-    it.geometry.setAttribute('focus', new THREE.BufferAttribute(mask, 1));
+    const n = it.geometry.attributes.position.count;
+    const scalars = await this.scalarArray(it.meta.id, name, n);
+    if (this.items.get(it.meta.id) !== it) return 0;
+    const attr = it.geometry.attributes.focus as THREE.BufferAttribute | undefined;
+    const current = token === this.highlightToken;
+    // write straight into the mask the GPU already has (no new buffer per hover); a superseded call only counts. It
+    // is uploaded only when something matched: otherwise the old mask stays on the GPU while the old highlight fades.
+    const mask = current && attr && attr.count === n ? (attr.array as Float32Array) : null;
+    const count = scalars ? maskOf(scalars, values, mask) : 0;
+    if (!current) return count;
+    if (!count) {
+      this.endHighlights();
+      return 0;
+    }
+    if (mask) attr!.needsUpdate = true;
+    else {
+      const fresh = new Float32Array(n);
+      maskOf(scalars!, values, fresh);
+      it.geometry.setAttribute('focus', new THREE.BufferAttribute(fresh, 1));
+    }
+    this.endHighlights(it);
     it.focused = true;
-    const u = (it.object.material as THREE.Material).userData?.uFocus;
-    if (u) u.value = 1;
+    this.lit = { it, name, values: [...values] };
+    this.fadeFocus(it, 1);
+    this.setGlow(it, !!opts.glow);
     this.invalidate();
     return count;
+  }
+
+  /**
+   * Fly the camera to what the current highlight lights (the last highlight(): model + scalar + values), so a small
+   * area is easy to find (Measure -> Golden model: a colour of the surface bar is clicked). It looks at their bounding
+   * box's centre from the current direction, or from their mean normal when most of them face away from the camera,
+   * and makes them span about 60 % of the view, but never shows less than about a quarter of the part's size (a
+   * tiny area still needs its surroundings). Resolves to false when nothing is highlighted.
+   */
+  async frameHighlight(duration = 650): Promise<boolean> {
+    const lit = this.lit;
+    if (!lit || this.items.get(lit.it.meta.id) !== lit.it) return false;
+    const it = lit.it;
+    const n = it.geometry.attributes.position.count;
+    const scalars = await this.scalarArray(it.meta.id, lit.name, n);
+    if (!scalars || this.lit !== lit) return false;
+    const count = maskOf(scalars, lit.values, null);
+    if (!count) return false;
+    const set = lit.values.length === 1 ? null : new Set(lit.values);
+    const one = lit.values[0];
+    const pos = it.geometry.attributes.position.array as Float32Array;
+    const nor = it.geometry.attributes.normal?.array as Float32Array | undefined;
+    it.object.updateMatrixWorld();
+    const m = it.object.matrixWorld;
+    const nm = new THREE.Matrix3().getNormalMatrix(m);
+    const cam = this.camera;
+    const ortho = cam === this.orthographic;
+    const camPos = cam.position;
+    const look = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+    // the lit vertices in world space, their mean normal and how many face the camera
+    const pts = new Float32Array(count * 3);
+    const p = new THREE.Vector3(), nv = new THREE.Vector3(), mean = new THREE.Vector3();
+    let j = 0, facing = 0;
+    for (let i = 0; i < n; i++) {
+      const s = scalars[i];
+      if (set ? !set.has(s) : s !== one) continue;
+      p.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]).applyMatrix4(m);
+      pts[j * 3] = p.x;
+      pts[j * 3 + 1] = p.y;
+      pts[j * 3 + 2] = p.z;
+      j++;
+      if (nor) {
+        nv.set(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]).applyMatrix3(nm).normalize();
+        mean.add(nv);
+        const toward = ortho ? -nv.dot(look) : nv.x * (camPos.x - p.x) + nv.y * (camPos.y - p.y) + nv.z * (camPos.z - p.z);
+        if (toward > 0) facing++;
+      } else facing++;
+    }
+    // the direction to look from (target -> camera): the current one, unless most of the area faces away
+    const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(cam.quaternion);
+    if (facing < count / 2 && mean.length() > count * 0.15) dir.copy(mean).normalize();
+    let up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+    if (Math.abs(up.dot(dir)) > 0.95) up = this.controls.up.clone();
+    if (Math.abs(up.dot(dir)) > 0.95) up = new THREE.Vector3(1, 0, 0);
+    const q = lookQuaternion(dir, up);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+    const upv = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+    // the area's extent on the new screen (2nd-98th percentile once there are enough vertices: a few strays must
+    // not pull the view out to the whole part)
+    const lo = [0, 0, 0], hi = [0, 0, 0];
+    const axes = [right, upv, dir];
+    const along = new Float32Array(count);
+    const trim = count >= 50 ? Math.floor(count * 0.02) : 0;
+    for (let a = 0; a < 3; a++) {
+      const ax = axes[a];
+      for (let k = 0; k < count; k++) along[k] = ax.x * pts[k * 3] + ax.y * pts[k * 3 + 1] + ax.z * pts[k * 3 + 2];
+      along.sort();
+      lo[a] = along[trim];
+      hi[a] = along[count - 1 - trim];
+    }
+    const target = new THREE.Vector3()
+      .addScaledVector(right, (lo[0] + hi[0]) / 2)
+      .addScaledVector(upv, (lo[1] + hi[1]) / 2)
+      .addScaledVector(dir, (lo[2] + hi[2]) / 2);
+    const aspect = Math.max(this.container.clientWidth, 1) / Math.max(this.container.clientHeight, 1);
+    const partBox = it.geometry.boundingBox!.clone().applyMatrix4(m);
+    const partSize = Math.max(...partBox.getSize(new THREE.Vector3()).toArray());
+    // visible height: the area spans ~60 %, but the view's short side never shows less than ~25 % of the part
+    const viewH = Math.max((hi[1] - lo[1]) / 0.6, (hi[0] - lo[0]) / aspect / 0.6, (partSize * 0.25) / Math.min(1, aspect), 1e-6);
+    const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.perspective.fov) / 2);
+    const dist = Math.max(viewH / (2 * tanHalf), (hi[2] - lo[2]) * 1.5);
+    const zoom = ortho ? (this.orthographic.top - this.orthographic.bottom) / viewH : undefined;
+    this.controls.animateTo(target.clone().addScaledVector(dir, dist), q, target, zoom, duration);
+    this.invalidate();
+    return true;
+  }
+
+  /** Per-vertex scalar `name` of an asset (null when it has none or the length does not match), downloaded once. */
+  private scalarArray(id: string, name: string, n: number): Promise<Float32Array | null> {
+    const key = `${id}/${name}`;
+    let p = this.scalarCache.get(key);
+    if (!p) {
+      p = fetch(`/api/assets/${id}/scalars/${encodeURIComponent(name)}`)
+        .then(async r => (r.ok ? new Float32Array(await r.arrayBuffer()) : null))
+        .catch(() => {
+          this.scalarCache.delete(key); // a network hiccup: try again next time
+          return null;
+        });
+      this.scalarCache.set(key, p);
+    }
+    return p.then(a => (a && a.length === n ? a : null));
+  }
+
+  /** Fade every highlighted model (but `keep`) back to its own colours. */
+  private endHighlights(keep?: Item) {
+    if (!keep || this.lit?.it !== keep) this.lit = null;
+    for (const it of this.items.values()) {
+      if (it === keep || !it.focused) continue;
+      it.focused = false;
+      this.fadeFocus(it, 0);
+      if (this.glowItem === it) this.setGlow(it, false);
+    }
+    this.invalidate();
+  }
+
+  /** Re-target the grey-out of one model (anime.js picks up from wherever the running fade is). */
+  private fadeFocus(it: Item, to: number) {
+    const fx = it.fx;
+    fx.fade?.cancel();
+    fx.fade = null;
+    if (fx.uFocus.value === to) return;
+    if (reducedMotion()) {
+      fx.uFocus.value = to;
+      this.invalidate();
+      return;
+    }
+    fx.fade = animate(fx.uFocus, {
+      value: to,
+      duration: FOCUS_MS,
+      ease: to > fx.uFocus.value ? 'out(2)' : 'inOut(2)',
+      onUpdate: () => this.invalidate(),
+      onComplete: () => {
+        fx.fade = null;
+        this.invalidate();
+      },
+    });
+  }
+
+  /** Start or stop the breathing of a highlight (one model at a time; a steady lift under reduced motion). */
+  private setGlow(it: Item, on: boolean) {
+    const fx = it.fx;
+    fx.glowFade?.cancel();
+    fx.glowFade = null;
+    if (on) {
+      if (reducedMotion()) {
+        if (this.glowItem === it) this.glowItem = null;
+        fx.uGlow.value = GLOW_STEADY;
+      } else if (this.glowItem !== it) {
+        if (this.glowItem) this.setGlow(this.glowItem, false);
+        // start from the glow's current lift so a re-highlight never jumps
+        const v = Math.min(Math.max(fx.uGlow.value / GLOW_MAX, 0), 1);
+        this.glowItem = it;
+        this.glowStart = performance.now() - (Math.acos(1 - 2 * v) / (2 * Math.PI)) * GLOW_PERIOD_MS;
+      }
+      this.invalidate();
+      return;
+    }
+    if (this.glowItem === it) this.glowItem = null;
+    if (fx.uGlow.value === 0) return;
+    if (reducedMotion()) {
+      fx.uGlow.value = 0;
+      this.invalidate();
+      return;
+    }
+    fx.glowFade = animate(fx.uGlow, {
+      value: 0,
+      duration: FOCUS_MS,
+      ease: 'out(2)',
+      onUpdate: () => this.invalidate(),
+      onComplete: () => {
+        fx.glowFade = null;
+      },
+    });
   }
 
   /** Re-centre the view on a world point, keeping direction and distance. */
@@ -1407,6 +1754,9 @@ export class Viewer {
     for (const o of [this.helpers, this.live?.points, this.liveFrame, this.liveMarkers, this.mapMarkers]) if (o && o.visible) { o.visible = false; hidden.push(o); }
     const wasVisible = it.object.visible;
     it.object.visible = true;
+    // a thumbnail shows the whole model, even while its scan-beam reveal is still sweeping on the main view
+    const prevReveal = it.fx.uReveal.value;
+    it.fx.uReveal.value = 1;
     let prevScale = 0, prevOrtho = 0;
     const pointU = it.object instanceof THREE.Points ? (it.object.material as THREE.ShaderMaterial).uniforms : null;
     if (pointU) {
@@ -1430,6 +1780,7 @@ export class Viewer {
       pointU.uOrtho.value = prevOrtho;
     }
     it.object.visible = wasVisible;
+    it.fx.uReveal.value = prevReveal;
     for (const o of hidden) o.visible = true;
     this.scene.remove(cam);
     target.dispose();
@@ -1440,6 +1791,161 @@ export class Viewer {
     const g = c.getContext('2d')!;
     const img = g.createImageData(S, S);
     for (let y = 0; y < S; y++) img.data.set(buf.subarray((S - 1 - y) * S * 4, (S - y) * S * 4), y * S * 4);
+    g.putImageData(img, 0, 0);
+    const out = document.createElement('canvas');
+    out.width = out.height = size;
+    const og = out.getContext('2d')!;
+    og.imageSmoothingQuality = 'high';
+    og.drawImage(c, 0, 0, size, size);
+    return out.toDataURL('image/png');
+  }
+
+  /**
+   * One area of a mesh, seen from `from` looking at `target` (the model's own frame, e.g. a golden check's
+   * region.view), rendered off screen as a PNG data URL with a transparent background (Measure -> Golden model: the
+   * picture on an area's card). Vertices whose scalar `scalar` is one of `values` keep their colours, the rest are
+   * greyed out like highlight(); without that scalar (or with no match) the whole model is in colour. With `radius`
+   * the camera moves along the same line until the area fills about 70 % of the picture; otherwise it stays at
+   * |from - target|. Lit and tone mapped like the main view, in the model's own colours (not the scalar colouring
+   * the main view may be showing), never clipped by the section plane. It draws into its own scene, so the main view
+   * (its mask, uniforms, visibility, helpers) is untouched, and it works while the main view shows other models or
+   * has not loaded this one yet. Resolves to null when the model cannot be loaded or is not a mesh.
+   */
+  async renderAreaThumbnail(assetId: string, o: { scalar: string; values: number[]; target: Vec3; from: Vec3; radius?: number; size?: number }): Promise<string | null> {
+    const size = Math.max(16, Math.round(o.size ?? 176));
+    // the model: the loaded one, or (when the main view never showed it) its preview downloaded just for this
+    let it = this.items.get(assetId);
+    let ownGeometry: THREE.BufferGeometry | null = null;
+    if (!it) {
+      const geom = await fetch(`/api/assets/${assetId}/preview`)
+        .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`preview ${r.status}`))))
+        .then(buf => toFloat32(new PLYLoader().parse(buf)))
+        .catch(() => null);
+      it = this.items.get(assetId); // it may have arrived while we were downloading
+      if (!it) {
+        if (!geom || !geom.index) {
+          geom?.dispose();
+          return null;
+        }
+        if (!geom.attributes.normal) geom.computeVertexNormals();
+        ownGeometry = geom;
+      } else geom?.dispose();
+    }
+    if (it && !(it.object instanceof THREE.Mesh)) return null;
+    const src = ownGeometry ?? it!.geometry;
+    const n = src.attributes.position.count;
+    const scalars = o.values.length ? await this.scalarArray(assetId, o.scalar, n) : null;
+    if (it && this.items.get(assetId) !== it) return null; // forgotten meanwhile
+    const zeros = new Float32Array(n);
+    let mask: Float32Array | null = null;
+    if (scalars) {
+      mask = new Float32Array(n);
+      if (!maskOf(scalars, o.values, mask)) mask = null;
+    }
+    // a stand-in sharing the model's buffers (no copy on the GPU) with its own mask, in the model's own colours
+    const hasColor = ownGeometry ? !!ownGeometry.attributes.color : it!.hasColor;
+    const colors = hasColor ? (it?.originalColors ?? src.attributes.color) : undefined;
+    const geom = new THREE.BufferGeometry();
+    geom.setIndex(src.index);
+    geom.setAttribute('position', src.attributes.position);
+    if (src.attributes.normal) geom.setAttribute('normal', src.attributes.normal);
+    if (colors) geom.setAttribute('color', colors);
+    geom.setAttribute('selected', new THREE.BufferAttribute(zeros, 1));
+    geom.setAttribute('focus', new THREE.BufferAttribute(mask ?? zeros, 1));
+    geom.computeBoundingSphere();
+    const fx = newFx(mask ? 1 : 0);
+    const mat = this.meshMaterial(fx);
+    mat.vertexColors = !!colors;
+    mat.color.set(colors ? '#ffffff' : this.theme.mesh);
+    const mesh = new THREE.Mesh(geom, mat);
+    const world = it ? it.object.matrixWorld.clone() : new THREE.Matrix4();
+    mesh.matrixAutoUpdate = false;
+    mesh.matrix.copy(world);
+    mesh.frustumCulled = false;
+    const scene = new THREE.Scene();
+    scene.environment = this.scene.environment;
+    scene.environmentIntensity = this.scene.environmentIntensity;
+    scene.add(mesh);
+
+    // the camera: on the line from `target` to `from`
+    const sphere = geom.boundingSphere!.clone().applyMatrix4(world);
+    const fov = 30;
+    const tanHalf = Math.tan(THREE.MathUtils.degToRad(fov / 2));
+    const t = new THREE.Vector3(...o.target).applyMatrix4(world);
+    const f = new THREE.Vector3(...o.from).applyMatrix4(world);
+    const dir = f.clone().sub(t);
+    let dist = dir.length();
+    if (!(dist > 1e-9) || !Number.isFinite(dist)) {
+      dir.copy(this.viewDirection('iso').dir);
+      dist = (sphere.radius / Math.sin(THREE.MathUtils.degToRad(fov / 2))) * 1.02;
+    }
+    dir.normalize();
+    if (o.radius && o.radius > 0) {
+      // the area (radius) spans ~70 % of the picture's height, the rest shows what is around it
+      const r = Math.max(o.radius, sphere.radius * 0.02);
+      dist = r / (0.7 * tanHalf);
+    }
+    const cam = new THREE.PerspectiveCamera(fov, 1, Math.max(dist * 0.01, sphere.radius * 1e-4), dist + sphere.radius * 4 + t.distanceTo(sphere.center));
+    cam.position.copy(t).addScaledVector(dir, dist);
+    let up = this.controls.up.clone();
+    if (Math.abs(up.dot(dir)) > 0.95) up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+    if (Math.abs(up.dot(dir)) > 0.95) up = new THREE.Vector3(1, 0, 0);
+    cam.up.copy(up);
+    cam.lookAt(t);
+    cam.updateProjectionMatrix();
+    const key = new THREE.DirectionalLight(0xffffff, 1.25);
+    key.position.set(-0.55, 0.8, 0.6);
+    key.target.position.set(0, 0, -1);
+    const fill = new THREE.DirectionalLight(0xdfe8ff, 0.35);
+    fill.position.set(0.7, -0.35, 0.5);
+    fill.target.position.set(0, 0, -1);
+    cam.add(key, key.target, fill, fill.target);
+    scene.add(cam);
+    scene.updateMatrixWorld(true);
+
+    // render supersampled into a float target; tone map + sRGB on the way out like the main view does on screen
+    const S = size * 2;
+    const target = new THREE.WebGLRenderTarget(S, S, { type: THREE.FloatType, samples: 4 });
+    const prevTarget = this.renderer.getRenderTarget();
+    const prevColor = this.renderer.getClearColor(new THREE.Color());
+    const prevAlpha = this.renderer.getClearAlpha();
+    const buf = new Float32Array(S * S * 4);
+    try {
+      this.renderer.setRenderTarget(target);
+      this.renderer.setClearColor(0x000000, 0);
+      this.renderer.clear();
+      this.renderer.render(scene, cam);
+      this.renderer.readRenderTargetPixels(target, 0, 0, S, S, buf);
+    } finally {
+      this.renderer.setRenderTarget(prevTarget);
+      this.renderer.setClearColor(prevColor, prevAlpha);
+      target.dispose();
+      mat.dispose();
+      // free only the stand-in's own buffers: disposing a geometry frees every attribute it holds on the GPU,
+      // and the rest belong to the model on the main view
+      for (const name of ['position', 'normal', 'color']) geom.deleteAttribute(name);
+      geom.setIndex(null);
+      geom.dispose();
+      if (ownGeometry) ownGeometry.dispose();
+      this.invalidate();
+    }
+
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d')!;
+    const img = g.createImageData(S, S);
+    const exposure = this.renderer.toneMappingExposure;
+    for (let y = 0; y < S; y++) {
+      const row = (S - 1 - y) * S * 4; // render targets start at the bottom row
+      for (let x = 0; x < S; x++) {
+        const i = row + x * 4, oi = (y * S + x) * 4;
+        const a = Math.min(buf[i + 3], 1);
+        if (a <= 1e-4) continue;
+        // edge pixels were averaged with the transparent clear: un-premultiply before tone mapping
+        toneMapSRGB(buf[i] / a, buf[i + 1] / a, buf[i + 2] / a, exposure, img.data, oi);
+        img.data[oi + 3] = Math.round(a * 255);
+      }
+    }
     g.putImageData(img, 0, 0);
     const out = document.createElement('canvas');
     out.width = out.height = size;
@@ -1514,6 +2020,61 @@ function toFloat32(geom: THREE.BufferGeometry): THREE.BufferGeometry {
     if (a.array instanceof Float64Array) geom.setAttribute(name, new THREE.BufferAttribute(new Float32Array(a.array), a.itemSize, a.normalized));
   }
   return geom;
+}
+
+/** Count the vertices whose scalar is one of `values`, writing 1 / 0 into `out` when given. */
+function maskOf(scalars: Float32Array, values: number[], out: Float32Array | null): number {
+  const n = scalars.length;
+  let count = 0;
+  if (values.length === 1) {
+    const v = values[0];
+    for (let i = 0; i < n; i++) {
+      const hit = scalars[i] === v;
+      if (out) out[i] = hit ? 1 : 0;
+      if (hit) count++;
+    }
+    return count;
+  }
+  const set = new Set(values);
+  for (let i = 0; i < n; i++) {
+    const hit = set.has(scalars[i]);
+    if (out) out[i] = hit ? 1 : 0;
+    if (hit) count++;
+  }
+  return count;
+}
+
+/** NeutralToneMapping + sRGB encoding (what the renderer does on screen), for pixels read back from a float target. */
+function toneMapSRGB(r: number, g: number, b: number, exposure: number, out: Uint8ClampedArray, o: number) {
+  r *= exposure;
+  g *= exposure;
+  b *= exposure;
+  const x = Math.min(r, g, b);
+  const offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+  r -= offset;
+  g -= offset;
+  b -= offset;
+  const peak = Math.max(r, g, b);
+  const start = 0.8 - 0.04;
+  if (peak >= start) {
+    const d = 1 - start;
+    const newPeak = 1 - (d * d) / (peak + d - start);
+    const s = newPeak / peak;
+    r *= s;
+    g *= s;
+    b *= s;
+    const k = 1 - 1 / (0.15 * (peak - newPeak) + 1);
+    r += (newPeak - r) * k;
+    g += (newPeak - g) * k;
+    b += (newPeak - b) * k;
+  }
+  const enc = (c: number) => {
+    c = Math.min(Math.max(c, 0), 1);
+    return 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+  };
+  out[o] = enc(r);
+  out[o + 1] = enc(g);
+  out[o + 2] = enc(b);
 }
 
 function lookQuaternion(dirFromTarget: THREE.Vector3, up: THREE.Vector3): THREE.Quaternion {

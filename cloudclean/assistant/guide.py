@@ -354,14 +354,32 @@ FEATURES: list[Feature] = [
             "missing not scanned coverage measurements match pass fail", _m("cad")),
     Feature("golden.verdict", "Golden check verdict", "Measure → Golden model → the box at the top of a result",
             "Matches, Mostly matches (95 % or more of the surface within the tolerance, a few things to look at), "
-            "Does not match, or Scan more; the ring shows how much of the surface matches, the three numbers under "
-            "it how much was scanned, how many sizes match and how many areas to look at.",
-            "verdict result pass fail percent match score summary how good", _m("cad")),
+            "Does not match, or Scan more; the dial shows how much of the surface matches (one coloured arc per "
+            "verdict: point at an arc to light those places on the model), the three numbers under it how much was "
+            "scanned, how many sizes match and how many areas to look at. An older check shows Update this check: "
+            "running it again gives plain names, the drawing of the part and sizes you can point at.",
+            "verdict result pass fail percent match score summary how good dial update older", _m("cad")),
+    Feature("golden.surface", "The surface (point at a colour)", "Measure → Golden model → The surface",
+            "One bar of colours for the whole golden surface: Matches, Not scanned, Too few points, Rough, Less "
+            "material, More material. Point at a colour (on the bar or its chip) and only those places keep their "
+            "colour on the 3D model, softly glowing; click a colour to keep it lit and fly the view to it, click again "
+            "to let go.", "surface bar colours legend highlight light up where matches not scanned less more material",
+            _m("cad")),
     Feature("golden.areas", "Areas to look at", "Measure → Golden model → Areas to look at",
-            "Every problem area of the check, numbered like the pins on the 3D view: Different from the golden "
-            "model (less or more material than designed, with a bar against the tolerance) and Scan these again "
-            "(not scanned, too few points, rough), each with what it means and what to do.",
-            "problem areas list regions off different rescan scan again pins numbers", _m("cad")),
+            "Every problem area of the check, named after the part (e.g. Bottom of the hex socket, Corner under the "
+            "head), with a picture of the part where the area is lit and a line saying where to find it, numbered "
+            "like the pins on the 3D view: Different from the golden model (less or more material than designed, "
+            "with a bar against the tolerance) and Scan these again (not scanned, too few points, rough), each with "
+            "what it means and what to do. Pointing at a card lights its area on the model.",
+            "problem areas list regions off different rescan scan again pins numbers picture", _m("cad")),
+    Feature("golden.sizes", "Sizes", "Measure → Golden model → Sizes",
+            "Every size the golden model is drawn with (overall length, head height, socket depth, hole diameters…), "
+            "measured again on the scan, grouped by the part they belong to, each with one line on where it is "
+            "measured from and to and how much bigger or smaller the scan is. A drawing of the part (a cut along "
+            "its axis) and the 3D model both show where a size is when you point at it; click a size for the "
+            "details and Show on the model. 'What the sizes say' explains when several sizes are off for one reason.",
+            "sizes measurements dimensions drawing cut section length height depth diameter off match designed "
+            "scanned caliper", _m("cad")),
     Feature("golden.show-me", "Show me", "Measure → Golden model → Areas to look at → Show me on an area",
             "Turns the 3D view to that area, greys out the rest of the part so only the area keeps its colour, and "
             "marks its pin. Whole part goes back to the full view. Clicking a numbered pin on the model does the same.",

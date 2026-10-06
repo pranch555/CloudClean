@@ -4,7 +4,6 @@
   gap: var(--sp-5);
   padding: var(--sp-5) var(--sp-5) var(--sp-6);
   min-width: 0;
-  animation: rise var(--dur-3) var(--ease) both;
 }
 
 .step-head {
@@ -37,6 +36,41 @@
   font-weight: 650;
   letter-spacing: -0.02em;
   color: var(--ink-1);
+}
+
+/* each word of the title rises out of its own clipping box */
+.step-title .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.step-title .w > span {
+  display: inline-block;
+}
+
+/* "Step n of 6": n is a strip of all six numbers in a one-digit window; it rolls to the step */
+.step-n {
+  display: inline-block;
+  height: 1.25em;
+  overflow: hidden;
+  vertical-align: bottom;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.step-n-strip {
+  display: block;
+}
+
+.step-n-strip > span {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25em;
+  text-align: center;
 }
 
 .step-purpose {

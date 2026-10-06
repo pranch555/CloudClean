@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, CheckCircle2, ChevronDown, Crosshair, Eye, ExternalLink, ImagePlus, RefreshCw, ScanLine, TriangleAlert, Upload, X } from 'lucide-react';
+import { ArrowDown, ChevronDown, ExternalLink, ImagePlus, RefreshCw, ScanLine, Sparkles, TriangleAlert, Upload } from 'lucide-react';
 import { create } from 'zustand';
 import { api } from '../../lib/api';
 import type { Asset } from '../../lib/types';
 import { submitJob } from '../../lib/jobs';
-import { fmtLen, fmtSigned } from '../../lib/format';
 import { pickFiles } from '../../lib/importing';
 import { goldenGrade, regionKey, useGoldenPins, type GoldenMeasurement, type GoldenRegion, type GoldenReport } from '../../lib/golden';
+import { enter, pulse } from '../../lib/motion';
 import { useProjectAssets, useStore } from '../../store';
 import { getViewer } from '../../viewer/instance';
 import { Button, Empty, Field, NumberInput, Segmented, Select } from '../../ui/primitives';
 import { Block } from '../StepFrame';
 import { CadResults, isCad } from './CadCompare';
 import { CadGlyph } from './glyphs';
+import { AreaCard } from './golden/AreaCard';
+import { GoldenHero } from './golden/Hero';
+import { pinPointing, pointAt, pointingCheck, settlePointing, type Pointing } from './golden/pointing';
+import { Sizes, dimensionOf } from './golden/Sizes';
+import { SurfaceBar } from './golden/SurfaceBar';
+import { useReveal } from './golden/useSeen';
+import { STATUS_CODE, plural, pct } from './golden/words';
 
 /* Measure -> Golden model (docs/golden-model.md): the scan against the part as it should be. */
 
@@ -210,79 +217,21 @@ function FillFromPhotos({ scanId }: { scanId: string }) {
 
 /* ---------------------------------------------------------------- the result */
 
-/** Plain words for the colours of the check (the legend keys of cloudclean/golden.py). */
-const SHARE_LABEL: Record<string, string> = {
-  good: 'Matches',
-  missing: 'Not scanned',
-  thin: 'Too few points',
-  rough: 'Rough: points scatter',
-  off_out: 'More material',
-  off_in: 'Less material',
-};
-
-const AREA_STATUS: Record<string, string> = {
-  missing: 'Not scanned',
-  thin: 'Too few points',
-  rough: 'Rough',
-  off_out: 'More material',
-  off_in: 'Less material',
-};
-
-const MEAS_STATUS: Record<GoldenMeasurement['status'], { label: string; tone: string }> = {
-  off: { label: 'Off', tone: 'fail' },
-  close: { label: 'Too close to call', tone: 'warn' },
-  ok: { label: 'Matches', tone: 'pass' },
-  not_measured: { label: 'Not measured', tone: 'none' },
-};
-
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-const pct = (v: number) => (v > 0 && v < 0.1 ? '<0.1' : v > 99.9 && v < 100 ? '99.9' : v.toFixed(1));
-
-/** The share of the golden surface that matches, as a ring. */
-function MatchRing({ value, tone }: { value: number | null; tone: string }) {
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  const v = Math.max(0, Math.min(100, value ?? 0));
-  return (
-    <div className={`gold-ring gold-ring-${tone}`} aria-hidden>
-      <svg viewBox="0 0 84 84" width="84" height="84">
-        <circle cx="42" cy="42" r={r} className="gold-ring-track" />
-        <circle cx="42" cy="42" r={r} className="gold-ring-value" strokeDasharray={`${(c * v) / 100} ${c}`} transform="rotate(-90 42 42)" />
-      </svg>
-      <div className="gold-ring-text">
-        <b>{value == null ? '–' : value >= 99.95 ? '100' : value.toFixed(value >= 10 ? 0 : 1)}<small>%</small></b>
-        <span>match</span>
-      </div>
-    </div>
-  );
-}
-
-/** Where a deviation sits against the tolerance: the green band is ±tolerance. */
-function DeviationMeter({ value, tol, units }: { value: number; tol: number; units: string }) {
-  const span = Math.max(4 * tol, Math.abs(value) * 1.25);
-  const at = (x: number) => `${((x + span) / (2 * span)) * 100}%`;
-  return (
-    <div className="gold-meter" role="img" aria-label={`${fmtSigned(value, 2)} ${units}, tolerance ±${fmtLen(tol)} ${units}`}>
-      <div className="gold-meter-track">
-        <span className="gold-meter-band" style={{ left: at(-tol), width: `${(tol / span) * 100}%` }} />
-        <span className="gold-meter-zero" style={{ left: at(0) }} />
-        <span className={`gold-meter-mark ${value < 0 ? 'is-in' : 'is-out'}`} style={{ left: at(value) }} />
-      </div>
-      <div className="gold-meter-labels">
-        <span>less material</span>
-        <span className="mono">±{+tol.toFixed(4)} ok</span>
-        <span>more material</span>
-      </div>
-    </div>
-  );
+/** The cards of the areas, entering as the list scrolls into view. */
+function AreaList({ checkKey, children }: { checkKey: string; children: React.ReactNode }) {
+  const [ref, seen] = useReveal<HTMLDivElement>(checkKey, root => enter(root.querySelectorAll('.ga'), { y: 14, step: 70, delay: 60 }));
+  return <div ref={ref} className={`ga-list ${seen ? 'is-seen' : ''}`}>{children}</div>;
 }
 
 function GoldenResults({ check }: { check: Asset }) {
   const units = useStore(s => s.display.units);
   const display = useStore(s => s.display);
   const byId = useStore(s => s.byId);
+  const onStage = useStore(s => s.visible.includes(check.id));
   const [report, setReport] = useState<GoldenReport | null>(null);
   const [failed, setFailed] = useState(false);
+  const [hot, setHot] = useState<string | null>(null);
+  const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const active = useGoldenPins(s => s.active);
   const picked = useGoldenPins(s => s.picked);
   const listRef = useRef<HTMLDivElement>(null);
@@ -291,31 +240,42 @@ function GoldenResults({ check }: { check: Asset }) {
     let alive = true;
     setReport(null);
     setFailed(false);
+    setHot(null);
+    setPinnedKey(null);
     api.asset(check.id).then(r => alive && setReport(r.report as GoldenReport)).catch(() => alive && setFailed(true));
     return () => {
       alive = false;
     };
   }, [check.id]);
 
+  const version = report?.version ?? 1;
   const tol = Number(report?.tolerance ?? 0.1);
   const colour = (r: GoldenRegion) => report?.legend.find(l => l.key === regionKey(r))?.color ?? 'var(--ink-3)';
   // one numbering for the list and the pins: areas that differ first (they decide the verdict), then what to scan again
   const ordered = useMemo(() => {
     if (!report) return [] as GoldenRegion[];
+    const listed = report.regions.filter(r => r.kind === 'off' || r.rescan);
+    if (listed.length && listed.every(r => r.number != null)) return [...listed].sort((a, b) => a.number! - b.number!);
     const off = report.regions.filter(r => r.kind === 'off').sort((a, b) => Math.abs(b.deviation ?? 0) * b.area_mm2 - Math.abs(a.deviation ?? 0) * a.area_mm2);
     return [...off, ...report.regions.filter(r => r.rescan)];
   }, [report]);
-  const numberOf = (r: GoldenRegion) => ordered.indexOf(r) + 1;
+  const numberOf = (r: GoldenRegion) => r.number ?? ordered.indexOf(r) + 1;
+  const areaNumber = (id: number) => {
+    const r = ordered.find(x => x.id === id);
+    return r ? numberOf(r) : null;
+  };
 
-  // the pins on the 3D view, while this result is on screen
+  // the pins on the 3D view and the lights of the panel, while this result is on screen
   useEffect(() => {
     if (!report) return;
+    pointingCheck(check.id);
     useGoldenPins.setState({
       checkId: check.id,
       active: null,
-      pins: ordered.map((r, i) => ({ n: i + 1, region: r.id, pos: r.pin ?? r.view.target, normal: r.normal, color: colour(r), label: r.name })),
+      pins: ordered.map(r => ({ n: numberOf(r), region: r.id, pos: r.pin ?? r.view.target, normal: r.normal, color: colour(r), label: r.name })),
     });
     return () => {
+      pointingCheck(null);
       useGoldenPins.setState({ checkId: null, pins: [], active: null });
       getViewer()?.spotlight(null);
     };
@@ -326,29 +286,33 @@ function GoldenResults({ check }: { check: Asset }) {
     const keepColours = st.display.colorMode === 'scalar' && st.display.scalar?.name === 'golden_deviation';
     useStore.setState({ visible: [check.id], activeId: check.id });
     if (!keepColours) st.setDisplay({ colorMode: 'original', scalar: null });
+    setPinnedKey(null);
+    pinPointing(null);
     useGoldenPins.setState({ active: r.id });
     window.setTimeout(() => {
-      const v = getViewer();
-      v?.viewFrom(r.view.target, r.view.from, 650, r.view.radius);
+      getViewer()?.viewFrom(r.view.target, r.view.from, 650, r.view.radius);
       // older checks coloured the raw CAD mesh, where an area can have hardly any vertices of its own: no spotlight
-      if ((report?.version ?? 1) >= 2) v?.spotlight(check.id, 'check_region', r.id).then(n => {
-          if (n === 0) v.spotlight(null);
-        });
+      if (version >= 2) settlePointing();
     }, 60);
   };
   const unfocus = () => {
     useGoldenPins.setState({ active: null });
-    getViewer()?.spotlight(null);
+    settlePointing();
     window.setTimeout(() => getViewer()?.fit([check.id]), 30);
+  };
+
+  const showArea = (id: number) => {
+    const r = report?.regions.find(x => x.id === id);
+    if (!r) return;
+    focus(r);
+    const card = listRef.current?.querySelector<HTMLElement>(`[data-area="${r.id}"]`);
+    card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    window.setTimeout(() => pulse(card ?? null), 350);
   };
 
   // a pin was clicked on the 3D view: show that area and bring its card into view
   useEffect(() => {
-    if (!picked || !report) return;
-    const r = report.regions.find(x => x.id === picked.region);
-    if (!r) return;
-    focus(r);
-    listRef.current?.querySelector(`[data-area="${r.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (picked && report) showArea(picked.region);
   }, [picked?.at]);
 
   if (failed) return <p className="err-text"><TriangleAlert size={14} aria-hidden /> The result of this check could not be loaded.</p>;
@@ -364,7 +328,8 @@ function GoldenResults({ check }: { check: Asset }) {
   const diverging = (name: string) => ({ colorMode: 'scalar' as const, scalar: { name, style: { kind: 'diverging' as const, min: -tol * 4, max: tol * 4, tolerance: tol, steps: 0 } } });
   const show = (v: View) => {
     useGoldenPins.setState({ active: null });
-    getViewer()?.spotlight(null);
+    setPinnedKey(null);
+    pinPointing(null);
     if (v === 'scan' && compareId) {
       useStore.setState({ visible: [compareId], activeId: compareId });
       useStore.getState().setDisplay(diverging('deviation'));
@@ -395,112 +360,86 @@ function GoldenResults({ check }: { check: Asset }) {
           : `Everything that was scanned is within ${tolText}, but ${plural(count('not_measured'), 'size')} could not be measured.`
         : `${pct(matchPct)} % of the surface is within ${tolText}. ${problems.length ? `${problems.join(' and ')}: see below.` : ''}`;
   const notes = report.summary.filter(s => !/ of the golden surface was scanned| match, .* off, .* not measured/.test(s));
-  const legacy = (report.version ?? 1) < 2;
-
-  const area = (r: GoldenRegion) => {
-    const key = regionKey(r);
-    const on = active === r.id;
-    return (
-      <li key={r.id} data-area={r.id} className={`gold-card ${on ? 'is-on' : ''}`}>
-        <div className="gold-card-head">
-          <span className="gold-pin" style={{ '--pin': colour(r) } as React.CSSProperties} aria-label={`Area ${numberOf(r)}`}>{numberOf(r)}</span>
-          <div className="gold-card-title">
-            <h4>{r.name}</h4>
-            <div className="gold-card-tags">
-              <span className={`gold-tag gold-tag-${key}`}>
-                <i style={{ background: colour(r) }} aria-hidden />
-                {AREA_STATUS[key]}
-                {r.kind === 'off' && r.deviation != null && <b className="mono">{fmtSigned(r.deviation, 2)} {units}</b>}
-                {r.kind === 'rough' && r.spread != null && <b className="mono">±{fmtLen(r.spread, 2)} {units}</b>}
-              </span>
-              <span className="gold-card-size mono">{r.area_mm2 >= 10 ? r.area_mm2.toFixed(0) : r.area_mm2.toFixed(1)} mm² · {pct(r.share_pct)} % of the part</span>
-            </div>
-          </div>
-        </div>
-        {r.kind === 'off' && r.deviation != null && <DeviationMeter value={r.deviation} tol={tol} units={units} />}
-        <p className="gold-card-why">{r.why}</p>
-        <p className="gold-card-todo"><span>What to do</span>{r.advice}</p>
-        <div className="gold-card-actions">
-          {on ? (
-            <>
-              <span className="gold-showing"><Eye size={15} aria-hidden /> Showing it in the 3D view</span>
-              <Button size="sm" variant="ghost" icon={<X size={14} />} onClick={unfocus}>Whole part</Button>
-            </>
-          ) : (
-            <Button size="sm" icon={<Crosshair size={15} />} onClick={() => focus(r)} data-guide={numberOf(r) === 1 ? 'golden.show-me' : undefined}>Show me</Button>
-          )}
-        </div>
-      </li>
-    );
-  };
-
-  const measRow = (m: GoldenMeasurement) => {
-    const region = m.region != null ? report.regions[m.region] : undefined;
-    const st = MEAS_STATUS[m.status];
-    const diff = Math.abs(m.difference ?? 0) < 0.0005 ? 0 : m.difference;
-    return (
-      <li key={m.id} className={`gold-row gold-row-${m.status}`}>
-        <div className="gold-row-main">
-          <span className="gold-row-name">{m.name}</span>
-          {m.status === 'not_measured' ? (
-            <span className="gold-row-note">
-              {m.reason}
-              {region && <> <button type="button" className="link" onClick={() => focus(region)}>Show the area</button></>}
-            </span>
-          ) : m.kind === 'position' ? (
-            <span className="gold-row-vals">{(m.scan ?? 0) < 0.0005 ? 'Exactly where the golden model has it' : <>Moved <b className="mono">{fmtLen(m.scan, 3)} {units}</b>{m.toward ? ` ${m.toward.startsWith('to ') || /^(up|down|sideways)/.test(m.toward) ? m.toward : `toward ${m.toward}`}` : ''}</>}</span>
-          ) : (
-            <span className="gold-row-vals">
-              Golden <b className="mono">{fmtLen(m.golden, 3)}</b> <span aria-hidden>→</span> scan <b className="mono">{fmtLen(m.scan, 3)}</b> {units}
-            </span>
-          )}
-        </div>
-        {m.status !== 'not_measured' ? (
-          <span className={`gold-diff gold-diff-${st.tone}`} title={`${st.label}${m.uncertainty != null ? ` · known to ±${fmtLen(m.uncertainty, 3)} ${units}` : ''}`}>
-            {m.kind === 'position' ? fmtLen(m.scan, 2) : fmtSigned(diff, 2)}
-            <small>{st.label}</small>
-          </span>
-        ) : (
-          <span className="gold-diff gold-diff-none"><small>{st.label}</small></span>
-        )}
-      </li>
-    );
-  };
-  const order: GoldenMeasurement['status'][] = ['off', 'close', 'ok'];
-  const shown = order.flatMap(s => ms.filter(m => m.status === s));
-  const notMeasured = ms.filter(m => m.status === 'not_measured');
   const scrollTo = (id: string) => listRef.current?.querySelector(`#${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // ---- pointing at the model: the surface colours, the areas, the sizes
+  const statusPointing = (key: string): Pointing => ({ kind: 'status', code: STATUS_CODE[key] ?? 0 });
+  const pointStatus = (key: string | null) => {
+    setHot(key);
+    pointAt(key ? statusPointing(key) : null);
+  };
+  const pinStatus = (key: string) => {
+    const next = pinnedKey === key ? null : key;
+    setPinnedKey(next);
+    pinPointing(next ? statusPointing(next) : null);
+    // a kept colour can be a few small places: bring them into view (the scalar may still be loading: wait a moment)
+    const v = getViewer() as unknown as { frameHighlight?: (duration?: number) => Promise<boolean> } | null;
+    if (next && next !== 'good' && onStage) window.setTimeout(() => void v?.frameHighlight?.(650), 260);
+  };
+  const sizePointing = (m: GoldenMeasurement): Pointing => ({ kind: 'size', faces: m.faces ?? [], dimension: dimensionOf(m, units) });
+  const pointSize = (m: GoldenMeasurement | null) => pointAt(m ? sizePointing(m) : null);
+  const pinSize = (m: GoldenMeasurement | null) => {
+    setPinnedKey(null);
+    pinPointing(m ? sizePointing(m) : null);
+  };
+  const showSize = (m: GoldenMeasurement) => {
+    if (!onStage) show('problems');
+    pinSize(m);
+    if (m.ends) {
+      const [a, b] = m.ends;
+      window.setTimeout(() => getViewer()?.lookAtPoint([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], 550), 80);
+    }
+  };
+
+  const slices = report.legend.map(l => ({ key: l.key, value: shares[l.key] ?? 0, color: l.color }));
+  const card = (r: GoldenRegion) => (
+    <AreaCard
+      key={r.id}
+      checkId={check.id}
+      r={r}
+      n={numberOf(r)}
+      color={colour(r)}
+      on={active === r.id}
+      tol={tol}
+      units={units}
+      pictures={version >= 2}
+      onShow={() => focus(r)}
+      onWhole={unfocus}
+      onPoint={id => {
+        if (version >= 2) pointAt(id != null ? { kind: 'region', id } : null);
+      }}
+    />
+  );
 
   return (
     <div className="gold" ref={listRef}>
-      <section className={`gold-hero gold-hero-${grade.tone}`} role="status" aria-label={`${grade.label}. ${sub}`} data-guide="golden.verdict">
-        <MatchRing value={grade.matchPct} tone={grade.tone} />
-        <div className="gold-hero-text">
-          <div className="gold-hero-kicker">{grade.tone === 'pass' ? <CheckCircle2 size={15} aria-hidden /> : <TriangleAlert size={15} aria-hidden />} Golden model check</div>
-          <h3 className="gold-hero-title">{grade.label}</h3>
-          <p className="gold-hero-sub">{sub}</p>
-        </div>
-      </section>
+      <GoldenHero
+        checkKey={check.id}
+        grade={grade}
+        title={grade.label}
+        sub={sub}
+        slices={slices}
+        tolText={tolText}
+        onPoint={pointStatus}
+        stats={[
+          { value: report.surface.scanned_pct, decimals: 1, suffix: '%', label: 'of the part scanned', onClick: () => scrollTo('gold-surface') },
+          { value: count('ok'), decimals: 0, suffix: `/${measured}`, label: measured ? 'sizes match' : 'no sizes to measure', fail: count('off') > 0, disabled: !ms.length, onClick: () => scrollTo('gold-sizes') },
+          { value: ordered.length, decimals: 0, label: ordered.length === 1 ? 'area to look at' : 'areas to look at', fail: differs.length > 0, disabled: !ordered.length, onClick: () => scrollTo('gold-areas') },
+        ]}
+      />
 
-      <div className="gold-glance">
-        <button type="button" className="gold-stat" onClick={() => scrollTo('gold-surface')}>
-          <span className="gold-stat-value mono">{pct(report.surface.scanned_pct)}<small>%</small></span>
-          <span className="gold-stat-label">of the part scanned</span>
-        </button>
-        <button type="button" className={`gold-stat ${count('off') ? 'is-fail' : ''}`} onClick={() => scrollTo('gold-sizes')} disabled={!ms.length}>
-          <span className="gold-stat-value mono">{count('ok')}<small>/{measured}</small></span>
-          <span className="gold-stat-label">{measured ? 'sizes match' : 'no sizes to measure'}</span>
-        </button>
-        <button type="button" className={`gold-stat ${differs.length ? 'is-fail' : ''}`} onClick={() => scrollTo('gold-areas')} disabled={!ordered.length}>
-          <span className="gold-stat-value mono">{ordered.length}</span>
-          <span className="gold-stat-label">{ordered.length === 1 ? 'area to look at' : 'areas to look at'}</span>
-        </button>
-      </div>
-
-      {legacy && (
+      {version < 3 && (
         <div className="gold-legacy">
-          <p>This check was made by an older version: its areas are named by coordinates and “Show me” can miss them. Run it again for plain names, numbered pins and a sharper colour map.</p>
-          <LegacyRerun check={check} report={report} />
+          <Sparkles size={18} aria-hidden />
+          <div>
+            <p>
+              {version < 2
+                ? 'This check was made by an older CloudClean: its areas are named by coordinates and its sizes by face positions. '
+                : 'This check was made before the latest update. '}
+              Run it again (about a minute) for plain names, a drawing of the part, and sizes you can point at on the model.
+            </p>
+            <LegacyRerun check={check} report={report} />
+          </div>
         </div>
       )}
 
@@ -509,18 +448,7 @@ function GoldenResults({ check }: { check: Asset }) {
           <h3>The surface</h3>
           <a className="gold-report-link" href={`/api/assets/${check.id}/golden-report`} target="_blank" rel="noreferrer"><ExternalLink size={14} aria-hidden /> Printable report</a>
         </div>
-        <div className="gold-bar" role="img" aria-label={Object.entries(shares).filter(([, v]) => v > 0).map(([k, v]) => `${SHARE_LABEL[k] ?? k} ${pct(v)} %`).join(', ')}>
-          {report.legend.map(l => ((shares[l.key] ?? 0) > 0 ? <span key={l.key} style={{ flexGrow: shares[l.key], background: l.color }} title={`${SHARE_LABEL[l.key] ?? l.label}: ${pct(shares[l.key])} %`} /> : null))}
-        </div>
-        <ul className="gold-shares">
-          {report.legend.filter(l => (shares[l.key] ?? 0) > 0 || l.key === 'good').map(l => (
-            <li key={l.key}>
-              <i style={{ background: l.color }} aria-hidden />
-              <span>{SHARE_LABEL[l.key] ?? l.label}</span>
-              <b className="mono">{pct(shares[l.key] ?? 0)} %</b>
-            </li>
-          ))}
-        </ul>
+        <SurfaceBar checkKey={check.id} shares={slices} tolText={tolText} hot={hot ?? pinnedKey} pinned={pinnedKey} canLight={onStage} onPoint={pointStatus} onPin={pinStatus} />
         <div className="gold-views" data-guide="golden.colour-by">
           <span className="gold-views-label">Colour the model by</span>
           <Segmented
@@ -543,43 +471,44 @@ function GoldenResults({ check }: { check: Asset }) {
             <h3>Areas to look at</h3>
             <span className="gold-section-note">The numbers match the pins on the model</span>
           </div>
-          {differs.length > 0 && (
-            <>
-              <div className="gold-group"><span className="gold-group-dot is-off" aria-hidden />Different from the golden model <span className="mono">{differs.length}</span></div>
-              <ol className="gold-cards">{differs.map(area)}</ol>
-            </>
-          )}
-          {rescan.length > 0 && (
-            <>
-              <div className="gold-group"><ScanLine size={15} aria-hidden />Scan these again <span className="mono">{rescan.length}</span></div>
-              <ol className="gold-cards">{rescan.map(area)}</ol>
-              {rescan.some(r => r.kind === 'missing' || r.kind === 'thin') && <FillFromPhotos scanId={scanId} />}
-            </>
-          )}
+          <AreaList checkKey={check.id}>
+            {differs.length > 0 && (
+              <>
+                <div className="gold-group"><span className="gold-group-dot is-off" aria-hidden />Different from the golden model <span className="mono">{differs.length}</span></div>
+                <ol className="ga-cards">{differs.map(card)}</ol>
+              </>
+            )}
+            {rescan.length > 0 && (
+              <>
+                <div className="gold-group"><ScanLine size={15} aria-hidden />Scan these again <span className="mono">{rescan.length}</span></div>
+                <ol className="ga-cards">{rescan.map(card)}</ol>
+                {rescan.some(r => r.kind === 'missing' || r.kind === 'thin') && <FillFromPhotos scanId={scanId} />}
+              </>
+            )}
+          </AreaList>
         </section>
       )}
 
-      <section className="gold-section" id="gold-sizes">
+      <section className="gold-section" id="gold-sizes" data-guide="golden.sizes">
         <div className="gold-section-head">
           <h3>Sizes</h3>
-          <span className="gold-section-note">golden → scan · difference</span>
+          <span className="gold-section-note">designed → scanned</span>
         </div>
         {ms.length ? (
-          <>
-            {shown.length > 0 && <ul className="gold-rows">{shown.map(measRow)}</ul>}
-            {notMeasured.length > 0 && (
-              <details className="gold-more">
-                <summary>
-                  <ArrowDown size={14} aria-hidden /> {plural(notMeasured.length, 'size')} could not be measured
-                </summary>
-                <ul className="gold-rows">{notMeasured.map(measRow)}</ul>
-              </details>
-            )}
-          </>
+          <Sizes
+            checkKey={check.id}
+            report={report}
+            units={units}
+            tolText={tolText}
+            areaNumber={areaNumber}
+            onPoint={pointSize}
+            onPin={pinSize}
+            onShowArea={showArea}
+            onShowSize={showSize}
+          />
         ) : (
           <p className="hint-text">The golden model has no flat or round faces to measure: use the colours and the areas above.</p>
         )}
-        <p className="gold-fine">A size matches when it is within {tolText}, allowing for how precisely the scan pins it down. Positions are measured after lining the scan up with the golden model.</p>
       </section>
 
       {(notes.length > 0 || (report.warnings ?? []).length > 0) && (
@@ -610,11 +539,11 @@ function LegacyRerun({ check, report }: { check: Asset; report: GoldenReport }) 
   const ok = !!useStore(s => s.byId.get(scanId)) && !!useStore(s => s.byId.get(goldenId));
   const align = ((check.params?.align as Align | undefined) ?? 'auto') as Align;
   return (
-    <Button size="sm" icon={<RefreshCw size={14} />} loading={busy} disabled={!ok} onClick={async () => {
+    <Button size="sm" variant="primary" icon={<RefreshCw size={14} />} loading={busy} disabled={!ok} onClick={async () => {
       setBusy(true);
       await runCheck({ scan_id: scanId, golden_id: goldenId, tolerance: Number(report.tolerance ?? 0.1), align }, () => setBusy(false));
     }}>
-      {ok ? 'Run the check again' : 'The scan or golden model was deleted'}
+      {ok ? 'Update this check' : 'The scan or golden model was deleted'}
     </Button>
   );
 }
