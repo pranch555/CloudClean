@@ -279,3 +279,18 @@ def test_driver_commands_route(tmp_path):
         assert r.status_code == 400 and "no command" in r.json()["detail"]
         assert client.get("/api/capture/status").json()["device"] == {}
         client.post("/api/capture/discard")
+
+
+def test_status_survives_infinite_numbers(tmp_path):
+    """No fit yet gives an infinite rmse (and a driver may report inf / NaN): the status still goes out, as null."""
+    with TestClient(create_app(tmp_path / "ws")) as client:
+        client.post("/api/capture/connect", json={"driver": "simulated", "settings": {"realtime": False}})
+        session = manager_for(tmp_path / "ws").session
+        session.tracking = {"state": "lost", "fitness": 0.0, "rmse_mm": float("inf")}
+        session.guidance = {"type": "guidance", "tracking": dict(session.tracking), "speed": {"value_mm_s": float("nan")}}
+        session.driver.status = lambda: {"distance_mm": float("inf")}
+        r = client.get("/api/capture/status")
+        assert r.status_code == 200
+        assert r.json()["device"] == {"distance_mm": None} and r.json()["guidance"]["tracking"]["rmse_mm"] is None
+        assert client.post("/api/capture/stop").status_code == 200
+        client.post("/api/capture/discard")

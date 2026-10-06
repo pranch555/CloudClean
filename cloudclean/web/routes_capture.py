@@ -88,6 +88,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from ..accuracy import jsonable
 from ..capture.manager import CaptureError, CaptureManager
 from ..io import CAD_EXTS, SUPPORTED_EXTS
 
@@ -127,8 +128,9 @@ def create_router(workspace, jobs) -> APIRouter:
     _MANAGERS[str(Path(workspace.root).resolve())] = manager
 
     def call(fn, *args):
+        # live numbers can be inf / NaN (no tracking yet, nothing in view): JSON has neither, so they go out as null
         try:
-            return fn(*args)
+            return jsonable(fn(*args))
         except CaptureError as exc:
             raise HTTPException(exc.status, str(exc))
 
@@ -181,7 +183,7 @@ def create_router(workspace, jobs) -> APIRouter:
 
     @router.get("/api/capture/status")
     def status():
-        return manager.status()
+        return jsonable(manager.status())
 
     @router.get("/api/capture/pending")
     def pending():
@@ -270,19 +272,19 @@ def create_router(workspace, jobs) -> APIRouter:
                     if isinstance(msg, bytes):
                         await websocket.send_bytes(msg)
                     else:
-                        await websocket.send_json(msg)
+                        await websocket.send_json(jsonable(msg))
                 now = time.monotonic()
                 if now - last_status >= 0.2:
                     last_status = now
                     session = manager.session
                     if session is None:
-                        await websocket.send_json(manager.status())
+                        await websocket.send_json(jsonable(manager.status()))
                     else:
-                        await websocket.send_json(session.status())
+                        await websocket.send_json(jsonable(session.status()))
                         key = (session.id, session.guidance_version)
                         if session.guidance is not None and key != seen_guidance:
                             seen_guidance = key
-                            await websocket.send_json(session.guidance)
+                            await websocket.send_json(jsonable(session.guidance))
                 try:
                     await asyncio.wait_for(closed.wait(), timeout=0.1)
                 except asyncio.TimeoutError:
