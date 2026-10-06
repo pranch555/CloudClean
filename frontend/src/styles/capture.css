@@ -1897,3 +1897,45 @@
     transition: none;
   }
 }
+
+/* ---- the practice (simulated) turntable can never pass for the real one (steps/capture/TurntableBlock.tsx) */
+.tt-missing {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+
+.tt-missing ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+}
+
+.tt-sim-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--warn-glyph) 45%, transparent);
+  background: var(--warn-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+
+.cap-tt-sim {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

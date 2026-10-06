@@ -103,8 +103,9 @@ function TurntableConnect({ status }: { status: TurntableStatus }) {
   const list: TurntableDevice[] = devices ?? [{ id: 'simulated', name: 'Simulated dual-axis turntable', kind: 'simulated', rssi: null }];
   useEffect(() => {
     if (pick && list.some(d => d.id === pick)) return;
+    // only a real table is picked for you: the practice one must be chosen on purpose (it moves nothing)
     const real = list.filter(d => d.kind !== 'simulated');
-    setPick((list.find(d => d.remembered) ?? real[0] ?? list[0])?.id ?? '');
+    setPick((real.find(d => d.remembered) ?? real[0])?.id ?? '');
   }, [devices]);
   const chosen = list.find(d => d.id === pick);
   const noBluetooth = status.bluetooth && status.bluetooth.installed === false;
@@ -123,12 +124,11 @@ function TurntableConnect({ status }: { status: TurntableStatus }) {
               </span>
               <span className="choice-text">
                 <span className="choice-title">
-                  <span className="truncate">{d.name ?? d.id}</span>
+                  <span className="truncate">{sim ? 'Practice turntable (simulated)' : d.name ?? d.id}</span>
                   {d.remembered && <span className="badge">last used</span>}
                 </span>
                 <span className="choice-body tt-device-meta">
-                  {KIND_LABEL[String(d.kind)] ?? 'Turntable'}
-                  {sim ? ' · works without hardware' : ''}
+                  {sim ? 'Nothing physical moves: for trying a turntable scan without the table' : KIND_LABEL[String(d.kind)] ?? 'Turntable'}
                   {rssiWord(d.rssi) && (
                     <>
                       {' · '}
@@ -148,7 +148,15 @@ function TurntableConnect({ status }: { status: TurntableStatus }) {
       </div>
       {noBluetooth && <p className="caption">Bluetooth support is not installed on the server, so only the simulated turntable is listed.</p>}
       {!searching && devices && !noBluetooth && !devices.some(d => d.kind !== 'simulated') && (
-        <p className="caption">No turntable found nearby. Switch it on, and close Revo Metro on other computers — the turntable accepts one connection at a time.</p>
+        <div className="tt-missing" role="status">
+          <b>Your turntable was not found.</b>
+          <ul>
+            <li>Is it switched on? Its light should be on.</li>
+            <li>Is Revo Metro open on any computer? Close it (or disconnect the turntable in it): the turntable accepts one connection at a time and hides while it is connected.</li>
+            <li>Is it within about 10 m of the computer running CloudClean?</li>
+          </ul>
+          <span>Then press Search again.</span>
+        </div>
       )}
       {(error || status.error) && (
         <p className="err-text" role="alert">
@@ -156,8 +164,8 @@ function TurntableConnect({ status }: { status: TurntableStatus }) {
         </p>
       )}
       <div className="row wrap">
-        <Button variant="primary" icon={<Link2 size={15} />} loading={busy === 'connect'} disabled={!chosen} onClick={() => chosen && turntable.connect(chosen.id, String(chosen.kind ?? 'auto'))}>
-          {chosen?.kind === 'simulated' ? 'Connect the simulated turntable' : 'Connect the turntable'}
+        <Button variant={chosen?.kind === 'simulated' ? 'secondary' : 'primary'} icon={<Link2 size={15} />} loading={busy === 'connect'} disabled={!chosen} onClick={() => chosen && turntable.connect(chosen.id, String(chosen.kind ?? 'auto'))}>
+          {!chosen ? 'Choose a turntable' : chosen.kind === 'simulated' ? 'Use the practice turntable' : 'Connect the turntable'}
         </Button>
         <Button variant="ghost" icon={<RefreshCw size={15} />} disabled={searching} onClick={() => searchTurntables(4)}>
           Search again
@@ -201,6 +209,12 @@ function TurntableControls({ status }: { status: TurntableStatus }) {
         </>
       }
     >
+      {status.kind === 'simulated' && (
+        <p className="tt-sim-note" role="status">
+          <b>This is the practice turntable: nothing physical moves.</b> To use your table,{' '}
+          <button type="button" className="link" onClick={() => turntable.disconnect()}>disconnect this one</button> and connect your turntable.
+        </p>
+      )}
       <div className="tt-head">
         <TurntableDial status={status} size={138} />
         <div className="tt-side">
