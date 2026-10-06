@@ -338,8 +338,10 @@ class CaptureSession:
         else:
             T, state, fitness, rmse = self._track(pts, frame.timestamp)
         self._publish_live(pts, T, frame.meta.get("marker_points"), state, frame.meta.get("map_points"))
-        self.tracking = {"state": state, "fitness": None if fitness is None else round(float(fitness), 3),
-                         "rmse_mm": None if rmse is None else round(float(rmse), 4)}
+        # no fit yet (nothing matched) gives an infinite rmse: report it as unknown
+        self.tracking = {"state": state,
+                         "fitness": round(float(fitness), 3) if fitness is not None and np.isfinite(fitness) else None,
+                         "rmse_mm": round(float(rmse), 4) if rmse is not None and np.isfinite(rmse) else None}
         info["tracking"] = state
 
         if state == "lost":
