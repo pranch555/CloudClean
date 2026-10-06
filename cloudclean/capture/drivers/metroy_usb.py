@@ -140,13 +140,12 @@ def detect_scanners() -> list[dict]:
     return []
 
 
-NOT_FOUND = ("No MetroY scanner found on the USB bus of the machine running CloudClean. If it is plugged into a "
-             "different computer (for example your Windows PC while CloudClean runs on the DGX Spark), that machine "
-             "cannot be seen from here - run Revo Metro there and use the 'Revopoint (Revo Metro bridge)' driver.")
+NOT_FOUND = ("No MetroY scanner found on the USB bus of the machine running CloudClean. Plug it into this machine "
+             "(CloudClean only sees scanners on its own USB ports); no other software is needed.")
 
-NOT_LINUX = ("Native capture runs on Linux (the DGX Spark): it needs V4L2 for the camera stream and hidraw for the "
-             "scanner's command channel. On this machine, scan in Revo Metro and bring each export in with the "
-             "'Revopoint (Revo Metro bridge)' or 'Watch folder' driver.")
+NOT_LINUX = ("Native capture runs on Linux for now (the DGX Spark): there the scanner's raw camera stream can be read "
+             "untouched. Plug the scanner into the DGX Spark, or, on this machine, use the 'Revopoint (Revo Metro "
+             "bridge)' driver until native capture works here too.")
 
 NO_OPENCV = ("Found the scanner, but OpenCV is not installed in CloudClean's environment. Install the MetroY extra "
              "(`pip install -e .[metroy]`, which adds opencv-python-headless) and restart CloudClean.")
@@ -203,12 +202,15 @@ class MetroyUsbDriver(ScannerDriver):
             node = hid.find_hidraw()
         except FileNotFoundError:
             return False, found + "Its HID command channel is missing, so the calibration cannot be read."
-        if not os.access(node, os.R_OK | os.W_OK):
-            return False, (found + f"No permission to use its command channel {node}. Add a udev rule and replug the "
-                           'scanner: SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2207", ATTRS{idProduct}=="110c", '
-                           'TAG+="uaccess" (for example in /etc/udev/rules.d/70-metroy.rules).')
         if not d["video_nodes"]:
             return False, found + "No video node is bound (is the uvcvideo module loaded?)."
+        # Linux gives a plugged-in scanner only to whoever is logged in at this machine's own screen unless a rule
+        # says otherwise: a server with nobody at its screen (CloudClean as a service) then cannot open it
+        locked = [n for n in [node, *d["video_nodes"]] if not os.access(n, os.R_OK | os.W_OK)]
+        if locked:
+            return False, (found + f"CloudClean may not open it yet ({', '.join(locked)}). Run this once on this "
+                           "machine, in the CloudClean folder: sudo deploy/install-scanner-access.sh - it lets "
+                           "CloudClean use the scanner even when nobody is logged in at the screen (no replugging).")
         return True, found.strip()
 
     def info(self) -> dict:

@@ -112,10 +112,19 @@ cp ~/code/CloudClean/tools/recon/Dockerfile . && docker build -t cloudclean-reco
 
 ## 4. Scanner → Spark with no manual upload
 
-Revopoint publishes no SDK for the MetroY Ultra. Plug the scanner into the Spark for native capture
-(`docs/metroy-protocol.md`), or keep Revo Metro on a Windows/macOS PC and let the bridge upload every export.
+Revopoint publishes no SDK for the MetroY Ultra, so CloudClean drives it itself: plug the scanner into the Spark's
+USB and use **Scan → MetroY by USB** (`docs/metroy-protocol.md`); no Revo Metro, no PC. Once per machine, let
+CloudClean open the scanner even when nobody is logged in at the Spark's own screen:
 
-On the scanning PC (only needs Python + `httpx`):
+```bash
+sudo deploy/install-scanner-access.sh     # a udev rule (plugdev) for the scanner's command channel and camera
+```
+
+Without it Linux hands the scanner only to the user logged in at the screen (on a headless Spark that is the login
+screen), and the Scan step says so. Native capture is Linux-only for now.
+
+The fallback: keep Revo Metro on a Windows/macOS PC and let the bridge upload every export. On the scanning PC (only
+needs Python + `httpx`):
 
 ```powershell
 pip install httpx
