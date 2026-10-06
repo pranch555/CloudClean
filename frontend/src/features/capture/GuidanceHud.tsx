@@ -462,6 +462,7 @@ function TurntableWidget() {
           ) : (
             <span className={status.moving ? 'is-live' : ''}>{status.moving ? (status.device_state?.tilting ? 'Tilting' : 'Turning') : 'Still'}</span>
           )}
+          {status.kind === 'simulated' && <span className="cap-tt-sim" title="The practice turntable: nothing physical moves">practice table</span>}
         </div>
         {running && p && (
           <span className="cap-tt-progress" aria-hidden>
