@@ -71,6 +71,9 @@ requirements. The browser UI is prebuilt, so Node is not needed.
 git pull          # then start CloudClean again; it installs anything new by itself
 ```
 
+A server installed with `deploy/install-service.sh` updates with `deploy/update.sh`, or follows GitHub by itself after
+`deploy/install-autoupdate.sh` (it waits until no scan, job or chat is running).
+
 ### Using the terminal
 
 `cloudclean` lives in the `.venv`: activate it (`source .venv/bin/activate`, or `.\.venv\Scripts\Activate.ps1` on
