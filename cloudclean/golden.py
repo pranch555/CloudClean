@@ -30,6 +30,7 @@ from scipy.sparse.csgraph import connected_components
 from scipy.spatial import cKDTree
 
 from .compare import CompareParams, ReferenceSurface, compare_to_reference
+from .golden_words import PartWords
 from .params import ParamsMixin
 
 Log = Callable[[str], None]
@@ -54,6 +55,10 @@ N_EFF = 400                # scanner noise is correlated between neighbouring po
                            # independent when judging how precisely a value is known
 MISSING_RATIO = 0.12       # spots with fewer points than this share of the usual density: not scanned
 THIN_RATIO = 0.35          # ... fewer than this share: too few points
+CHECK_MESH_TRIANGLES = 520_000   # the coloured golden surface: fine enough to show every listed area, and under
+                                 # io.preview's 600k so the viewer gets it as it is (decimation would erase colours)
+MOSTLY_MATCHES_PCT = 95.0  # a check that found problems on less than 5 % of the surface "mostly matches"
+REPORT_VERSION = 2         # 2: names from golden_words, "Show me" views with radius, pins, match_pct
 
 
 @dataclass
@@ -357,6 +362,72 @@ def _face_labels(faces: list[dict]) -> list[str]:
     return labels
 
 
+def refine_long_edges(mesh: o3d.geometry.TriangleMesh, max_edge: float,
+                      max_triangles: int = CHECK_MESH_TRIANGLES) -> o3d.geometry.TriangleMesh:
+    """Split edges longer than max_edge at their midpoints (longest first, up to max_triangles) without moving the
+    surface. CAD tessellations draw a flat face as a few huge triangles, and colours painted per vertex cannot show a
+    problem inside them: the corner vertices sit on the face's edges, which are never judged, so a whole off face
+    looked like it matched. Neighbouring triangles split the same shared edges, so no cracks or T-junctions appear."""
+    V = np.asarray(mesh.vertices, dtype=np.float64)
+    F = np.asarray(mesh.triangles, dtype=np.int64)
+    N = np.asarray(mesh.vertex_normals, dtype=np.float64) if mesh.has_vertex_normals() else None
+    for _ in range(16):
+        T = len(F)
+        budget = max_triangles - T
+        if budget <= 1:
+            break
+        e = np.vstack([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])           # edge k of triangle t at row k*T + t
+        uniq, inv = np.unique(np.sort(e, axis=1), axis=0, return_inverse=True)
+        inv = inv.ravel()
+        length = np.linalg.norm(V[uniq[:, 0]] - V[uniq[:, 1]], axis=1)
+        mark = length > max_edge
+        if not mark.any():
+            break
+        uses = np.bincount(inv, minlength=len(uniq))                          # 1 (open border) or 2 triangles
+        if uses[mark].sum() > budget:                                       # each split edge adds one per user
+            cand = np.flatnonzero(mark)
+            cand = cand[np.argsort(-length[cand])]
+            keep = cand[: int(np.searchsorted(np.cumsum(uses[cand]), budget, side="right"))]
+            if not len(keep):
+                break
+            mark = np.zeros_like(mark)
+            mark[keep] = True
+        mid = np.full(len(uniq), -1, dtype=np.int64)
+        split = np.flatnonzero(mark)
+        mid[split] = len(V) + np.arange(len(split))
+        V = np.vstack([V, (V[uniq[split, 0]] + V[uniq[split, 1]]) / 2])
+        if N is not None:
+            nm = N[uniq[split, 0]] + N[uniq[split, 1]]
+            N = np.vstack([N, nm / np.maximum(np.linalg.norm(nm, axis=1, keepdims=True), 1e-12)])
+        M = mid[inv].reshape(3, T).T                                        # midpoint on edge k, or -1
+        bits = M >= 0
+        k = bits.sum(1)
+        out = [F[k == 0]]
+        # rotate each split triangle so its pattern is canonical: one split edge -> edge 0; two -> edges 0 and 1
+        first = np.argmax(bits, axis=1)
+        unsplit = np.argmin(bits, axis=1)
+        rot = np.where(k == 1, first, np.where(k == 2, (unsplit + 1) % 3, 0))
+        cols = (rot[:, None] + np.arange(3)[None]) % 3
+        Fr = np.take_along_axis(F, cols, axis=1)
+        Mr = np.take_along_axis(M, cols, axis=1)
+        a, b, c = Fr[:, 0], Fr[:, 1], Fr[:, 2]
+        m0, m1, m2 = Mr[:, 0], Mr[:, 1], Mr[:, 2]
+        s = k == 1
+        out += [np.c_[a[s], m0[s], c[s]], np.c_[m0[s], b[s], c[s]]]
+        s = k == 2
+        out += [np.c_[m0[s], b[s], m1[s]], np.c_[a[s], m0[s], m1[s]], np.c_[a[s], m1[s], c[s]]]
+        s = k == 3
+        out += [np.c_[a[s], m0[s], m2[s]], np.c_[m0[s], b[s], m1[s]], np.c_[m2[s], m1[s], c[s]],
+                np.c_[m0[s], m1[s], m2[s]]]
+        F = np.vstack(out)
+    out_mesh = o3d.geometry.TriangleMesh(o3d.utility.Vector3dVector(V), o3d.utility.Vector3iVector(F.astype(np.int32)))
+    if N is not None:
+        out_mesh.vertex_normals = o3d.utility.Vector3dVector(N)
+    else:
+        out_mesh.compute_vertex_normals()
+    return out_mesh
+
+
 def _edge_samples(V: np.ndarray, sharp: np.ndarray, step: float) -> np.ndarray:
     if len(sharp) == 0:
         return np.empty((0, 3))
@@ -369,10 +440,11 @@ def _edge_samples(V: np.ndarray, sharp: np.ndarray, step: float) -> np.ndarray:
 
 # --------------------------------------------------------------------------- the check
 def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: GoldenParams | None = None,
-                         log: Log = print, progress=None, debug: dict | None = None) -> dict:
+                         log: Log = print, progress=None, debug: dict | None = None, up_axis: str = "y") -> dict:
     """Compare a scan with the golden model. Returns {"aligned", "deviation" (as compare_to_reference),
     "check_mesh" (the golden surface coloured by verdict, in the golden frame), "vertex_status",
-    "vertex_region", "vertex_deviation" (per vertex of check_mesh), "compare_report", "report"}."""
+    "vertex_region", "vertex_deviation" (per vertex of check_mesh), "compare_report", "report"}.
+    up_axis: the 3D view's up axis ('y' or 'z'), for the few names that need 'top' or 'left' (golden_words)."""
     p = params or GoldenParams()
     if p.tolerance <= 0:
         raise ValueError("The tolerance must be more than 0")
@@ -410,7 +482,9 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
     spot_area = total_area / n_spots
     min_face = max(5e-5 * total_area, 1.0, 4 * spot_area)
     faces, tri_face, sharp = find_faces(ref, min_face)
-    labels = _face_labels(faces)
+    words = PartWords(ref, faces, up_axis)
+    words.set_triangle_faces(tri_face)
+    labels = words.labels
     log(f"Golden check: {sum(f['type'] == 'plane' for f in faces)} flat faces, "
         f"{sum(f['type'] == 'cylinder' and f['hole'] for f in faces)} holes, "
         f"{sum(f['type'] == 'cylinder' and not f['hole'] for f in faces)} round faces; {n_spots:,} surface spots "
@@ -497,7 +571,7 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
             area = len(idx) * spot_area
             if area < min_region:
                 continue
-            region = _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, labels, lo, hi, area,
+            region = _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words, area,
                                       total_area, dev_s, spread_s, ratio, typical, tol)
             region["_index"] = len(regions)
             spot_region[idx] = len(regions)
@@ -512,12 +586,12 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
 
     # measurements
     pts = np.asarray(cmp["aligned"].points)[inc]
-    measurements = _measure(faces, labels, tri_face, tri[ok], d[ok], q[ok], qn[ok], pts[ok], point_edge[ok], status,
+    measurements = _measure(faces, words, tri_face, tri[ok], d[ok], q[ok], qn[ok], pts[ok], point_edge[ok], status,
                             spot_face, face_spots, spot_region, regions, lo, hi, tol, h, ref)
     progress(0.93, "writing the report")
 
-    # the golden surface coloured by verdict, for the viewer
-    mesh = cmp["reference"]
+    # the golden surface coloured by verdict, for the viewer: split long CAD edges first so every listed area shows
+    mesh = refine_long_edges(cmp["reference"], max(1.5 * h, 0.05))
     Vd, Nd = np.asarray(mesh.vertices), np.asarray(mesh.vertex_normals)
     _, idx = spot_tree.query(Vd, k=6, workers=-1)
     agree = np.einsum("ijk,ik->ij", Sn[idx], Nd) > 0.3
@@ -537,7 +611,8 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
                "spot_spacing": round(h, 4), "area_mm2": round(total_area, 2)}
     report = _summarise(regions, measurements, surface, creport, tol, faces, symmetric)
     report.update(golden_size=np.round(hi - lo, 4).tolist(), golden_min=np.round(lo, 4).tolist(),
-                  golden_max=np.round(hi, 4).tolist())
+                  golden_max=np.round(hi, 4).tolist(),
+                  part={"axis": words.axis, "ends": list(words.ends) if words.ends else None, "up_axis": up_axis})
     for line in [report["headline"], *report["summary"]]:
         log("  " + line)
     return {"aligned": cmp["aligned"], "deviation": cmp["deviation"], "check_mesh": mesh,
@@ -545,7 +620,7 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
             "vertex_deviation": v_dev, "compare_report": creport, "report": report}
 
 
-def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, labels, lo, hi, area, total_area, dev_s,
+def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words: PartWords, area, total_area, dev_s,
                      spread_s, ratio, typical, tol) -> dict:
     P, N = S[idx], Sn[idx]
     center = P.mean(0)
@@ -560,27 +635,18 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, labels, lo,
         if (fids == best).sum() >= 0.5 * len(idx):
             face_id, face = best, faces[best]
     kind = KIND[code]
-    if face is not None:
-        name = labels[face_id]
-        part = (fids == face_id).sum() / max(1, face_spots[face_id])
-        if face["type"] == "plane" and part < 0.6:
-            s = _side(face["normal"], 5.0)
-            where = _where(center, lo, hi, s[0] if s else None)
-            name += f", {where}" if where else ", in the middle"
-        elif face["type"] == "cylinder" and part < 0.6:
-            name = f"part of the {name}"
-    else:
-        where = _where(center, lo, hi)
-        if np.linalg.norm(mean_n) < 0.3:
-            name = "curved area" + (f" {where}" if where else " in the middle")
-        else:
-            name = f"area facing {_facing(normal)}" + (f", {where}" if where else "")
-    name = name[0].upper() + name[1:]
+    part = (fids == face_id).sum() / max(1, face_spots[face_id]) if face is not None else 1.0
+    named = words.region(face_id, part, center, mean_n, anchor)
+    name = named["name"]
+    fkind = words.info[face_id]["kind"] if face_id is not None else named["face_kind"]
+    inner_of = named["inner_of"]
+    in_recess = fkind in ("floor", "wall", "pocket") or name.startswith("Inside the recess")
 
     dev = float(np.mean(dev_s[idx]))
     spread = float(np.median(spread_s[idx]))
     dens = float(np.median(ratio[idx]))
     hole = face is not None and face["type"] == "cylinder" and face["hole"]
+    end_sign = words.is_end_like(normal, center)
     if kind == "missing":
         why = "Not scanned: no scan points landed here."
         if hole:
@@ -588,13 +654,20 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, labels, lo,
             if face["length"] > 2 * face["radius"]:
                 how += (" Holes deeper than they are wide are hard for any scanner to see into; if it stays empty, "
                         "check this hole with a gauge or caliper instead.")
-        elif normal[2] < -0.7:
-            how = ("This side faces down in the golden model, so it usually sits on the turntable. Turn the part "
-                   "over, scan it again and merge the two scans (Align step).")
-        elif normal[2] > 0.7:
-            how = "Tilt the part (or the turntable) so the scanner looks down onto this side, and scan it again."
+        elif in_recess:
+            how = ("Point the scanner straight into the recess (tilt the part so its opening faces the scanner) and "
+                   "scan it again. Deep, narrow recesses are hard for any scanner to see into: if it stays empty, "
+                   "check it with a depth gauge or caliper instead.")
+        elif inner_of is not None:
+            how = (f"This corner is in the shadow of the {words.labels[inner_of]}. Tilt the part so the scanner looks "
+                   "straight into the corner, and scan it again.")
+        elif end_sign and words.axis is not None:
+            end = words.end(end_sign)
+            how = (f"The scanner did not see the {end}: the part probably stood on it. Turn the part over so the "
+                   f"{end} faces the scanner, scan it again and merge the two scans (Align step).")
         else:
-            how = f"Turn or tilt the part so the side facing {_facing(normal)} faces the scanner, and scan it again."
+            how = ("Turn or tilt the part so this side faces the scanner, and scan it again. If the part stood on "
+                   "this side, turn it over, scan it again and merge the two scans (Align step).")
     elif kind == "thin":
         why = (f"Only {dens * 100:.0f} % of the usual number of points landed here: the scanner saw it at a steep "
                "angle.")
@@ -611,28 +684,33 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, labels, lo,
             where = ("outside the golden surface: there is more material here" if dev > 0 else
                      "inside the golden surface: there is less material here")
         why = f"The scanned surface sits {abs(dev):.3f} mm {where}; the tolerance is ±{tol:g} mm."
-        how = ("Either the part really differs here (check it with a caliper or gauge), or this area came from a "
-               "separate scan that was merged slightly off: redo that line-up in the Align step.")
+        how = ("Measure it with a caliper or gauge. If the part is right, this area probably came from a separate "
+               "scan that was merged slightly off: redo that line-up in the Align step.")
+        if fkind == "floor" and dev < 0:
+            how = ("Real recess floors are often cone-shaped (the drill point) where the CAD draws them flat, so "
+                   "the scan reads deeper here. Check the depth with a depth gauge.")
     size = float(np.linalg.norm(P.max(0) - P.min(0)))
-    look = normal
+    prefer = None
     if hole:
-        axis = face["axis"] if face["axis"] @ (anchor - (lo + hi) / 2) >= 0 else -face["axis"]
-        look = _unit(axis + 0.35 * normal)
-    return {"kind": kind, "sign": (1 if code == OFF_OUT else -1) if kind == "off" else 0, "name": name, "why": why, "advice": how, "rescan": kind in ("missing", "thin", "rough"),
+        axis = face["axis"] if face["axis"] @ (anchor - words.mid) >= 0 else -face["axis"]
+        prefer = _unit(axis + 0.35 * normal)
+    return {"kind": kind, "sign": (1 if code == OFF_OUT else -1) if kind == "off" else 0, "name": name, "why": why,
+            "advice": how, "rescan": kind in ("missing", "thin", "rough"), "face_kind": fkind,
             "area_mm2": round(area, 2), "share_pct": round(100.0 * area / total_area, 2),
             "center": np.round(center, 4).tolist(), "normal": np.round(normal, 4).tolist(),
+            "pin": np.round(anchor, 4).tolist(), "box": [np.round(P.min(0), 4).tolist(), np.round(P.max(0), 4).tolist()],
             "size": round(size, 3), "face": face_id,
             "deviation": round(dev, 4) if kind == "off" else None,
             "spread": round(spread, 4) if kind == "rough" else None,
             "density_pct": round(dens * 100, 1) if kind in ("thin", "missing") else None,
-            "view": {"target": np.round(anchor, 4).tolist(),
-                     "from": np.round(anchor + look * max(3.0 * size, 10.0), 4).tolist()}}
+            "view": words.view_for(anchor, normal, size, prefer)}
 
 
-def _measure(faces, labels, tri_face, tri, d, q, qn, pts, point_edge, status, spot_face, face_spots, spot_region,
-             regions, lo, hi, tol, h, ref) -> list[dict]:
+def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, status, spot_face, face_spots,
+             spot_region, regions, lo, hi, tol, h, ref) -> list[dict]:
     """Golden value vs scanned value for the overall size, face-to-face distances, diameters, hole positions."""
     out: list[dict] = []
+    labels = words.labels
     nf = len(faces)
     pf = tri_face[tri]
     use = (pf >= 0) & ~point_edge
@@ -665,7 +743,7 @@ def _measure(faces, labels, tri_face, tri, d, q, qn, pts, point_edge, status, sp
     band = max(2.0 * h, 0.01 * float(np.max(hi - lo)))
     for k in range(3):
         golden = float(hi[k] - lo[k])
-        entry = {"kind": "size", "name": f"Overall size along {AXES[k]}", "golden": round(golden, 4), "axis": k,
+        entry = {"kind": "size", "name": words.size_name(k), "golden": round(golden, 4), "axis": k,
                  "at": ((lo + hi) / 2).round(4).tolist()}
         end_faces = {1: [], -1: []}
         for i, f in enumerate(faces):
@@ -683,12 +761,12 @@ def _measure(faces, labels, tri_face, tri, d, q, qn, pts, point_edge, status, sp
             shift = d[sel] * np.abs(qn[sel, k])     # how far the scan's surface sits beyond the golden end
             ends.append((float(np.median(shift)), _se_median(_robust_sigma(shift), int(sel.sum()))))
         if missing:
-            words = " and ".join(f"{ENDS[k][1 if sg > 0 else 0]} ({'+' if sg > 0 else '-'}{AXES[k]})" for sg in missing)
+            ends_missing = " and the ".join(words.end_word(k, sg) for sg in missing)
             m = not_measured(entry, [i for sg in missing for i in end_faces[sg]],
-                             f"The {words} end{'s were' if len(missing) > 1 else ' was'} not scanned, so this size "
+                             f"The {ends_missing} {'were' if len(missing) > 1 else 'was'} not scanned, so this size "
                              "cannot be measured.")
             if m["region"] is None:
-                m["region"] = _region_at_end(k, [ENDS[k][1 if sg > 0 else 0] for sg in missing], regions, lo, hi)
+                m["region"] = _region_at_end(k, missing, regions, lo, hi)
             out.append(m)
             continue
         scan = golden + ends[0][0] + ends[1][0]
@@ -739,9 +817,8 @@ def _measure(faces, labels, tri_face, tri, d, q, qn, pts, point_edge, status, sp
                 pairs_same.append((i, j))
 
     def pair_entry(kind: str, i: int, j: int, golden: float) -> dict:
-        word = {"thickness": "Thickness", "gap": "Gap", "step": "Step"}[kind]
         at = (faces[i]["point"] + faces[j]["point"]) / 2
-        return {"kind": kind, "name": f"{word}: {labels[i]} to {labels[j]}", "golden": round(golden, 4),
+        return {"kind": kind, "name": words.pair_name(kind, i, j), "golden": round(golden, 4),
                 "faces": [i, j], "at": np.round(at, 4).tolist()}
 
     face_pairs = sorted(pairs_opp.items(), key=lambda kv: -min(faces[kv[0][0]]["area"], faces[kv[0][1]]["area"]))[:12]
@@ -811,22 +888,30 @@ def _measure(faces, labels, tri_face, tri, d, q, qn, pts, point_edge, status, sp
         off = float(np.linalg.norm(shift))
         direction = shift[0] * u_ax + shift[1] * v_ax
         e_p["offset"] = np.round(direction, 4).tolist()
-        e_p["toward"] = _facing(direction) if off > 1e-6 else None
+        e_p["toward"] = words.direction(direction) if off > 1e-6 else None
         out.append(result(e_p, 0.0, off, 2 * float(np.hypot(se[0], se[1]))))
+    # the same name twice (e.g. three widths across one hexagon socket): number them
+    seen: dict[str, list[dict]] = {}
+    for m in out:
+        seen.setdefault(m["name"], []).append(m)
+    for name, ms in seen.items():
+        if len(ms) > 1:
+            for n, m in enumerate(ms, 1):
+                m["name"] = f"{name} ({n} of {len(ms)})"
     for k, m in enumerate(out):
         m["id"] = k
     return out
 
 
-def _region_at_end(k: int, words: list[str], regions: list[dict], lo, hi) -> int | None:
-    """The biggest rescan region at that end of the part."""
+def _region_at_end(k: int, signs: list[int], regions: list[dict], lo, hi) -> int | None:
+    """The biggest rescan region at that end (+1 / -1 along axis k) of the part."""
     best = None
     for r in regions:
         if not r["rescan"]:
             continue
         c = r["center"][k]
         t = (c - lo[k]) / max(hi[k] - lo[k], 1e-9)
-        at_end = (t > 0.9 and ENDS[k][1] in words) or (t < 0.1 and ENDS[k][0] in words)
+        at_end = (t > 0.9 and 1 in signs) or (t < 0.1 and -1 in signs)
         if at_end and (best is None or r["area_mm2"] > regions[best]["area_mm2"]):
             best = r["id"]
     return best
@@ -845,7 +930,12 @@ def _summarise(regions, measurements, surface, creport, tol, faces, symmetric: b
         if off_regions:
             bits.append(f"{len(off_regions)} area{'s' if len(off_regions) > 1 else ''} of the surface "
                         f"{'are' if len(off_regions) > 1 else 'is'} beyond ±{tol:g} mm")
-        headline = "The scan does not match the golden model: " + " and ".join(bits) + "."
+        good = surface["shares_pct"]["good"]
+        if good >= MOSTLY_MATCHES_PCT:
+            headline = (f"The scan mostly matches the golden model ({good:.0f} % of the surface is within "
+                        f"±{tol:g} mm), but " + " and ".join(bits) + ".")
+        else:
+            headline = "The scan does not match the golden model: " + " and ".join(bits) + "."
     elif rescan or counts["not_measured"]:
         verdict = "incomplete"
         n = len(rescan)
@@ -882,7 +972,8 @@ def _summarise(regions, measurements, surface, creport, tol, faces, symmetric: b
         summary.append("The part looks almost the same turned another way, so the line-up may be wrong: check "
                        "the colours make sense before trusting the numbers.")
     steps = [f"{r['name']}: {r['advice']}" for r in regions if r["rescan"]]
-    return {"verdict": verdict, "headline": headline, "summary": summary, "tolerance": tol, "counts": counts,
+    return {"version": REPORT_VERSION, "verdict": verdict, "headline": headline, "summary": summary,
+            "match_pct": shares["good"], "tolerance": tol, "counts": counts,
             "rescan": steps, "regions": regions, "measurements": measurements, "surface": surface,
             "faces": {"flat": sum(f["type"] == "plane" for f in faces),
                       "holes": sum(f["type"] == "cylinder" and f["hole"] for f in faces),

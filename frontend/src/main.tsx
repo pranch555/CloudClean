@@ -7,6 +7,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/primitives.css';
 import './styles/shell.css';
+import './styles/models.css';
 import './styles/viewport.css';
 import './styles/steps.css';
 import './styles/assistant.css';

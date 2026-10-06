@@ -27,9 +27,14 @@ interface AlignState {
   align: { meshId: string; photoId: string; prevVisible: string[] } | null;
   opacity: number;
   views: SavedView[];
+  /** the photo chosen to line up (here, or from the photo viewer: "Line this photo up by hand") */
+  pick: string | null;
 }
 
-export const useAlign = create<AlignState>(() => ({ align: null, opacity: 0.5, views: loadViews() }));
+export const useAlign = create<AlignState>(() => ({ align: null, opacity: 0.5, views: loadViews(), pick: null }));
+
+/** Choose the photo that "Line up one photo by hand" starts with. */
+export const pickPhotoToLineUp = (id: string | null) => useAlign.setState({ pick: id });
 
 const saveViews = (views: SavedView[]) => {
   useAlign.setState({ views });
@@ -73,8 +78,8 @@ export function ColourSection() {
   const activeId = useStore(s => s.activeId);
   const mesh = useTarget(['mesh']) ?? null;
   const photos = assets.filter(a => a.kind === 'image');
-  const { align, opacity, views } = useAlign();
-  const [photoId, setPhotoId] = useState<string | null>(null);
+  const { align, opacity, views, pick: photoId } = useAlign();
+  const setPhotoId = pickPhotoToLineUp;
   const [values, setValues] = useState(() => defaultsOf(params.schema.texture));
   const [fov, setFovState] = useState(35);
   const [roll, setRoll] = useState(0);

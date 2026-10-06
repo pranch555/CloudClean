@@ -3,8 +3,9 @@ import { PanelRightClose } from 'lucide-react';
 import { stepInfo } from '../lib/journey';
 import { useStore } from '../store';
 import { useAssistant } from '../features/assistant/assistantStore';
-import { AssistantPanel } from '../features/assistant/AssistantPanel';
+import { AssistantPanel, PoppedOutNotice } from '../features/assistant/AssistantPanel';
 import { AssistantGlyph } from '../features/assistant/AssistantMark';
+import { allowAssistantTab, useChatWindow } from '../features/assistant/chatWindow';
 import { STEP_GLYPH } from '../ui/icons';
 import { IconButton } from '../ui/primitives';
 import { CleanStep } from '../steps/CleanStep';
@@ -20,6 +21,7 @@ export function SidePanel() {
   const tab = useStore(s => s.rightTab);
   const params = useStore(s => s.params);
   const streaming = useAssistant(s => s.streaming);
+  const floating = useChatWindow(s => s.place === 'floating');
   const set = useStore(s => s.set);
   const info = stepInfo(step);
   const Glyph = STEP_GLYPH[step];
@@ -31,11 +33,12 @@ export function SidePanel() {
           <button type="button" role="tab" aria-selected={tab === 'step'} className={tab === 'step' ? 'is-on' : ''} onClick={() => set({ rightTab: 'step' })}>
             <Glyph size={16} /> {info.label}
           </button>
-          <button type="button" role="tab" aria-selected={tab === 'assistant'} className={tab === 'assistant' ? 'is-on' : ''} onClick={() => set({ rightTab: 'assistant' })}>
+          <button type="button" role="tab" aria-selected={tab === 'assistant'} className={tab === 'assistant' ? 'is-on' : ''} onClick={() => allowAssistantTab(() => set({ rightTab: 'assistant' }))}>
             <span className={`assistant-tab-glyph ${streaming ? 'is-working' : ''}`}>
               <AssistantGlyph size={16} />
             </span>
             Assistant
+            {floating && <span className="side-tab-note">popped out</span>}
             {streaming && <span className="visually-hidden">, working</span>}
           </button>
         </div>
@@ -44,7 +47,7 @@ export function SidePanel() {
         </IconButton>
       </div>
       {tab === 'assistant' ? (
-        <AssistantPanel />
+        floating ? <PoppedOutNotice /> : <AssistantPanel />
       ) : !params ? (
         <div className="side-scroll" />
       ) : (

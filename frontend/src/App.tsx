@@ -20,6 +20,7 @@ import { Viewport } from './viewport/Viewport';
 import { IconButton } from './ui/primitives';
 import { TooltipLayer } from './ui/TooltipLayer';
 import { GuideSpotlight } from './ui/GuideSpotlight';
+import { FloatingChat } from './features/assistant/FloatingChat';
 
 export default function App() {
   const theme = useThemeEffect();
@@ -50,6 +51,7 @@ export default function App() {
       <TopBar home={screen === 'home'} />
       {screen === 'home' && <HomeScreen />}
       <Workspace theme={theme} hidden={screen === 'home'} />
+      <FloatingChat />
       <JobsDrawer />
       <Toasts />
       <DropOverlay />

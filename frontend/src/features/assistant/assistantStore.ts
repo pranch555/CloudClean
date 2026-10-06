@@ -3,6 +3,7 @@ import { api, postSse, upload } from '../../lib/api';
 import { applyUi, uiContext } from '../../lib/applyUi';
 import { local, panelShown, useStore } from '../../store';
 import type { Attachment } from './attachments';
+import { chatWindowOpen, expandChat, noteReplyDone, useChatWindow } from './chatWindow';
 
 export interface ToolRecord {
   call_id: string;
@@ -54,6 +55,8 @@ interface AssistantState {
   /** photos from this computer are saved in the project as reference photos of the part when sent */
   keepPhotos: boolean;
   draft: string;
+  /** what the user answered to a "delete these?" request (by call id), so every view of the chat agrees */
+  decisions: Record<string, 'deleted' | 'kept'>;
 }
 
 export const useAssistant = create<AssistantState>(() => ({
@@ -64,11 +67,17 @@ export const useAssistant = create<AssistantState>(() => ({
   attachments: [],
   keepPhotos: local.get('keepPhotos', true),
   draft: '',
+  decisions: {},
 }));
 
+// dev only: lets screenshots and tests put a conversation on screen without a language model
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if (import.meta.env.DEV) (window as any).__ccChat = { assistant: useAssistant, chatWindow: useChatWindow };
+
 /**
- * Ctrl K: put the cursor where you ask CloudClean something — the Home prompt, the open conversation, or the Ask
- * bar under the 3D view. (Finding features is the assistant's job; there is no separate search.)
+ * Ctrl K: put the cursor where you ask CloudClean something — the Home prompt, the floating chat when the chat is
+ * popped out, the open conversation, or the Ask bar under the 3D view. (Finding features is the assistant's job;
+ * there is no separate search.)
  */
 export function focusAsk() {
   const st = useStore.getState();
@@ -81,11 +90,15 @@ export function focusAsk() {
     focus('.home-ask input');
     return;
   }
+  if (useChatWindow.getState().place === 'floating') {
+    expandChat();
+    return;
+  }
   const chatShown = st.rightTab === 'assistant' && panelShown(st, 'right');
-  if (chatShown ? focus('.composer textarea') : focus('.ask-bar .ask-input')) return;
+  if (chatShown ? focus('.side .composer textarea') : focus('.ask-bar .ask-input')) return;
   st.set({ rightTab: 'assistant' });
   st.setLayout({ rightOpen: true });
-  setTimeout(() => focus('.composer textarea'), 60);
+  setTimeout(() => focus('.side .composer textarea'), 60);
 }
 
 export function setKeepPhotos(keep: boolean) {
@@ -188,6 +201,7 @@ export async function sendToAssistant(text: string) {
     if ((err as Error).name !== 'AbortError') updateLast(m => ({ ...m, error: (err as Error).message }));
   } finally {
     useAssistant.setState({ streaming: false });
+    noteReplyDone();
     abort = null;
     useStore.getState().refreshAssets().catch(() => undefined);
     useStore.getState().refreshProjects().catch(() => undefined);
@@ -213,19 +227,40 @@ export async function loadConversation(id: string) {
   });
 }
 
-/** Open the Assistant tab and put text in the composer (e.g. "With the points I selected: "). */
+/** Open the chat (the Assistant tab, or the floating chat when popped out) and put text in its message box. */
 export function draftForAssistant(text: string) {
   useAssistant.setState({ draft: text });
+  if (useChatWindow.getState().place === 'floating') {
+    if (useStore.getState().screen !== 'workspace') useStore.getState().set({ screen: 'workspace' });
+    if (!chatWindowOpen()) expandChat(false);
+    return;
+  }
   useStore.getState().set({ rightTab: 'assistant', screen: 'workspace' });
   useStore.getState().setLayout({ rightOpen: true });
 }
 
-/** The one-line state of the last reply, for the Ask bar. */
+/** The one-line state of the last reply (the tool step running now, and the answer so far). */
 export function lastActivity(): { running: string | null; reply: string } {
-  const msgs = useAssistant.getState().messages;
-  const last = [...msgs].reverse().find(m => m.role === 'assistant');
-  if (!last) return { running: null, reply: '' };
-  const tool = last.tools?.find(t => t.running);
-  const running = tool ? `${tool.name.replace(/_/g, ' ')}${tool.progress?.label ? ` · ${tool.progress.label}` : ''}${tool.progress?.progress != null ? ` · ${Math.round(tool.progress.progress * 100)}%` : ''}` : null;
-  return { running, reply: last.error ? `⚠ ${last.error}` : last.text };
+  const ex = lastExchange(useAssistant.getState().messages);
+  if (!ex) return { running: null, reply: '' };
+  return { running: runningStep(ex.answer)?.label ?? null, reply: ex.answer.error ? `⚠ ${ex.answer.error}` : ex.answer.text };
+}
+
+/** The latest exchange: the user's last question and the assistant's answer to it (for the reply box). */
+export function lastExchange(messages: Msg[]): { question: Msg | null; answer: Msg; index: number } | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== 'assistant') continue;
+    const q = i > 0 && messages[i - 1].role === 'user' ? messages[i - 1] : null;
+    return { question: q, answer: messages[i], index: i };
+  }
+  return null;
+}
+
+/** The tool step running now, in words ("build mesh · Poisson · 45%"), and its progress (0..1) when known. */
+export function runningStep(msg: Msg | null | undefined): { label: string; progress: number | null } | null {
+  const tool = msg?.tools?.find(t => t.running);
+  if (!tool) return null;
+  const p = tool.progress;
+  const label = `${tool.name.replace(/_/g, ' ')}${p?.label ? ` · ${p.label}` : ''}${p?.progress != null ? ` · ${Math.round(p.progress * 100)}%` : ''}`;
+  return { label, progress: p?.progress ?? null };
 }

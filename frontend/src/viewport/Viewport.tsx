@@ -15,6 +15,7 @@ import { ToolRail, ViewRail } from './Rails';
 import { SizeTag } from './SizeTag';
 import { Legend } from './Legend';
 import { Labels } from './Labels';
+import { GoldenPins } from './GoldenPins';
 import { SelectionOverlay } from './SelectionOverlay';
 import { BrushOverlay } from './BrushOverlay';
 import { PairOverlay } from './PairOverlay';
@@ -134,6 +135,7 @@ export function Viewport({ theme }: { theme: ResolvedTheme }) {
         <>
           <PhotoOverlay />
           <Labels />
+          <GoldenPins />
           <SelectionOverlay />
           <BrushOverlay />
           <PairOverlay />

@@ -1,28 +1,39 @@
 import { useState } from 'react';
 import { ArrowUp, Loader2, Square } from 'lucide-react';
 import { useStore, panelShown } from '../store';
-import { lastActivity, sendToAssistant, stopAssistant, useAssistant } from '../features/assistant/assistantStore';
+import { lastExchange, runningStep, sendToAssistant, stopAssistant, useAssistant } from '../features/assistant/assistantStore';
 import { SUGGESTIONS } from '../features/assistant/AssistantPanel';
 import { AttachButton, AttachmentStrip, dropImages, pasteImages } from '../features/assistant/AttachControls';
 import { AssistantGlyph } from '../features/assistant/AssistantMark';
+import { showReply, useChatWindow } from '../features/assistant/chatWindow';
+import { ReplyBox } from '../features/assistant/ReplyBox';
 
-/** The assistant, one line away: type, press Enter, watch it work. The full thread lives in the Assistant tab. */
+/**
+ * The assistant, one line away: type, press Enter, watch it work. Above the line, the latest reply in short (when
+ * the full chat is not on screen). The full thread is the Assistant tab, or the floating chat when popped out;
+ * while the chat floats, this bar steps aside so there is one place to type.
+ */
 export function AskBar() {
   const [text, setText] = useState('');
   const [focused, setFocused] = useState(false);
   const streaming = useAssistant(s => s.streaming);
   const attached = useAssistant(s => s.attachments.length);
-  useAssistant(s => s.messages); // re-render as the reply streams
+  const messages = useAssistant(s => s.messages);
+  const place = useChatWindow(s => s.place);
+  const replyHidden = useChatWindow(s => s.replyHidden);
   const step = useStore(s => s.step);
   const rightTab = useStore(s => s.rightTab);
   const rightOpen = useStore(s => panelShown(s, 'right'));
-  const { running, reply } = lastActivity();
   const threadVisible = rightTab === 'assistant' && rightOpen;
 
-  const openThread = () => {
-    useStore.getState().set({ rightTab: 'assistant' });
-    useStore.getState().setLayout({ rightOpen: true });
-  };
+  // the element stays (other overlays measure it to keep clear of it); it is just not shown while the chat floats
+  if (place === 'floating') return <div className="hud ask-bar is-away" aria-hidden />;
+
+  const ex = lastExchange(messages);
+  const live = streaming && !!ex && ex.index === messages.length - 1;
+  const replyShown = !!ex && !threadVisible && replyHidden !== ex.index;
+  const hiddenReply = !!ex && !threadVisible && replyHidden === ex.index;
+  const running = runningStep(ex?.answer);
 
   const send = (t = text) => {
     if ((!t.trim() && !attached) || streaming) return;
@@ -30,26 +41,25 @@ export function AskBar() {
     sendToAssistant(t);
   };
 
-  const snippet = reply.replace(/[#*_`>|]/g, '').replace(/\s+/g, ' ').trim();
-
   return (
-    <div className="hud ask-bar" role="search" aria-label="Ask CloudClean" data-own-drop {...dropImages}>
-      {streaming && (
+    <div className={`hud ask-bar ${replyShown ? 'has-reply' : ''}`} data-own-drop {...dropImages}>
+      {replyShown && <ReplyBox question={ex.question} answer={ex.answer} index={ex.index} live={live} />}
+      {streaming && threadVisible && (
         <div className="ask-status" aria-live="polite">
           <Loader2 size={14} className="spin" aria-hidden />
-          <span className="truncate">{running ? `Working: ${running}` : snippet ? 'Answering…' : 'Thinking…'}</span>
-          <span className="spacer" />
-          {!threadVisible && <button type="button" className="link" onClick={openThread}>Show</button>}
-        </div>
-      )}
-      {!streaming && snippet && !threadVisible && (
-        <div className="ask-reply" onClick={openThread} title="Open the conversation">
-          {snippet.slice(0, 280)}
+          <span className="truncate">{running ? `Working: ${running.label}` : ex?.answer.text ? 'Answering…' : 'Thinking…'}</span>
         </div>
       )}
       {!threadVisible && <AttachmentStrip small />}
-      <div className="ask-row">
-        <AssistantGlyph size={18} />
+      <div className="ask-row" role="search" aria-label="Ask CloudClean">
+        {hiddenReply ? (
+          <button type="button" className={`ask-glyph-btn ${live ? 'is-live' : ''}`} onClick={showReply} aria-label="Show the latest reply" data-tip="Show the latest reply">
+            <AssistantGlyph size={18} />
+            <span className="ask-glyph-dot" aria-hidden />
+          </button>
+        ) : (
+          <AssistantGlyph size={18} />
+        )}
         <input
           className="ask-input"
           value={text}

@@ -44,7 +44,8 @@ def job_golden_check(ws: Workspace, payload: dict, log) -> list[str]:
                 break
         log(msg)
 
-    result = check_against_golden(scan, golden, params, staged_log, progress)
+    result = check_against_golden(scan, golden, params, staged_log, progress,
+                                  up_axis=payload.get("up_axis") or "y")
     report, creport = result["report"], result["compare_report"]
     if from_photos:
         report["photo_points_left_out"] = from_photos

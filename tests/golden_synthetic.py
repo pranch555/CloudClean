@@ -29,6 +29,14 @@ def stepped_tube() -> o3d.geometry.TriangleMesh:
     return revolve(STEPPED_TUBE)
 
 
+# Ø30 x 20 with a Ø6 hole through it and a Ø16 counterbore 6 deep from the top (its floor: a recess floor at z = 14)
+COUNTERBORED_TUBE = [(3.0, 0.0), (15.0, 0.0), (15.0, 20.0), (8.0, 20.0), (8.0, 14.0), (3.0, 14.0)]
+
+
+def counterbored_tube() -> o3d.geometry.TriangleMesh:
+    return revolve(COUNTERBORED_TUBE)
+
+
 def sample_surface(mesh: o3d.geometry.TriangleMesh, n: int, seed: int = 0) -> np.ndarray:
     """Area-uniform points on the mesh."""
     V, F = np.asarray(mesh.vertices), np.asarray(mesh.triangles)

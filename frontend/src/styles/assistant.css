@@ -389,6 +389,7 @@
 
 .composer {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   padding: var(--sp-3) var(--sp-3) var(--sp-3);
   border-top: 1px solid var(--line);
@@ -466,6 +467,10 @@
   line-height: 1.45;
   min-height: 24px;
   color: var(--ink-1);
+}
+
+.composer-box textarea:focus-visible {
+  box-shadow: none; /* the box around it shows the focus */
 }
 
 .composer-box textarea::placeholder {
@@ -743,4 +748,467 @@
     opacity: 0.4;
     transform: scale(0.88);
   }
+}
+
+/* ============================================================ the chat popped out (features/assistant/FloatingChat.tsx)
+   A small window over the app: drag it by its header, resize it from its corner, minimize it to a bubble.
+   It sits above the panels and drawers, below menus, dialogs and toasts. */
+.chat-float {
+  position: fixed;
+  z-index: calc(var(--z-popover) - 5);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  animation: chat-pop var(--dur-2) var(--ease) both;
+}
+
+.chat-float.is-dragging {
+  box-shadow: var(--shadow-3), 0 0 0 1px var(--assistant-line);
+}
+
+@keyframes chat-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.chat-float-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  height: 46px;
+  padding: 0 6px 0 2px;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.chat-float.is-dragging .chat-float-head {
+  cursor: grabbing;
+}
+
+.chat-float-grip {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 30px;
+  border-radius: 7px;
+  color: var(--ink-4);
+  cursor: grab;
+}
+
+.chat-float-grip:hover {
+  color: var(--ink-2);
+  background: var(--surface-hover);
+}
+
+.chat-float-title {
+  margin-left: 2px;
+}
+
+.chat-float-name {
+  margin: 0 6px 0 7px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.model-dot {
+  width: 7px;
+  height: 7px;
+}
+
+.chat-float-head .spacer {
+  flex: 1;
+  min-width: 4px;
+}
+
+.chat-float-head .icon-btn {
+  color: var(--ink-3);
+}
+
+.chat-float-head .icon-btn:hover:not(:disabled) {
+  color: var(--ink-1);
+}
+
+/* the resize corner: two hatch strokes, like a section on a drawing */
+.chat-float-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: end;
+  width: 22px;
+  height: 22px;
+  padding: 0 5px 5px 0;
+  border-radius: 0 0 var(--r-lg) 0;
+  cursor: nwse-resize;
+  touch-action: none;
+  color: var(--ink-4);
+}
+
+.chat-float-resize:hover,
+.chat-float-resize:focus-visible {
+  color: var(--ink-1);
+}
+
+.chat-float-resize svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+body.is-moving-chat,
+body.is-moving-chat * {
+  user-select: none !important;
+}
+
+/* a narrow or short window: the chat is a sheet along the bottom */
+.chat-float.is-sheet {
+  animation-name: chat-sheet;
+}
+
+.chat-float.is-sheet .chat-float-head {
+  position: relative;
+  cursor: default;
+  padding-left: 8px;
+}
+
+.chat-float-handle {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+@keyframes chat-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- the chat in compact type (the floating window) */
+.assistant.is-compact .chat {
+  padding: 12px 12px 6px;
+  gap: 12px;
+}
+
+.assistant.is-compact .chat-empty {
+  gap: 14px;
+  padding: 4px 2px;
+}
+
+.assistant.is-compact .chat-hero h3 {
+  font-size: 23px;
+}
+
+.assistant.is-compact .chat-hero p {
+  font-size: 13.5px;
+}
+
+.assistant.is-compact .suggestion {
+  padding: 9px 11px;
+  font-size: 13.5px;
+}
+
+.assistant.is-compact .bubble {
+  max-width: 92%;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.assistant.is-compact .bubble-images img {
+  width: 56px;
+  height: 56px;
+}
+
+.assistant.is-compact .markdown {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.assistant.is-compact .tool-call-head {
+  padding: 6px 8px;
+}
+
+.assistant.is-compact .tool-call-summary,
+.assistant.is-compact .tool-call .chip-row {
+  padding-left: 36px;
+}
+
+.assistant.is-compact .composer {
+  padding: 8px 10px 10px;
+  gap: 6px;
+}
+
+.assistant.is-compact .composer-box {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 4px;
+  padding: 5px 5px 5px 12px;
+  border-radius: 16px;
+}
+
+.assistant.is-compact .composer-box textarea {
+  font-size: 14.5px;
+  padding: 7px 0;
+}
+
+.assistant.is-compact .composer-actions {
+  gap: 0;
+}
+
+.assistant.is-compact .composer-actions .spacer {
+  display: none;
+}
+
+.assistant.is-compact .composer-actions .ask-send {
+  width: 34px;
+  height: 34px;
+}
+
+.assistant.is-compact .context-chip {
+  font-size: 11.5px;
+}
+
+.composer .ask-chips {
+  padding: 0 0 2px;
+  margin: 0 -2px;
+}
+
+.assistant.is-compact .msg-gallery-grid {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+
+/* ---- the minimized chat: a bubble you can drag anywhere */
+.chat-bubble {
+  position: fixed;
+  z-index: calc(var(--z-popover) - 5);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(330px, calc(100vw - 16px));
+  height: 50px;
+  padding: 0 12px 0 9px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hud-line);
+  background: var(--hud-bg);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--shadow-3);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  animation: chat-pop var(--dur-2) var(--ease) both;
+  transition: box-shadow var(--dur-1) var(--ease);
+}
+
+.chat-bubble:hover {
+  box-shadow: var(--shadow-3), 0 0 0 1px var(--assistant-line);
+}
+
+.chat-bubble.is-dragging {
+  cursor: grabbing;
+}
+
+.chat-bubble:focus-visible {
+  box-shadow: var(--shadow-3), var(--focus);
+  border-radius: var(--r-pill);
+}
+
+.chat-bubble-mark {
+  position: relative;
+  display: grid;
+  flex: none;
+}
+
+/* working: a sweep runs round the logo tile */
+@property --chat-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.chat-bubble.is-working .chat-bubble-mark::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  padding: 2px;
+  border-radius: 11px;
+  background: conic-gradient(from var(--chat-sweep), var(--signal) 0deg 100deg, transparent 100deg 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: chat-sweep 1.2s linear infinite;
+}
+
+@keyframes chat-sweep {
+  to {
+    --chat-sweep: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-bubble.is-working .chat-bubble-mark::before {
+    animation: none;
+    background: var(--signal);
+  }
+}
+
+.chat-bubble-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 2px var(--surface);
+  animation: tally 1.6s var(--ease) infinite;
+}
+
+.chat-bubble-text {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.chat-bubble-name {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.chat-bubble-state {
+  max-width: 230px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.chat-bubble.is-unread .chat-bubble-state {
+  color: var(--signal-ink);
+  font-weight: 600;
+}
+
+.chat-bubble-open {
+  flex: none;
+  color: var(--ink-3);
+}
+
+/* ---- the Assistant tab while the chat is popped out */
+.side-tab-note {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.chat-away {
+  flex: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 28px 48px;
+  text-align: center;
+}
+
+.chat-away-art {
+  width: 220px;
+  height: auto;
+  margin-bottom: 6px;
+  overflow: visible;
+}
+
+.chat-away-art .slot {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 4;
+}
+
+.chat-away-art .slot-lines {
+  stroke: var(--line-strong);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.chat-away-art .window {
+  fill: var(--surface);
+  stroke: var(--ink-1);
+  stroke-width: 1.5;
+}
+
+.chat-away-art .window-bar {
+  stroke: var(--ink-1);
+  stroke-width: 1.5;
+}
+
+.chat-away-art .leader,
+.chat-away-art .arrow {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chat-away-art .node {
+  fill: var(--signal);
+}
+
+.chat-away h3 {
+  font-size: 27px;
+  line-height: 1.1;
+}
+
+.chat-away .hint-text {
+  max-width: 310px;
+}
+
+.chat-away .row {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* ---- pictures a tool showed, small (the reply box) */
+.msg-gallery.is-small {
+  margin: 0;
+}
+
+.msg-gallery.is-small .msg-gallery-grid {
+  grid-template-columns: repeat(auto-fill, 72px);
+  gap: 6px;
+}
+
+.msg-gallery.is-small .msg-gallery-grid a {
+  padding: 2px;
 }
