@@ -133,6 +133,20 @@ body.is-resizing .gutter::after {
 
 .topbar-right {
   justify-content: flex-end;
+  /* never paint over the journey rail in the middle: what does not fit is cut at the column's edge */
+  overflow-x: clip;
+  overflow-clip-margin: 6px;
+}
+
+.topbar-right > * {
+  flex: none;
+}
+
+/* the running job gives way first: its title shortens with an ellipsis, down to just its dial */
+.topbar-right > .jobs-btn {
+  flex: 0 1 auto;
+  min-width: 40px;
+  overflow: hidden;
 }
 
 .brand-btn {
@@ -512,6 +526,7 @@ html.theme-iris *::after {
 }
 
 .jobs-btn .job-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 550;

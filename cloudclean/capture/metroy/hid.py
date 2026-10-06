@@ -53,9 +53,9 @@ class MetroyHid:
             self.fd = os.open(self.path, os.O_RDWR)
         except PermissionError:
             raise PermissionError(
-                f"no permission to open {self.path}. Install a udev rule so the logged-in user may use the scanner: "
-                'SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2207", ATTRS{idProduct}=="110c", TAG+="uaccess" '
-                "(for example in /etc/udev/rules.d/70-metroy.rules), then replug it.") from None
+                f"no permission to open {self.path}. Run this once in the CloudClean folder: "
+                "sudo deploy/install-scanner-access.sh (it lets CloudClean use the scanner even when nobody is "
+                "logged in at the screen; no replugging needed).") from None
 
     def close(self) -> None:
         os.close(self.fd)
