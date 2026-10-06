@@ -17,7 +17,6 @@
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   align-items: center;
   gap: var(--sp-8);
-  animation: rise var(--dur-3) var(--ease) both;
 }
 
 .home-copy {
@@ -44,6 +43,24 @@
 .home-title em {
   font-style: italic;
   color: var(--ink-2);
+}
+
+/* each word rises out of its own clipping box (padding keeps descenders and the italic overhang visible) */
+.home-title-line {
+  display: block;
+}
+
+.home-title .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0 0.08em 0.14em 0.02em;
+  margin: 0 -0.08em -0.14em -0.02em;
+}
+
+.home-title .w > span {
+  display: inline-block;
+  will-change: transform;
 }
 
 .home-ask {
@@ -96,23 +113,291 @@
   height: 44px;
 }
 
-.bolt-drawing {
+
+/* ---- the turntable dial (ui/motion/ScanDial.tsx) */
+.dial {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
   width: 100%;
-  height: auto;
-  color: var(--ink-2);
-  animation: fade 0.8s var(--ease) 0.1s both;
+  max-width: 470px;
+  justify-self: end;
 }
 
-.bolt-drawing .bd-dim {
+.dial-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.dial-face {
+  position: absolute;
+  inset: 4%;
+  cursor: pointer;
+}
+
+.dial-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dial-tick {
+  stroke: var(--ink-4);
+  stroke-width: 1.1;
+}
+
+.dial-tick.is-major {
+  stroke: var(--ink-1);
+  stroke-width: 2;
+}
+
+.dial-ring {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.dial-ring.is-dashed {
+  stroke: var(--ink-4);
+  stroke-dasharray: 1.5 5;
+}
+
+.dial-arc {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 8;
+}
+
+.dial-arc.is-done {
+  stroke: var(--ink-1);
+}
+
+.dial-arc.is-skipped {
+  stroke-width: 2;
+  stroke: var(--ink-4);
+}
+
+.dial-arc.is-next {
+  stroke: var(--signal);
+}
+
+.dial-glow {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 20;
+  opacity: 0;
+}
+
+.dial-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  fill: var(--ink-3);
+}
+
+.dial-label.is-done {
+  fill: var(--ink-1);
+}
+
+.dial-label.is-next {
+  fill: var(--signal-ink);
+  font-weight: 600;
+}
+
+.dial-platter,
+.dial-head {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+.dial-platter-disc {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.dial-groove {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 0.8;
+  opacity: 0.6;
+}
+
+.dial-part-drawing {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+
+.dial-trail {
+  opacity: 0;
+}
+
+.dial-trail path {
+  fill: var(--signal);
+}
+
+.dial-hand {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.6;
+}
+
+.dial-hand-tip {
+  fill: var(--signal);
+}
+
+.dial-hand-dot {
+  fill: var(--surface);
+  stroke: var(--signal);
+  stroke-width: 1.6;
+}
+
+.dial-cross {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+/* instrument readouts in the four corners, each with a corner bracket */
+.dial-readout {
+  position: absolute;
+  display: grid;
+  gap: 3px;
+  padding: 8px 0 0 11px;
+  pointer-events: none;
+}
+
+.dial-readout::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  border-left: 1.5px solid var(--ink-2);
+  border-top: 1.5px solid var(--ink-2);
+}
+
+.dial-readout-0 {
+  left: 0;
+  top: 0;
+}
+
+.dial-readout-1 {
+  right: 0;
+  top: 0;
+  padding: 8px 11px 0 0;
+  text-align: right;
+}
+
+.dial-readout-1::before {
+  left: auto;
+  right: 0;
+  border-left: 0;
+  border-right: 1.5px solid var(--ink-2);
+}
+
+.dial-readout-2,
+.dial-readout-3 {
+  bottom: 0;
+  padding: 0 0 8px 11px;
+}
+
+.dial-readout-2 {
+  left: 0;
+}
+
+.dial-readout-3 {
+  right: 0;
+  padding: 0 11px 8px 0;
+  text-align: right;
+}
+
+.dial-readout-2::before,
+.dial-readout-3::before {
+  top: auto;
+  bottom: 0;
+  border-top: 0;
+  border-bottom: 1.5px solid var(--ink-2);
+}
+
+.dial-readout-3::before {
+  left: auto;
+  right: 0;
+  border-left: 0;
+  border-right: 1.5px solid var(--ink-2);
+}
+
+.dial-readout-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--ink-3);
 }
 
-.bolt-drawing .bd-chip {
-  fill: var(--primary);
+.dial-readout-value {
+  min-height: 1.15em;
+  font-family: var(--font-mono);
+  font-size: 21px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink-1);
+  white-space: nowrap;
 }
 
-.bolt-drawing text {
-  fill: var(--ink-on-primary);
+.dial-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 40px;
+  padding: 0 16px 0 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-1);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+
+.dial-caption:hover {
+  border-color: var(--ink-1);
+  box-shadow: var(--shadow-2);
+}
+
+.dial-caption svg {
+  flex: none;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.dial-caption:hover svg,
+.dial:has(.dial-face:hover) .dial-caption svg {
+  transform: translateX(3px);
+}
+
+.dial-caption-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--signal-ink);
+}
+
+.dial-caption-name {
+  min-width: 0;
+}
+
+.dial-caption-next {
+  flex: none;
+  color: var(--ink-3);
+  font-weight: 550;
 }
 
 /* ---- action cards */
@@ -120,7 +405,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sp-4);
-  animation: rise var(--dur-3) var(--ease) 0.06s both;
 }
 
 .action-card {
@@ -202,7 +486,6 @@
 .home-projects {
   display: grid;
   gap: var(--sp-4);
-  animation: rise var(--dur-3) var(--ease) 0.12s both;
 }
 
 .home-section-head {
@@ -242,11 +525,37 @@
 }
 
 .project-cover {
+  position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
   aspect-ratio: 4 / 3;
   background: radial-gradient(110% 100% at 50% 20%, var(--vp-top), var(--vp-bottom));
   border-bottom: 1px solid var(--line);
+}
+
+/* the scanner line that reveals a project's picture */
+.project-scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--signal);
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--signal) 60%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.project-scan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 2px;
+  width: 56px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--signal) 16%, transparent));
 }
 
 .project-cover img {
@@ -310,7 +619,6 @@
   border-radius: var(--r-lg);
   background: var(--surface);
   border: 1px solid var(--line);
-  animation: rise var(--dur-3) var(--ease) 0.18s both;
 }
 
 .status-item {
@@ -360,8 +668,9 @@
   .home-hero {
     grid-template-columns: 1fr;
   }
-  .bolt-drawing {
-    max-width: 480px;
+  .dial {
+    justify-self: center;
+    width: min(440px, 100%);
   }
   .home-actions,
   .status-strip {

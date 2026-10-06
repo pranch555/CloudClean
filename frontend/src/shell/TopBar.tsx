@@ -3,7 +3,7 @@ import { ChevronDown, FolderPlus, Home, Moon, Settings, Sun, Terminal } from 'lu
 import { lastLog } from '../lib/jobs';
 import { createProject, projectsSupported } from '../lib/projects';
 import { fmtAgo } from '../lib/format';
-import { resolveTheme } from '../lib/theme';
+import { resolveTheme, switchTheme } from '../lib/theme';
 import { useStore, panelShown } from '../store';
 import { Logo } from '../ui/icons';
 import { AssistantGlyph } from '../features/assistant/AssistantMark';
@@ -62,8 +62,8 @@ export function TopBar({ home = false }: { home?: boolean }) {
             <span className="job-text">{running ? `${running.title} · ${running.progress?.label || lastLog(running)}` : queued ? `${queued} waiting` : failed ? `${jobs[0].title} failed` : 'Jobs'}</span>
           </button>
         )}
-        <IconButton className="theme-toggle" data-guide="theme" label={dark ? 'Switch to the light Paper theme' : 'Switch to the dark Carbon theme'} tip="bottom" onClick={() => set({ theme: dark ? 'paper' : 'carbon' })}>
-          {dark ? <Sun size={18} /> : <Moon size={18} />}
+        <IconButton className="theme-toggle" data-guide="theme" label={dark ? 'Switch to the light Paper theme' : 'Switch to the dark Carbon theme'} tip="bottom" onClick={e => switchTheme(dark ? 'paper' : 'carbon', e.currentTarget)}>
+          <span key={dark ? 'sun' : 'moon'} className="theme-icon">{dark ? <Sun size={18} /> : <Moon size={18} />}</span>
         </IconButton>
         <IconButton label="Settings" tip="bottom" data-guide="settings" onClick={() => set({ settingsOpen: 'appearance' })}>
           <Settings size={18} />

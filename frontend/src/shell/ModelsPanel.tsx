@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Box, Camera, Crosshair, FileInput, FolderInput, PanelLeftClose, Plus, ScanLine, Search, Upload, X } from 'lucide-react';
 import type { Asset } from '../lib/types';
 import { guideTo } from '../lib/guide';
 import { importPaths, pickFiles } from '../lib/importing';
 import { useProjectAssets, useStore } from '../store';
 import { Button, Empty, IconButton, Popover } from '../ui/primitives';
+import { animate, enter, pulse, reducedMotion, springy } from '../lib/motion';
 import { checkEntries, displayName, GROUPS, groupOf, type Entry, type GroupId } from './models/groups';
 import { useCheckInfos } from './models/checkInfo';
 import { GroupCard } from './models/GroupCard';
@@ -53,6 +54,41 @@ export function ModelsPanel() {
     checks: checkEntries(by.checks, links),
     cad: flat([...by.cad].sort((x, y) => Number(y.id === golden) - Number(x.id === golden) || newestFirst(x, y))),
   };
+  // ---- arrivals: the groups and rows come in once when a project's list first shows; afterwards only a model
+  // that is new (a finished job, an import) slides in, with a ring and a short glow
+  const projectId = useStore(s => s.projectId);
+  const scroll = useRef<HTMLDivElement>(null);
+  const seen = useRef<{ project: string | null; ids: Set<string>; groups: Set<string> } | null>(null);
+  const idsKey = all.map(a => a.id).join(',');
+  useLayoutEffect(() => {
+    const el = scroll.current;
+    if (!el || !booted) return;
+    const ids = new Set(all.map(a => a.id));
+    const groups = new Set([...el.querySelectorAll<HTMLElement>('.mp-group')].map(g => g.getAttribute('aria-label') ?? ''));
+    const before = seen.current;
+    seen.current = { project: projectId, ids, groups };
+    if (reducedMotion() || !ids.size) return;
+    if (!before || before.project !== projectId || !before.ids.size) {
+      enter(el.querySelectorAll('.mp-group'), { y: 14, step: 70, duration: 560 });
+      enter([...el.querySelectorAll('.mp-row, .ph-tile')].slice(0, 16), { y: 8, step: 26, delay: 110, duration: 460 });
+      return;
+    }
+    for (const g of el.querySelectorAll<HTMLElement>('.mp-group')) {
+      if (!before.groups.has(g.getAttribute('aria-label') ?? '')) enter([g], { y: 12, scale: 0.98, duration: 520 });
+    }
+    for (const id of ids) {
+      if (before.ids.has(id)) continue;
+      const row = el.querySelector<HTMLElement>(`.mp-row[data-asset="${id}"]`);
+      if (!row) continue;
+      animate(row, { opacity: [0, 1], translateX: [-16, 0], ease: springy() });
+      row.classList.remove('is-new');
+      void row.offsetWidth; // restart the glow
+      row.classList.add('is-new');
+      row.addEventListener('animationend', () => row.classList.remove('is-new'), { once: true });
+      setTimeout(() => pulse(row), 160);
+    }
+  }, [booted, projectId, idsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const shownEntries = (g: Exclude<GroupId, 'photos'>) => (q ? entries[g].filter(e => matches(e.asset) || e.children.some(matches)) : entries[g]);
   const photos = photosAll.filter(matches);
   const anyMatch = MODEL_GROUPS.some(g => shownEntries(g).length > 0) || photos.length > 0;
@@ -82,7 +118,7 @@ export function ModelsPanel() {
         </label>
       )}
 
-      <div className="models-scroll mp-scroll">
+      <div className="models-scroll mp-scroll" ref={scroll}>
         {!booted ? (
           <div className="skeleton-list" aria-label="Loading models">{[0, 1, 2, 3].map(i => <div key={i} className="skeleton-row"><span /><span /></div>)}</div>
         ) : (

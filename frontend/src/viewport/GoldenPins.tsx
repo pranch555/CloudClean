@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useGoldenPins } from '../lib/golden';
+import { animate, pulse, reducedMotion, springy, stagger, utils } from '../lib/motion';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
@@ -82,6 +83,31 @@ export function GoldenPins() {
     };
   }, [onStage, pins]);
 
+  // a new set of pins pops up from their anchors, one after another (the heads scale through --pin-pop, so the
+  // hover / active scale on their transform keeps working)
+  const arrival = onStage ? pins.map(p => p.region).join(',') : '';
+  useLayoutEffect(() => {
+    const el = layer.current;
+    if (!el || !arrival || reducedMotion()) return;
+    const heads = el.querySelectorAll<HTMLElement>('.gold-pin3d span');
+    utils.set(heads, { '--pin-pop': 0, opacity: 0 }); // hidden through the stagger's wait, not shown then popped
+    const a = animate(heads, {
+      '--pin-pop': [0, 1],
+      opacity: { from: 0, to: 1, duration: 180, ease: 'out(2)' },
+      ease: springy(),
+      delay: stagger(55, { start: 120 }),
+    });
+    return () => void a.complete();
+  }, [arrival]);
+
+  // the area "Show me" is on: its pin says "here" once the view has flown to it, and once more
+  useEffect(() => {
+    if (active == null || !onStage) return;
+    const ring = () => pulse(layer.current?.querySelector<HTMLElement>(`[data-region="${active}"] span`) ?? null);
+    const timers = [window.setTimeout(ring, 650), window.setTimeout(ring, 1400)];
+    return () => timers.forEach(t => window.clearTimeout(t));
+  }, [active, onStage]);
+
   if (!onStage || !pins.length) return null;
   return (
     <div ref={layer} className="gold-pins" role="group" aria-label="Areas the golden check found">
@@ -92,6 +118,7 @@ export function GoldenPins() {
           className={`gold-pin3d ${active === pin.region ? 'is-active' : ''} ${active != null && active !== pin.region ? 'is-dim' : ''}`}
           data-pos={pin.pos.join(',')}
           data-normal={pin.normal.join(',')}
+          data-region={pin.region}
           style={{ '--pin': pin.color } as React.CSSProperties}
           title={`${pin.n}. ${pin.label}`}
           aria-label={`Area ${pin.n}: ${pin.label}`}

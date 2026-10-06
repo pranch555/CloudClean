@@ -36,28 +36,51 @@ def _mm(v, signed: bool = False) -> str:
     return f"{v:+.3f}" if signed else f"{v:.3f}"
 
 
+def _size_groups(measurements: list[dict]) -> list[tuple[str, list[dict]]]:
+    """The sizes under their headings (v3 'group'), in the order the headings first appear; 'Other sizes' last."""
+    groups: dict[str, list[dict]] = {}
+    for m in measurements:
+        groups.setdefault(m.get("group") or "Sizes", []).append(m)
+    return sorted(groups.items(), key=lambda kv: kv[0] == "Other sizes")
+
+
 def render_golden_report(meta: dict, report: dict, scan_name: str, golden_name: str) -> str:
     e = html.escape
     tol = report.get("tolerance", 0)
     verdict = report.get("verdict", "")
     tone = {"match": "#15803d", "incomplete": "#b45309", "differs": "#b91c1c"}.get(verdict, "#334155")
     rows = []
-    for m in report.get("measurements", []):
-        st = m.get("status")
-        colour = {"ok": "#15803d", "off": "#b91c1c", "close": "#b45309"}.get(st, "#64748b")
-        note = m.get("reason") or ""
-        if m.get("kind") == "position" and m.get("toward"):
-            note = f"moved toward {m['toward']}"
-        rows.append(f"<tr><td>{e(m['name'])}</td><td class=n>{_mm(m.get('golden'))}</td><td class=n>{_mm(m.get('scan'))}</td>"
-                    f"<td class=n>{_mm(m.get('difference'), True)}</td><td class=n>{'±' + _mm(m['uncertainty']) if m.get('uncertainty') else '–'}</td>"
-                    f"<td style='color:{colour};font-weight:600'>{STATUS_TEXT.get(st, st)}</td><td class=small>{e(note)}</td></tr>")
+    groups = _size_groups(report.get("measurements", []))
+    for heading, ms in groups:
+        if len(groups) > 1:
+            rows.append(f"<tr class=group><td colspan=7>{e(heading)}</td></tr>")
+        for m in ms:
+            st = m.get("status")
+            colour = {"ok": "#15803d", "off": "#b91c1c", "close": "#b45309"}.get(st, "#64748b")
+            note = m.get("reason") or ""
+            if m.get("kind") == "position" and m.get("toward"):
+                note = f"moved toward {m['toward']}"
+            name = m["name"] + (f" ({m['series_index']} of {m['series_size']})" if m.get("series") else "")
+            what = f"<div class=small>{e(m['what'])}</div>" if m.get("what") else ""
+            caveat = f"<div class='small caveat'>{e(m['caveat'])}</div>" if m.get("caveat") else ""
+            rows.append(f"<tr><td><b>{e(name)}</b>{what}{caveat}</td><td class=n>{_mm(m.get('golden'))}</td>"
+                        f"<td class=n>{_mm(m.get('scan'))}</td><td class=n>{_mm(m.get('difference'), True)}</td>"
+                        f"<td class=n>{'±' + _mm(m['uncertainty']) if m.get('uncertainty') else '–'}</td>"
+                        f"<td style='color:{colour};font-weight:600'>{STATUS_TEXT.get(st, st)}</td>"
+                        f"<td class=small>{e(note)}</td></tr>")
+    story = report.get("sizes_story")
+    story = f"<p class=story>{e(story)}</p>" if story else ""
     regions = []
-    for r in report.get("regions", []):
+    for r in sorted(report.get("regions", []), key=lambda r: r.get("number", r["id"] + 1)):
         detail = {"off": f"{_mm(r.get('deviation'), True)} mm", "rough": f"±{_mm(r.get('spread'))} mm",
                   "thin": f"{r.get('density_pct') or 0:.0f} % of the usual points"}.get(r["kind"], "")
-        regions.append(f"<tr><td>{r['id'] + 1}</td><td><b>{e(r['name'])}</b><div class=small>{e(r['why'])}</div></td>"
+        where = f"<div class=small>{e(r['where'])}</div>" if r.get("where") else ""
+        regions.append(f"<tr><td>{r.get('number', r['id'] + 1)}</td><td><b>{e(r['name'])}</b>{where}"
+                       f"<div class=small>{e(r['why'])}</div></td>"
                        f"<td>{KIND_TEXT.get(r['kind'], r['kind'])}</td><td class=n>{r['area_mm2']:.0f} mm² "
                        f"({r['share_pct']:.1f} %)</td><td class=n>{e(detail)}</td><td class=small>{e(r['advice'])}</td></tr>")
+    part = (report.get("part") or {}).get("summary")
+    part = f"<p class=small>{e(part)}</p>" if part else ""
     surface = report.get("surface", {})
     shares = surface.get("shares_pct", {})
     legend = "".join(f"<span class=chip><i style='background:{g['color']}'></i>{e(g['label'])} "
@@ -78,15 +101,17 @@ table{{border-collapse:collapse;width:100%;font-size:13px}} th,td{{border-bottom
 th{{font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:.03em}} td.n{{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}}
 .small{{font-size:12px;color:#475569}} .chip{{display:inline-flex;align-items:center;gap:6px;margin:0 14px 6px 0;font-size:13px}}
 .chip i{{width:12px;height:12px;border-radius:3px;display:inline-block}} ul{{margin:6px 0;padding-left:20px}}
+tr.group td{{font-weight:700;font-size:13px;color:#334155;background:#f1f5f9;border-bottom:1px solid #cbd5e1}}
+.caveat{{color:#b45309}} .story{{border-left:4px solid #b45309;background:#fffbeb;padding:8px 12px;margin:8px 0;font-size:14px}}
 @media print{{body{{margin:0}} .noprint{{display:none}}}}
 </style></head><body>
 <h1>Golden model check</h1>
 <div class=meta>Scan <b>{e(scan_name)}</b> against the golden model <b>{e(golden_name)}</b> · tolerance ±{tol:g} mm · {when}</div>
 <div class=verdict>{e(report.get('headline', ''))}</div>
-<ul>{summary}</ul>
+{part}<ul>{summary}</ul>
 <h2>What to scan again</h2><ol>{rescan}</ol>
 <h2>Measurements (mm)</h2>
-<table><thead><tr><th>Measurement</th><th>Golden</th><th>Scan</th><th>Difference</th><th>Certainty</th><th>Result</th><th></th></tr></thead>
+{story}<table><thead><tr><th>Measurement</th><th>Golden</th><th>Scan</th><th>Difference</th><th>Certainty</th><th>Result</th><th></th></tr></thead>
 <tbody>{''.join(rows) or '<tr><td colspan=7>No flat or round faces were found to measure.</td></tr>'}</tbody></table>
 <p class=small>Certainty: how precisely the scan pins the value down (twice the standard uncertainty). A value only
 counts as matching when it is inside ±{tol:g} mm even allowing for that; "too close to call" means it is within

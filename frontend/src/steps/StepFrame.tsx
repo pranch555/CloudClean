@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { ArrowRight, CheckCircle2, Info, TriangleAlert, XCircle } from 'lucide-react';
 import type { Asset, Step } from '../lib/types';
 import { fmtCount } from '../lib/format';
@@ -7,22 +7,64 @@ import { sizeText, Thumb } from '../shell/ModelsPanel';
 import { useProjectAssets, useStore } from '../store';
 import { STEP_GLYPH } from '../ui/icons';
 import { Button } from '../ui/primitives';
+import { animate, EASE, enter, reducedMotion, springy, stagger, useEntrance, utils } from '../lib/motion';
 
-/** Shared anatomy of a step panel: header, body (scrolls), footer (sticky main action + next step). */
+/** The step number shown last: the kicker rolls from it to the new one. */
+let lastStepN = 0;
+
+/**
+ * Shared anatomy of a step panel: header, body (scrolls), footer (sticky main action + next step).
+ * When a step opens, the number in "Step n of 6" rolls from the step you came from, the title rises word by word
+ * and the blocks follow in a short stagger.
+ */
 export function StepFrame({ step, children, footer, title, purpose }: { step: Step; children: ReactNode; footer?: ReactNode; title?: string; purpose?: ReactNode }) {
   const info = stepInfo(step);
   const Glyph = STEP_GLYPH[step];
+  const from = useMemo(() => lastStepN, [step]); // read during render: StrictMode's second effect run sees the same
+  const root = useEntrance<HTMLDivElement>(step, el => {
+    lastStepN = info.n;
+    const strip = el.querySelectorAll('.step-n-strip');
+    const at = (n: number) => `${-(n - 1) * 1.25}em`;
+    if (reducedMotion()) {
+      utils.set(strip, { translateY: at(info.n) });
+      return null;
+    }
+    const blocks = [...el.querySelectorAll(':scope > :not(.step-head)')].slice(0, 8);
+    return [
+      from && from !== info.n ? animate(strip, { translateY: [at(from), at(info.n)], ease: springy() }) : (utils.set(strip, { translateY: at(info.n) }), null),
+      animate(el.querySelectorAll('.step-glyph'), { scale: [0.6, 1], rotate: [-25, 0], opacity: [0, 1], ease: springy() }),
+      animate(el.querySelectorAll('.step-title .w > span'), { translateY: ['110%', '0%'], duration: 560, delay: stagger(40, { start: 40 }), ease: EASE.out }),
+      enter(el.querySelectorAll('.step-purpose'), { y: 6, delay: 120, duration: 480 }),
+      enter(blocks, { y: 12, step: 55, delay: 170, duration: 520 }),
+    ];
+  });
+  const heading = title ?? info.verb;
   return (
     <>
       <div className="side-scroll">
-        <div className="step">
+        <div className="step" ref={root}>
           <header className="step-head">
             <div className="step-kicker">
               <span className="step-glyph"><Glyph size={18} /></span>
-              Step {info.n} of {STEPS.length}
+              <span>
+                Step{' '}
+                <span className="step-n" aria-hidden>
+                  <span className="step-n-strip">
+                    {STEPS.map(s => <span key={s.id}>{s.n}</span>)}
+                  </span>
+                </span>
+                <span className="visually-hidden">{info.n}</span> of {STEPS.length}
+              </span>
               {info.optional && <span className="badge">optional</span>}
             </div>
-            <h2 className="step-title">{title ?? info.verb}</h2>
+            <h2 className="step-title" aria-label={heading}>
+              {heading.split(' ').map((w, i) => (
+                <span key={i} aria-hidden>
+                  {i > 0 && ' '}
+                  <span className="w"><span>{w}</span></span>
+                </span>
+              ))}
+            </h2>
             <p className="step-purpose">{purpose ?? info.purpose}</p>
           </header>
           {children}

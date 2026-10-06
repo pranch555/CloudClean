@@ -11,15 +11,19 @@ builds on compare.compare_to_reference (a rigid best-fit line-up and the signed 
      rough     the points scatter more than the tolerance allows (shiny or dark surface)
      off       the scanned surface sits beyond the tolerance, outside (+) or inside (-) the golden surface
    Spots on sharp edges are never called rough or off: every scanner rounds edges a little.
-2. Regions. Neighbouring spots with the same problem become a region with a plain name ("bottom face", "Ø6.00
-   hole"), its size and what to do about it (scan it again and how, or check it by hand).
+2. Regions. Neighbouring spots with the same problem become a region with a plain name ("Bottom of the hex
+   socket", "Corner under the head"), a sentence saying where it is, its size and what to do about it (scan it again
+   and how, or check it by hand). Names come from golden_words, which recognises what the part is built from.
 3. Measurements. The golden model's flat faces and round faces (holes, shafts) are found on the golden mesh and
    measured again on the scan points that landed on them: overall size, thicknesses, gaps, steps, diameters and hole
    positions. Each gets the golden value, the scanned value, the difference and a verdict against the tolerance that
-   allows for how precisely the scan pins the value down (ISO 14253-1 style: ok, off, or too close to call).
+   allows for how precisely the scan pins the value down (ISO 14253-1 style: ok, off, or too close to call), plain
+   words (what it is, from where to where), a dimension line on the golden surfaces and a caveat when one of its
+   faces carries a problem area. A cut through the golden model (cut_section) is the drawing the sizes are shown on.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Callable
 
@@ -58,7 +62,10 @@ THIN_RATIO = 0.35          # ... fewer than this share: too few points
 CHECK_MESH_TRIANGLES = 520_000   # the coloured golden surface: fine enough to show every listed area, and under
                                  # io.preview's 600k so the viewer gets it as it is (decimation would erase colours)
 MOSTLY_MATCHES_PCT = 95.0  # a check that found problems on less than 5 % of the surface "mostly matches"
-REPORT_VERSION = 2         # 2: names from golden_words, "Show me" views with radius, pins, match_pct
+REPORT_VERSION = 3         # 2: names from golden_words, "Show me" views with radius, pins, match_pct; 3: the part's
+                           # vocabulary (head, shaft, hex socket...), where / number per area, what / group / series /
+                           # ends / caveat per size, sizes_story, the section drawing, check_face
+SECTION_BYTES = 60_000     # the section drawing's JSON stays under this
 
 
 @dataclass
@@ -484,7 +491,6 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
     faces, tri_face, sharp = find_faces(ref, min_face)
     words = PartWords(ref, faces, up_axis)
     words.set_triangle_faces(tri_face)
-    labels = words.labels
     log(f"Golden check: {sum(f['type'] == 'plane' for f in faces)} flat faces, "
         f"{sum(f['type'] == 'cylinder' and f['hole'] for f in faces)} holes, "
         f"{sum(f['type'] == 'cylinder' and not f['hole'] for f in faces)} round faces; {n_spots:,} surface spots "
@@ -559,6 +565,8 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
     min_region = max(5 * spot_area, 5e-4 * total_area, 0.5)
     spot_face = tri_face[Stri]
     face_spots = np.bincount(spot_face[spot_face >= 0], minlength=len(faces))
+    covered = np.bincount(spot_face[(spot_face >= 0) & (status != MISSING)], minlength=len(faces)) \
+        / np.maximum(face_spots, 1)
     regions: list[dict] = []
     spot_region = np.full(n_spots, -1, dtype=np.int64)
     for code in (MISSING, THIN, ROUGH, OFF_OUT, OFF_IN):
@@ -572,7 +580,7 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
             if area < min_region:
                 continue
             region = _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words, area,
-                                      total_area, dev_s, spread_s, ratio, typical, tol)
+                                      total_area, dev_s, spread_s, ratio, typical, tol, covered)
             region["_index"] = len(regions)
             spot_region[idx] = len(regions)
             regions.append(region)
@@ -582,12 +590,20 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
         lut[r.pop("_index")] = i
         r["id"] = i
     spot_region = lut[spot_region]          # -1 stays -1 (the last entry of lut)
+    # the numbers the list and the pins show: areas that differ first (they decide the verdict), the biggest
+    # difference over the biggest area first, then what to scan again (frontend GoldenCheck, `ordered`)
+    off_first = sorted((r for r in regions if r["kind"] == "off"), key=lambda r: -abs(r["deviation"]) * r["area_mm2"])
+    for n, r in enumerate(off_first + [r for r in regions if r["rescan"]], 1):
+        r["number"] = n
     progress(0.86, "measuring")
 
     # measurements
     pts = np.asarray(cmp["aligned"].points)[inc]
     measurements = _measure(faces, words, tri_face, tri[ok], d[ok], q[ok], qn[ok], pts[ok], point_edge[ok], status,
                             spot_face, face_spots, spot_region, regions, lo, hi, tol, h, ref)
+    on_face = _regions_on_faces(regions, spot_face, spot_region, face_spots, len(faces))
+    for m in measurements:
+        _annotate(m, regions, words, on_face, covered)
     progress(0.93, "writing the report")
 
     # the golden surface coloured by verdict, for the viewer: split long CAD edges first so every listed area shows
@@ -599,6 +615,7 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
     v_status = status[pick]
     v_region = spot_region[pick]
     v_dev = np.where(judged, dev_s, np.nan)[pick]
+    v_face = tri_face[ref.closest(Vd)[3]]           # the golden face each point lies on (its closest triangle's)
     palette = np.array([[int(e["color"][i:i + 2], 16) / 255 for i in (1, 3, 5)] for e in LEGEND])
     mesh = o3d.geometry.TriangleMesh(mesh)
     mesh.vertex_colors = o3d.utility.Vector3dVector(palette[v_status])
@@ -610,18 +627,32 @@ def check_against_golden(scan, golden: o3d.geometry.TriangleMesh, params: Golden
                          "rounded_by": round(float(np.percentile(edge_dev, 90)), 4) if len(edge_dev) else None},
                "spot_spacing": round(h, 4), "area_mm2": round(total_area, 2)}
     report = _summarise(regions, measurements, surface, creport, tol, faces, symmetric)
+    used = sorted({f for m in measurements for f in (m.get("faces") or []) if f >= 0})
+    try:
+        section = cut_section(ref, words, tri_face, used)
+    except Exception as exc:        # noqa: BLE001 - the drawing is an extra: never fail the check for it
+        log(f"  no section drawing: {exc}")
+        section = None
     report.update(golden_size=np.round(hi - lo, 4).tolist(), golden_min=np.round(lo, 4).tolist(),
                   golden_max=np.round(hi, 4).tolist(),
-                  part={"axis": words.axis, "ends": list(words.ends) if words.ends else None, "up_axis": up_axis})
+                  sizes_story=_sizes_story(measurements, regions, words, on_face), section=section,
+                  part={"axis": words.axis, "ends": list(words.ends) if words.ends else None, "up_axis": up_axis,
+                        "summary": words.summary(), "kind": words.kind})
     for line in [report["headline"], *report["summary"]]:
         log("  " + line)
     return {"aligned": cmp["aligned"], "deviation": cmp["deviation"], "check_mesh": mesh,
             "vertex_status": v_status.astype(np.float64), "vertex_region": v_region.astype(np.float64),
-            "vertex_deviation": v_dev, "compare_report": creport, "report": report}
+            "vertex_deviation": v_dev, "vertex_face": v_face.astype(np.float64), "compare_report": creport,
+            "report": report}
+
+
+def _amount(x: float) -> str:
+    """A distance in an area's text: 2.41, 0.080."""
+    return f"{x:.2f}" if x >= 1 else f"{x:.3f}"
 
 
 def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words: PartWords, area, total_area, dev_s,
-                     spread_s, ratio, typical, tol) -> dict:
+                     spread_s, ratio, typical, tol, covered) -> dict:
     P, N = S[idx], Sn[idx]
     center = P.mean(0)
     anchor = P[np.argmin(np.linalg.norm(P - center, axis=1))]
@@ -636,11 +667,11 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words: Part
             face_id, face = best, faces[best]
     kind = KIND[code]
     part = (fids == face_id).sum() / max(1, face_spots[face_id]) if face is not None else 1.0
-    named = words.region(face_id, part, center, mean_n, anchor)
+    named = words.region(face_id, part, center, mean_n, anchor, spots=(P, N, spot_face[idx]))
     name = named["name"]
-    fkind = words.info[face_id]["kind"] if face_id is not None else named["face_kind"]
-    inner_of = named["inner_of"]
-    in_recess = fkind in ("floor", "wall", "pocket") or name.startswith("Inside the recess")
+    fkind = named["face_kind"]
+    shade = named["shade"]
+    rec = named["recess"]
 
     dev = float(np.mean(dev_s[idx]))
     spread = float(np.median(spread_s[idx]))
@@ -648,23 +679,34 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words: Part
     hole = face is not None and face["type"] == "cylinder" and face["hole"]
     end_sign = words.is_end_like(normal, center)
     if kind == "missing":
-        why = "Not scanned: no scan points landed here."
+        why = "The scan has no points here: the scanner never saw it."
         if hole:
-            how = "Point the scanner straight into the hole (tilt the part so the hole faces the scanner) and scan it again."
+            how = ("Point the scanner straight into the hole (tilt the part so the hole faces the scanner) and scan "
+                   "it again.")
             if face["length"] > 2 * face["radius"]:
-                how += (" Holes deeper than they are wide are hard for any scanner to see into; if it stays empty, "
-                        "check this hole with a gauge or caliper instead.")
-        elif in_recess:
-            how = ("Point the scanner straight into the recess (tilt the part so its opening faces the scanner) and "
-                   "scan it again. Deep, narrow recesses are hard for any scanner to see into: if it stays empty, "
-                   "check it with a depth gauge or caliper instead.")
-        elif inner_of is not None:
-            how = (f"This corner is in the shadow of the {words.labels[inner_of]}. Tilt the part so the scanner looks "
-                   "straight into the corner, and scan it again.")
-        elif end_sign and words.axis is not None:
-            end = words.end(end_sign)
-            how = (f"The scanner did not see the {end}: the part probably stood on it. Turn the part over so the "
-                   f"{end} faces the scanner, scan it again and merge the two scans (Align step).")
+                how += (" Holes deeper than they are wide are hard for any scanner to see into: if it stays empty, "
+                        "check the hole with a gauge or caliper instead.")
+        elif rec is not None or fkind in ("floor", "wall", "pocket"):
+            opening = rec["noun"] if rec is not None else "pocket" if fkind == "pocket" else "recess"
+            opening = "hole" if opening.startswith("Ø") else opening
+            how = (f"Point the scanner straight into the {opening} (tilt the part so its opening faces the scanner) "
+                   "and scan it again. Deep, narrow openings are hard for any scanner to see into: if it stays empty, "
+                   "check the depth with a depth gauge instead.")
+        elif shade == "the head":
+            how = ("A tight corner like this is hard to see into. Tilt the part so the scanner looks up under the "
+                   "head, straight at the corner, and scan it again.")
+        elif shade is not None:
+            how = (f"{shade[:1].upper()}{shade[1:]} shades this corner. Tilt the part so the scanner looks straight "
+                   "into the corner, and scan it again.")
+        elif end_sign and words.axis is not None and words.near_end(P, end_sign):
+            end_face = words.end_face(end_sign)
+            fid = words.end_face_id(end_sign)
+            if fid is None or covered[fid] < 0.5:
+                how = (f"The scanner did not see the {end_face}: the part probably stood on it. Turn the part over so "
+                       f"the {end_face} faces the scanner, scan it again and merge the two scans (Align step).")
+            else:
+                how = ("The scanner missed this edge. Tilt the part so the edge faces the scanner, scan it again and "
+                       "merge the two scans (Align step).")
         else:
             how = ("Turn or tilt the part so this side faces the scanner, and scan it again. If the part stood on "
                    "this side, turn it over, scan it again and merge the two scans (Align step).")
@@ -677,25 +719,30 @@ def _describe_region(code, idx, S, Sn, spot_face, face_spots, faces, words: Part
         how = ("Shiny, dark or see-through surfaces do this. Give it a light coat of scanning spray (or lower the "
                "exposure) and scan it again.")
     else:
-        if hole:
-            where = ("outside the golden surface: the hole is smaller here" if dev > 0 else
-                     "inside the golden surface: the hole is bigger here")
+        x = _amount(abs(dev))
+        if fkind in ("floor", "pocket"):
+            why = (f"The scan finds this bottom {x} mm {'deeper' if dev < 0 else 'shallower'} than the golden model. "
+                   f"The tolerance is ±{tol:g} mm.")
+        elif hole:
+            why = (f"The hole's wall sits {x} mm {'farther in' if dev > 0 else 'farther out'} than designed: the hole "
+                   f"is {'smaller' if dev > 0 else 'bigger'} here. The tolerance is ±{tol:g} mm.")
         else:
-            where = ("outside the golden surface: there is more material here" if dev > 0 else
-                     "inside the golden surface: there is less material here")
-        why = f"The scanned surface sits {abs(dev):.3f} mm {where}; the tolerance is ±{tol:g} mm."
-        how = ("Measure it with a caliper or gauge. If the part is right, this area probably came from a separate "
-               "scan that was merged slightly off: redo that line-up in the Align step.")
+            why = (f"Here the scan sits {x} mm {'outside' if dev > 0 else 'inside'} the golden model's surface: there "
+                   f"is {'more' if dev > 0 else 'less'} material than designed. The tolerance is ±{tol:g} mm.")
+        how = ("Measure it with a caliper or gauge. If the part is right there, this area probably came from a "
+               "separate scan that was merged slightly off: redo that line-up in the Align step.")
         if fkind == "floor" and dev < 0:
-            how = ("Real recess floors are often cone-shaped (the drill point) where the CAD draws them flat, so "
-                   "the scan reads deeper here. Check the depth with a depth gauge.")
+            how = ("Drilled holes and sockets usually end in a cone (the drill point) where the drawing shows a flat "
+                   "bottom, so the scan reads deeper here. Check the depth with a depth gauge before you decide the "
+                   "part is wrong.")
     size = float(np.linalg.norm(P.max(0) - P.min(0)))
     prefer = None
     if hole:
         axis = face["axis"] if face["axis"] @ (anchor - words.mid) >= 0 else -face["axis"]
         prefer = _unit(axis + 0.35 * normal)
-    return {"kind": kind, "sign": (1 if code == OFF_OUT else -1) if kind == "off" else 0, "name": name, "why": why,
-            "advice": how, "rescan": kind in ("missing", "thin", "rough"), "face_kind": fkind,
+    return {"kind": kind, "sign": (1 if code == OFF_OUT else -1) if kind == "off" else 0, "name": name,
+            "where": named["where"], "why": why, "advice": how, "rescan": kind in ("missing", "thin", "rough"),
+            "face_kind": fkind,
             "area_mm2": round(area, 2), "share_pct": round(100.0 * area / total_area, 2),
             "center": np.round(center, 4).tolist(), "normal": np.round(normal, 4).tolist(),
             "pin": np.round(anchor, 4).tolist(), "box": [np.round(P.min(0), 4).tolist(), np.round(P.max(0), 4).tolist()],
@@ -710,7 +757,6 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
              spot_region, regions, lo, hi, tol, h, ref) -> list[dict]:
     """Golden value vs scanned value for the overall size, face-to-face distances, diameters, hole positions."""
     out: list[dict] = []
-    labels = words.labels
     nf = len(faces)
     pf = tri_face[tri]
     use = (pf >= 0) & ~point_edge
@@ -743,13 +789,14 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
     band = max(2.0 * h, 0.01 * float(np.max(hi - lo)))
     for k in range(3):
         golden = float(hi[k] - lo[k])
-        entry = {"kind": "size", "name": words.size_name(k), "golden": round(golden, 4), "axis": k,
+        entry = {"kind": "size", **words.size_words(k), "golden": round(golden, 4), "axis": k,
                  "at": ((lo + hi) / 2).round(4).tolist()}
         end_faces = {1: [], -1: []}
         for i, f in enumerate(faces):
             s_ = _side(f["normal"], 1.0) if f["type"] == "plane" else None
             if s_ and s_[0] == k and abs(f["point"][k] - (hi[k] if s_[1] > 0 else lo[k])) < 1e-3 * max(golden, 1.0):
                 end_faces[s_[1]].append(i)
+        entry["faces"] = end_faces[-1] + end_faces[1]
         extreme_pairs.update((i, j) for i in end_faces[1] for j in end_faces[-1])
         extreme_pairs.update((j, i) for i in end_faces[1] for j in end_faces[-1])
         ends, missing = [], []
@@ -818,8 +865,11 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
 
     def pair_entry(kind: str, i: int, j: int, golden: float) -> dict:
         at = (faces[i]["point"] + faces[j]["point"]) / 2
-        return {"kind": kind, "name": words.pair_name(kind, i, j), "golden": round(golden, 4),
+        return {"kind": kind, **words.pair_words(kind, i, j), "golden": round(golden, 4),
                 "faces": [i, j], "at": np.round(at, 4).tolist()}
+
+    def too_little(missing: list[int]) -> str:
+        return f"Too little of the {words.faces_phrase(missing)} was scanned to measure this."
 
     face_pairs = sorted(pairs_opp.items(), key=lambda kv: -min(faces[kv[0][0]]["area"], faces[kv[0][1]]["area"]))[:12]
     for (i, j), g in face_pairs:
@@ -828,8 +878,7 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
         entry = pair_entry(kind, i, j, golden)
         missing = [f for f in (i, j) if not face_ok(f)]
         if missing:
-            out.append(not_measured(entry, missing, f"Not enough of the {' and '.join(labels[f] for f in missing)} "
-                                    "was scanned to measure this."))
+            out.append(not_measured(entry, missing, too_little(missing)))
             continue
         # each face moved outward by its median deviation: a thickness grows by both, a gap shrinks by both
         scan = golden + med[i] + med[j] if g > 0 else golden - med[i] - med[j]
@@ -840,8 +889,7 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
         entry = pair_entry("step", j, i, golden)
         missing = [f for f in (i, j) if not face_ok(f)]
         if missing:
-            out.append(not_measured(entry, missing, f"Not enough of the {' and '.join(labels[f] for f in missing)} "
-                                    "was scanned to measure this."))
+            out.append(not_measured(entry, missing, too_little(missing)))
             continue
         scan = golden + med[j] - med[i]
         u = 2 * float(np.hypot(_se_median(sigma[i], cnt[i]), _se_median(sigma[j], cnt[j])))
@@ -853,13 +901,13 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
         f = faces[i]
         u_ax, v_ax = _plane_frame(f["axis"])
         golden_d = 2 * f["radius"]
-        what = "hole" if f["hole"] else "round face"
+        what = words.labels[i].split(" (")[0]
         base = {"faces": [i], "at": np.round(f["center"], 4).tolist()}
-        e_d = {**base, "kind": "diameter", "name": f"Diameter: {labels[i]}", "golden": round(golden_d, 4)}
-        e_p = {**base, "kind": "position", "name": f"Position: {labels[i]}", "golden": 0.0}
+        e_d = {**base, "kind": "diameter", **words.diameter_words(i), "golden": round(golden_d, 4)}
+        e_p = {**base, "kind": "position", **words.position_words(i), "golden": 0.0}
         sel = (pf == i) & ~point_edge
         if sel.sum() < 30:
-            reason = f"Not enough of the {what} was scanned to measure it."
+            reason = f"Too little of the {what} was scanned to measure it."
             out.append(not_measured(e_d, [i], reason))
             out.append(not_measured(e_p, [i], reason))
             continue
@@ -867,7 +915,7 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
         c_g = np.array([f["center"] @ u_ax, f["center"] @ v_ax])
         arc = _arc_deg(np.degrees(np.arctan2(xy[:, 1] - c_g[1], xy[:, 0] - c_g[0])))
         if arc < 120.0:
-            reason = f"Only {arc:.0f}° of the {what}'s circle was scanned; at least 120° is needed."
+            reason = f"Only {arc:.0f}° of the way round the {what} was scanned; at least 120° is needed."
             out.append(not_measured(e_d, [i], reason))
             out.append(not_measured(e_p, [i], reason))
             continue
@@ -890,17 +938,412 @@ def _measure(faces, words: PartWords, tri_face, tri, d, q, qn, pts, point_edge, 
         e_p["offset"] = np.round(direction, 4).tolist()
         e_p["toward"] = words.direction(direction) if off > 1e-6 else None
         out.append(result(e_p, 0.0, off, 2 * float(np.hypot(se[0], se[1]))))
-    # the same name twice (e.g. three widths across one hexagon socket): number them
+    # several sizes of one feature (the three widths across a hex socket): one series, shown as one row
+    series: dict[str, list[dict]] = {}
+    for m in out:
+        key = m.pop("series", None)
+        if key:
+            series.setdefault(key, []).append(m)
+    for key, ms in series.items():
+        if len(ms) > 1:
+            for n, m in enumerate(ms, 1):
+                m.update(series=key, series_index=n, series_size=len(ms))
+    # any other name twice: number them
     seen: dict[str, list[dict]] = {}
     for m in out:
-        seen.setdefault(m["name"], []).append(m)
+        if "series" not in m:
+            seen.setdefault(m["name"], []).append(m)
     for name, ms in seen.items():
         if len(ms) > 1:
             for n, m in enumerate(ms, 1):
                 m["name"] = f"{name} ({n} of {len(ms)})"
+    # the dimension line of each size, on the golden surfaces it is measured between
     for k, m in enumerate(out):
+        m["ends"] = _dimension_line(m, faces, words, ref)
         m["id"] = k
     return out
+
+
+# --------------------------------------------------------------------------- dimension lines
+def _section_axes(words: PartWords) -> tuple[np.ndarray, np.ndarray]:
+    """The drawing's x and y directions: along the main axis and the 3D view's up (its right when the axis is up);
+    with no main axis, the view's right and up."""
+    up, right = words.up_index(), 0
+    if words.axis is None:
+        ku, kv = right, up
+    else:
+        ku = words.axis
+        kv = up if ku != up else right
+    return np.eye(3)[ku], np.eye(3)[kv]
+
+
+def _in_drawing(words: PartWords, P: np.ndarray) -> np.ndarray:
+    """Points close to the drawing's plane (dimension lines there show on the drawing as well as on the model)."""
+    u, v = _section_axes(words)
+    return np.abs((P - words.mid) @ np.cross(u, v)) <= max(0.02 * words.diag, 3 * words.eps)
+
+
+def _face_samples(ref: ReferenceSurface, f: dict, n: int, seed: int = 0) -> np.ndarray:
+    """Area-uniform points on one golden face."""
+    t = f["tris"]
+    w = ref.areas[t]
+    rng = np.random.default_rng(seed)
+    pick = rng.choice(t, size=n, p=w / w.sum())
+    r1, r2 = rng.random(n), rng.random(n)
+    s = np.sqrt(r1)
+    a, b, c = (ref.vertices[ref.triangles[pick, k]] for k in range(3))
+    return a * (1 - s)[:, None] + b * (s * (1 - r2))[:, None] + c * (s * r2)[:, None]
+
+
+def _dimension_line(m: dict, faces, words: PartWords, ref: ReferenceSurface) -> list | None:
+    """Two golden-frame points on the surfaces a size is measured between (None for positions)."""
+    try:
+        if m["kind"] == "size":
+            ends = _size_ends(words, m["axis"])
+        elif m["kind"] in ("thickness", "gap", "step"):
+            ends = _plane_ends(words, ref, faces, *m["faces"])
+        elif m["kind"] == "diameter":
+            ends = _circle_ends(words, ref, faces[m["faces"][0]])
+        else:
+            return None
+    except (ValueError, IndexError):
+        return None
+    return None if ends is None else [np.round(np.asarray(e, dtype=np.float64), 4).tolist() for e in ends]
+
+
+def _size_ends(words: PartWords, k: int):
+    """The overall size along axis k: a line along k between the extreme surfaces, through the middle of where the
+    part reaches both (rays cast from both sides on a grid across the part); when no straight line reaches both (the
+    flat top of a head only outside a chamfered socket, the tip smaller), the two nearest points on them."""
+    lo, hi = words.lo, words.hi
+    o2 = [j for j in range(3) if j != k]
+    n = 61
+    A, B = np.meshgrid(np.linspace(lo[o2[0]], hi[o2[0]], n), np.linspace(lo[o2[1]], hi[o2[1]], n), indexing="ij")
+    P = np.zeros((n * n, 3))
+    P[:, o2[0]], P[:, o2[1]] = A.ravel(), B.ravel()
+    e = np.eye(3)[k]
+    margin = 1.0 + words.eps
+    top, bottom = P.copy(), P.copy()
+    top[:, k], bottom[:, k] = hi[k] + margin, lo[k] - margin
+    t_hi, _ = words.cast(top, np.tile(-e, (len(P), 1)))
+    t_lo, _ = words.cast(bottom, np.tile(e, (len(P), 1)))
+    x_hi, x_lo = hi[k] + margin - t_hi, lo[k] - margin + t_lo
+    tol = max(2e-3 * (hi[k] - lo[k]), 0.02)
+    ext = np.where(np.isfinite(t_hi) & np.isfinite(t_lo), x_hi - x_lo, -np.inf)
+    cand = np.flatnonzero(ext >= hi[k] - lo[k] - tol)
+    flat = _in_drawing(words, P)
+    if (flat[cand]).any():
+        cand = cand[flat[cand]]
+    if len(cand):
+        c = P[cand][:, o2].mean(0)
+        pick = cand[np.argmin(np.linalg.norm(P[cand][:, o2] - c, axis=1))]
+        p0, p1 = P[pick].copy(), P[pick].copy()
+        p0[k], p1[k] = x_lo[pick], x_hi[pick]
+        return [p0, p1]
+    top = np.flatnonzero(np.isfinite(t_hi) & (x_hi >= hi[k] - tol))
+    bottom = np.flatnonzero(np.isfinite(t_lo) & (x_lo <= lo[k] + tol))
+    if not len(top) or not len(bottom):
+        return None
+    if flat[top].any() and flat[bottom].any():
+        top, bottom = top[flat[top]], bottom[flat[bottom]]
+    fine = max(1e-4 * (hi[k] - lo[k]), 0.005)                 # the extreme surfaces themselves, not a chamfer
+    top, bottom = top[x_hi[top] >= x_hi[top].max() - fine], bottom[x_lo[bottom] <= x_lo[bottom].min() + fine]
+    dist, near = cKDTree(P[bottom][:, o2]).query(P[top][:, o2])
+    a = int(np.argmin(dist))
+    p0, p1 = P[bottom[near[a]]].copy(), P[top[a]].copy()
+    p0[k], p1[k] = x_lo[bottom[near[a]]], x_hi[top[a]]
+    return [p0, p1]
+
+
+def _plane_ends(words: PartWords, ref: ReferenceSurface, faces, i: int, j: int):
+    """Between two flat faces: a point inside the part of face i that lies over face j and its projection onto j;
+    when they do not overlap, the two closest points, one on each face."""
+    fi, fj = faces[i], faces[j]
+    if fi["type"] != "plane" or fj["type"] != "plane":
+        return None
+    Pi, Pj = _face_samples(ref, fi, 400, seed=i), _face_samples(ref, fj, 400, seed=j)
+    nj = fj["normal"]
+    Q = Pi - ((Pi - fj["point"]) @ nj)[:, None] * nj
+    on = np.abs(ref.query(Q)[0]) <= max(1e-3, 1e-5 * words.diag)
+    if on.any():
+        idx = np.flatnonzero(on)
+        flat = _in_drawing(words, Pi[idx])
+        if flat.any():
+            idx = idx[flat]
+        pick = idx[np.argmin(np.linalg.norm(Pi[idx] - Pi[idx].mean(0), axis=1))]
+        return [Pi[pick], Q[pick]]
+    fi_in, fj_in = _in_drawing(words, Pi), _in_drawing(words, Pj)
+    if fi_in.any() and fj_in.any():
+        Pi, Pj = Pi[fi_in], Pj[fj_in]
+    u, v = _plane_frame(fi["normal"])
+    dist, near = cKDTree(np.c_[Pj @ u, Pj @ v]).query(np.c_[Pi @ u, Pi @ v])
+    a = int(np.argmin(dist))
+    return [Pi[a], Pj[near[a]]]
+
+
+def _circle_ends(words: PartWords, ref: ReferenceSurface, f: dict):
+    """Across a round face at its middle: two opposite points on it, the line upright in the default view when it
+    can be (the drawing's cut contains that direction), snapped onto the golden mesh."""
+    a = _unit(f["axis"])
+    cands = []
+    for e in (*_section_axes(words)[::-1], np.eye(3)[words.up_index()], np.eye(3)[0]):
+        d = e - (e @ a) * a
+        if np.linalg.norm(d) > 0.3:
+            cands.append(_unit(d))
+    u, v = _plane_frame(a)
+    cands += [np.cos(t) * u + np.sin(t) * v for t in np.radians(np.arange(0.0, 180.0, 15.0))]
+    r = f["radius"]
+    tol = max(0.02, 0.02 * r)
+    for shift in (0.0, 0.25, -0.25):
+        c = f["center"] + a * shift * f["length"]
+        for d in cands:
+            dist, near, _ = ref.query(np.array([c + r * d, c - r * d]))
+            if np.abs(dist).max() <= tol:
+                return [near[0], near[1]]
+    return [f["center"] + r * cands[0], f["center"] - r * cands[0]]
+
+
+# --------------------------------------------------------------------------- what to say about each size
+def _regions_on_faces(regions, spot_face, spot_region, face_spots, nf: int) -> dict[int, list[int]]:
+    """{face id: the listed areas on it}: at least 3 of its spots, and 5 % of the face or 30 % of the area."""
+    nr = len(regions)
+    if nr == 0:
+        return {}
+    sel = (spot_face >= 0) & (spot_region >= 0)
+    count = np.zeros((nr, nf), dtype=np.int64)
+    np.add.at(count, (spot_region[sel], spot_face[sel]), 1)
+    total = np.bincount(spot_region[spot_region >= 0], minlength=nr)
+    out: dict[int, list[int]] = {}
+    for r, f in zip(*np.nonzero(count >= 3)):
+        if count[r, f] >= 0.05 * face_spots[f] or count[r, f] >= 0.3 * total[r]:
+            out.setdefault(int(f), []).append(int(r))
+    return out
+
+
+def _annotate(m: dict, regions: list[dict], words: PartWords, on_face: dict, covered: np.ndarray) -> None:
+    """A size's listed areas (on its faces) and, when it deserves care, why (caveat)."""
+    faces = [f for f in (m.get("faces") or []) if f >= 0]
+    found = {r for f in faces for r in on_face.get(f, [])}
+    m["regions"] = sorted(found, key=lambda r: regions[r]["number"])
+    m["caveat"] = None
+    if m["status"] == "not_measured":
+        return
+    label = {f: words.labels[f].split(" (")[0] for f in faces}
+    pairs = [(f, regions[r]) for f in faces for r in on_face.get(f, [])]
+    off = [(f, r) for f, r in pairs if r["kind"] == "off"]
+    if off:
+        f, r = max(off, key=lambda fr: abs(fr[1]["deviation"]) * fr[1]["area_mm2"])
+        if m["status"] in ("off", "close"):
+            m["caveat"] = (f"The scan finds {words.scan_finds(f, r['deviation'], _amount(abs(r['deviation'])))} "
+                           f"(area {r['number']}).")
+        else:
+            m["caveat"] = f"The {label[f]} itself is off (area {r['number']}), but this size still matches."
+        return
+    rescan = [(f, r) for f, r in pairs if r["rescan"]]
+    if rescan:
+        f, r = max(rescan, key=lambda fr: fr[1]["area_mm2"])
+        m["caveat"] = {
+            "missing": f"Part of the {label[f]} was not scanned (area {r['number']}), so this size comes from the "
+                       "rest of it.",
+            "thin": f"Part of the {label[f]} has too few points (area {r['number']}), so this size leans on the "
+                    "rest of it.",
+            "rough": f"Part of the {label[f]} is rough in the scan (area {r['number']}), which makes this size "
+                     "less certain."}[r["kind"]]
+        return
+    thin = [f for f in faces if covered[f] < 0.5]
+    if thin:
+        f = min(thin, key=lambda f: covered[f])
+        m["caveat"] = (f"Only about {covered[f] * 100:.0f} % of the {label[f]} was scanned, so this size rests on "
+                       "few points.")
+
+
+def _sizes_story(measurements: list[dict], regions: list[dict], words: PartWords, on_face: dict) -> str | None:
+    """1-3 sentences when the sizes that are off (or too close to call) share a cause: one face they are all
+    measured from."""
+    bad = [m for m in measurements if m["status"] in ("off", "close")]
+    if len(bad) < 2 or any(not m.get("faces") for m in bad):
+        return None
+    common = set(bad[0]["faces"]).intersection(*(set(m["faces"]) for m in bad[1:]))
+    if not common:
+        return None
+
+    def worst_off(f):
+        off = [regions[r] for r in on_face.get(f, []) if regions[r]["kind"] == "off"]
+        return max(off, key=lambda r: abs(r["deviation"]) * r["area_mm2"]) if off else None
+
+    with_off = [f for f in common if worst_off(f) is not None]
+    if with_off:
+        f = max(with_off, key=lambda f: abs(worst_off(f)["deviation"]) * worst_off(f)["area_mm2"])
+    else:
+        f = min(common)
+    label = words.labels[f].split(" (")[0]
+    if all(m["status"] == "off" for m in bad):
+        which = "sizes that are off"
+    else:
+        which = "sizes that are off or too close to call"
+    count = "Both" if len(bad) == 2 else f"All {len(bad)}"
+    lines = [f"{count} {which} are measured from the {label}."]
+    r = worst_off(f)
+    if r is None:
+        lines.append(f"Check {words.pronoun(f)} first: measure it by hand and look at its colours on the model.")
+        return " ".join(lines)
+    amount = f"about {abs(r['deviation']):.1f}"
+    lines.append(f"The scan finds {words.scan_finds(f, r['deviation'], amount, that=True)} (area {r['number']}).")
+    rec = words.recess_of(f)
+    if words.info[f]["kind"] == "floor" and r["deviation"] < 0:
+        if rec is not None and rec["shape"] in ("hex", "square"):
+            what = "sockets"
+        elif rec is not None and rec["shape"] == "round":
+            what = "holes"
+        else:
+            what = "holes and sockets"
+        lines.append(f"Drilled {what} usually end in a cone that the drawing shows flat, so check the depth with a "
+                     "depth gauge before deciding the part is wrong.")
+    else:
+        lines.append(f"Measure {words.pronoun(f)} by hand: if it is right, it probably came from a separate scan that "
+                     "was merged slightly off (redo that line-up in the Align step).")
+    return " ".join(lines)
+
+
+# --------------------------------------------------------------------------- the drawing
+def _simplify(P: np.ndarray, tol: float) -> np.ndarray:
+    """Douglas-Peucker on an open polyline: the indices of the points kept."""
+    n = len(P)
+    if n <= 2:
+        return np.arange(n)
+    keep = np.zeros(n, dtype=bool)
+    keep[[0, n - 1]] = True
+    stack = [(0, n - 1)]
+    while stack:
+        i, j = stack.pop()
+        if j <= i + 1:
+            continue
+        a, ab = P[i], P[j] - P[i]
+        L2 = float(ab @ ab)
+        Q = P[i + 1:j] - a
+        t = np.clip(Q @ ab / L2, 0.0, 1.0) if L2 > 1e-24 else np.zeros(len(Q))
+        dist = np.linalg.norm(Q - t[:, None] * ab, axis=1)
+        k = int(np.argmax(dist))
+        if dist[k] > tol:
+            mid = i + 1 + k
+            keep[mid] = True
+            stack += [(i, mid), (mid, j)]
+    return np.flatnonzero(keep)
+
+
+def _simplify_loop(P: np.ndarray, tol: float) -> np.ndarray:
+    """Douglas-Peucker on a closed loop (split at its first point and the point farthest from it)."""
+    n = len(P)
+    if n < 4:
+        return np.arange(n)
+    far = int(np.argmax(np.linalg.norm(P - P[0], axis=1)))
+    if far == 0:
+        return np.array([0])
+    a = _simplify(P[:far + 1], tol)
+    b = _simplify(np.vstack([P[far:], P[:1]]), tol) + far
+    return np.r_[a, b[1:-1]]
+
+
+def cut_section(ref: ReferenceSurface, words: PartWords, tri_face: np.ndarray, face_ids) -> dict | None:
+    """A cut through the golden model for the drawing in Sizes. Along the main axis: u = the axis (+ towards its +
+    end), v = the 3D view's up direction (its right when the axis is up); with no main axis, square to the view's
+    depth: u = right, v = up. Through the middle of the bounding box. Returns origin, u, v, the closed outlines of the
+    cut (simplified to 0.0015 x the diagonal, 0.01 mm), their bounds and, per face in face_ids, where it meets the
+    cut ([x1, y1, x2, y2] segments). None when the golden mesh is not closed or the cut does not form loops."""
+    if not ref.watertight:
+        return None
+    V, F = ref.vertices, ref.triangles
+    u, v = _section_axes(words)
+    o = words.mid
+    dist = (V - o) @ np.cross(u, v)
+    side = dist >= 0
+    T, nV = len(F), len(V)
+    E = np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])        # edge e of triangle t at row e * T + t
+    rows = np.flatnonzero(side[E[:, 0]] != side[E[:, 1]])
+    if len(rows) < 3:
+        return None
+    Es = np.sort(E[rows], axis=1)
+    uniq, node = np.unique(Es[:, 0] * nV + Es[:, 1], return_inverse=True)
+    node = node.ravel()
+    a, b = uniq // nV, uniq % nV
+    t = dist[a] / (dist[a] - dist[b])                                     # each crossed edge's point, once
+    P = V[a] + t[:, None] * (V[b] - V[a])
+    xy = np.c_[(P - o) @ u, (P - o) @ v]
+    tri = rows % T
+    order = np.argsort(tri, kind="stable")
+    tri_s, node_s = tri[order], node[order]
+    if len(tri_s) % 2 or np.any(tri_s[0::2] != tri_s[1::2]):
+        return None
+    seg_a, seg_b, seg_face = node_s[0::2], node_s[1::2], tri_face[tri_s[0::2]]
+    nn, ns = len(uniq), len(seg_a)
+    # a closed mesh: every crossed edge is shared by two crossed triangles, so the segments chain into loops
+    ends = np.r_[seg_a, seg_b]
+    if np.any(np.bincount(ends, minlength=nn) != 2):
+        return None
+    o_ = np.argsort(ends, kind="stable")
+    nb = np.r_[seg_b, seg_a][o_].reshape(nn, 2)
+    via = np.r_[np.arange(ns), np.arange(ns)][o_].reshape(nn, 2)
+    seen = np.zeros(nn, dtype=bool)
+    loops = []
+    for start in range(nn):
+        if seen[start]:
+            continue
+        path, segs = [start], []
+        seen[start] = True
+        cur, came = start, -1
+        while True:
+            k = 0 if via[cur, 0] != came else 1
+            came, nxt = via[cur, k], nb[cur, k]
+            segs.append(came)
+            if nxt == start:
+                break
+            if seen[nxt]:
+                return None
+            seen[nxt] = True
+            path.append(nxt)
+            cur = nxt
+        loops.append((np.array(path), np.array(segs)))
+    wanted = [int(f) for f in face_ids if f >= 0]
+    tol = 0.0015 * words.diag
+    for _ in range(6):
+        out_loops = []
+        for path, _segs in loops:
+            pts = xy[path]
+            keep = _simplify_loop(pts, tol)
+            if len(keep) >= 3:
+                out_loops.append(np.round(pts[keep], 2).ravel().tolist())
+        if not out_loops:
+            return None
+        traces: dict[str, list] = {}
+        for fid in wanted:
+            segs_out = []
+            for path, segs in loops:
+                on = seg_face[segs] == fid
+                if not on.any():
+                    continue
+                m = len(segs)
+                if on.all():
+                    runs, shift = [(0, m)], 0
+                else:
+                    shift = int(np.flatnonzero(~on)[0])
+                    d = np.diff(np.r_[0, np.roll(on, -shift).astype(int), 0])
+                    runs = list(zip(np.flatnonzero(d == 1), np.flatnonzero(d == -1)))
+                for r0, r1 in runs:
+                    idx = (np.arange(r0, r1 + 1) + shift) % m       # segment n runs from path[n] to path[n + 1]
+                    pts = xy[path[idx]]
+                    keep = _simplify(pts, tol)
+                    for p0, p1 in zip(pts[keep[:-1]], pts[keep[1:]]):
+                        segs_out.append(np.round(np.r_[p0, p1], 2).tolist())
+            if segs_out:
+                segs_out.sort(key=lambda s_: -np.hypot(s_[2] - s_[0], s_[3] - s_[1]))
+                traces[str(fid)] = segs_out[:12]
+        allxy = np.concatenate([np.asarray(lp).reshape(-1, 2) for lp in out_loops])
+        section = {"origin": np.round(o, 4).tolist(), "u": u.tolist(), "v": v.tolist(), "loops": out_loops,
+                   "bounds": np.round(np.r_[allxy.min(0), allxy.max(0)], 2).tolist(), "faces": traces}
+        if len(json.dumps(section)) <= SECTION_BYTES:
+            return section
+        tol *= 2
+    return None
 
 
 def _region_at_end(k: int, signs: list[int], regions: list[dict], lo, hi) -> int | None:

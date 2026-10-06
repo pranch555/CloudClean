@@ -319,6 +319,21 @@
   margin-top: 1px;
 }
 
+/* a model that has just arrived (a finished job, an import) glows once (ModelsPanel) */
+.mp-row.is-new {
+  animation: mp-new 1.6s var(--ease) both;
+}
+
+@keyframes mp-new {
+  0%,
+  25% {
+    background-color: var(--signal-soft);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 /* the shown-in-3D state also reads on the thumbnail: a thin signal ring */
 .mp-row.is-shown .thumb {
   border-color: var(--signal-line);

@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { setTab as setMeasureTab } from '../steps/measure/state';
 import { ArrowRight, ArrowUp, FolderOpen, FolderPlus, Gauge, HardDrive, RotateCw, ScanLine, Upload } from 'lucide-react';
 import { api } from '../lib/api';
-import { fmtAgo } from '../lib/format';
-import { journeyStatus, STEPS } from '../lib/journey';
+import { fmtAgo, fmtCount } from '../lib/format';
+import { journeyStatus, roleOf, stepInfo, STEPS, suggestedStep } from '../lib/journey';
 import { createProject, projectsSupported } from '../lib/projects';
 import { uploadFiles } from '../lib/importing';
 import type { Asset, Project } from '../lib/types';
 import { useThumbs } from '../lib/thumbnails';
+import { enter, once, reducedMotion, stagger, timeline, useEntrance, utils, animate, EASE } from '../lib/motion';
 import { projectAssets, useStore } from '../store';
 import { refreshAssistantStatus, sendToAssistant, useAssistant } from '../features/assistant/assistantStore';
 import { AttachButton, AttachmentStrip, dropImages, pasteImages } from '../features/assistant/AttachControls';
 import { AssistantGlyph } from '../features/assistant/AssistantMark';
+import { ScanDial, type DialReadout } from '../ui/motion/ScanDial';
 import { Logo } from '../ui/icons';
 import { Button } from '../ui/primitives';
 
@@ -20,9 +22,51 @@ function greeting() {
   return h < 5 ? 'Working late.' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
 }
 
+/** Words of a headline, each in a clipping box so it can rise into place (rendered by React, animated by anime). */
+function Words({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(' ').map((w, i) => (
+        <span key={i}>
+          {i > 0 && ' '}
+          <span className="w">
+            <span>{w}</span>
+          </span>
+        </span>
+      ))}
+    </>
+  );
+}
+
+const thumbUrl = (a: Asset, local: Record<string, string>) => local[a.id] ?? `/api/assets/${a.id}/thumbnail`;
+
+/** The model that stands for a project: its cover, else the newest model with a picture. */
+function coverOf(p: Project, geometry: Asset[], local: Record<string, string>): Asset | undefined {
+  const byId = new Map(geometry.map(a => [a.id, a]));
+  const preferred = p.cover_asset_id ? byId.get(p.cover_asset_id) : undefined;
+  const withThumb = [...geometry].reverse().find(a => a.has_thumbnail || local[a.id]);
+  return preferred && (preferred.has_thumbnail || local[preferred.id]) ? preferred : withThumb;
+}
+
+/** "12 MIN AGO", "5 H AGO", "2 DAYS AGO", "OCT 05": short enough for an instrument readout. */
+function readoutAgo(iso: string | undefined): string {
+  if (!iso) return '—';
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return 'NOW';
+  if (s < 3600) return `${Math.floor(s / 60)} MIN AGO`;
+  if (s < 86400) return `${Math.floor(s / 3600)} H AGO`;
+  if (s < 86400 * 7) {
+    const d = Math.floor(s / 86400);
+    return `${d} DAY${d === 1 ? '' : 'S'} AGO`;
+  }
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: '2-digit' }).toUpperCase();
+}
+
 export function HomeScreen() {
   const projects = useStore(s => s.projects);
   const assets = useStore(s => s.assets);
+  const exported = useStore(s => s.exported);
+  const local = useThumbs(s => s.urls);
   const [ask, setAsk] = useState('');
   const attached = useAssistant(s => s.attachments.length);
   const [naming, setNaming] = useState<null | 'scan' | 'files'>(null);
@@ -65,8 +109,84 @@ export function HomeScreen() {
     sendToAssistant(text);
   };
 
+  // ---- the dial: the project worked on last, and four readouts about all of them
+  const dial = useMemo(() => {
+    const latest = [...projects].sort((x, y) => y.updated.localeCompare(x.updated))[0];
+    const geometry = assets.filter(a => a.kind !== 'image');
+    const points = geometry.reduce((n, a) => n + (a.kind === 'pointcloud' ? (a.stats?.points ?? 0) : 0), 0);
+    const checks = geometry.filter(a => roleOf(a) === 'inspection').length;
+    const lastWork = geometry.reduce<string | undefined>((m, a) => (!m || a.created > m ? a.created : m), undefined);
+    const readouts: DialReadout[] = [
+      { label: 'Models', value: String(geometry.length).padStart(2, '0') },
+      { label: 'Checks', value: String(checks).padStart(2, '0') },
+      { label: 'Points', value: points ? fmtCount(points) : '0' },
+      { label: 'Last change', value: readoutAgo(lastWork) },
+    ];
+    if (!latest) return { latest: null, status: null, next: null, cover: null, readouts };
+    const own = projectAssets({ assets, projects, projectId: latest.id });
+    const status = journeyStatus(own, !!exported[latest.id], false);
+    const next = suggestedStep(status);
+    const c = coverOf(latest, own.filter(a => a.kind !== 'image'), local);
+    return { latest, status, next, cover: c ? thumbUrl(c, local) : null, readouts };
+  }, [projects, assets, exported, local]);
+
+  const openLatest = () => {
+    if (dial.latest) useStore.getState().openProject(dial.latest.id, dial.next ?? undefined);
+    else {
+      setNaming('scan');
+      setName('');
+    }
+  };
+
+  // ---- arrival: the headline rises word by word, then the cards, the projects, the status strip
+  const first = useMemo(() => once('home'), []);
+  const root = useEntrance<HTMLElement>('home', el => {
+    const words = el.querySelectorAll('.home-title .w > span');
+    const grid = el.querySelector<HTMLElement>('.project-grid');
+    const cards = el.querySelectorAll('.project-card');
+    const cols = grid ? Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length) : 1;
+    if (reducedMotion()) {
+      utils.set(words, { translateY: '0%' });
+      return null;
+    }
+    const k = first ? 1 : 0.6; // later visits: the same moves, quicker
+    const out = [
+      enter(el.querySelectorAll('.home-kicker'), { y: 6, duration: 420 }),
+      animate(words, { translateY: ['108%', '0%'], duration: 760 * k, delay: stagger(42 * k, { start: 60 * k }), ease: EASE.out }),
+      enter(el.querySelectorAll('.home-ask'), { y: 12, delay: 300 * k, duration: 560 }),
+      enter(el.querySelectorAll('.action-card'), { y: 18, step: 70 * k, delay: 380 * k, duration: 620, scale: 0.985 }),
+      enter(el.querySelectorAll('.home-section-head'), { y: 8, delay: 520 * k }),
+      cards.length
+        ? animate(cards, {
+            opacity: { from: 0, to: 1, duration: 420, ease: 'out(2)' },
+            translateY: { from: 16, to: 0 },
+            scale: { from: 0.97, to: 1 },
+            duration: 640,
+            ease: EASE.out,
+            delay: stagger(70 * k, { grid: [cols, Math.ceil(cards.length / cols)], from: 'center', start: 560 * k }),
+          })
+        : null,
+      enter(el.querySelectorAll('.status-item'), { y: 8, step: 45, delay: 680 * k }),
+    ];
+    return out;
+  });
+
+  const nextInfo = dial.next ? stepInfo(dial.next) : null;
+  const caption = dial.latest ? (
+    <>
+      <span className="dial-caption-kicker">Continue</span>
+      <span className="dial-caption-name truncate">{dial.latest.name}</span>
+      {nextInfo && <span className="dial-caption-next">· next: {nextInfo.label}</span>}
+    </>
+  ) : (
+    <>
+      <span className="dial-caption-kicker">Start</span>
+      <span className="dial-caption-name">your first scan</span>
+    </>
+  );
+
   return (
-    <main className="home" aria-label="Home">
+    <main className="home" aria-label="Home" ref={root}>
       <div className="home-inner">
         <section className="home-hero">
           <div className="home-copy">
@@ -74,9 +194,8 @@ export function HomeScreen() {
               <span className="dot live" aria-hidden /> CloudClean · scan, clean, measure — on your own hardware
             </p>
             <h1 className="home-title display">
-              {greeting()}
-              <br />
-              <em>What are we measuring today?</em>
+              <span className="home-title-line"><Words text={greeting()} /></span>
+              <em className="home-title-line"><Words text="What are we measuring today?" /></em>
             </h1>
             <form className="home-ask" onSubmit={e => { e.preventDefault(); submitAsk(); }} data-own-drop {...dropImages}>
               <AttachmentStrip small />
@@ -88,7 +207,15 @@ export function HomeScreen() {
               </div>
             </form>
           </div>
-          <BoltDrawing />
+          <ScanDial
+            status={dial.status}
+            next={dial.next}
+            cover={dial.cover}
+            readouts={dial.readouts}
+            caption={caption}
+            onOpen={openLatest}
+            label={dial.latest ? `Continue ${dial.latest.name}${nextInfo ? `: next step ${nextInfo.label}` : ''}` : 'Start your first scan'}
+          />
         </section>
 
         <section className="home-actions" aria-label="Start">
@@ -132,7 +259,7 @@ export function HomeScreen() {
             )}
           </div>
           <div className="project-grid">
-            {projects.map(p => <ProjectCard key={p.id} project={p} assets={projectAssets({ assets, projects, projectId: p.id })} />)}
+            {projects.map((p, i) => <ProjectCard key={p.id} index={i} project={p} assets={projectAssets({ assets, projects, projectId: p.id })} />)}
             {!projects.length && <div className="caption">No projects yet — scan a part or open a file to start one.</div>}
           </div>
         </section>
@@ -161,24 +288,41 @@ function ActionCard({ icon, title, body, open, onOpen, name, setName, onGo, cta 
   );
 }
 
-function ProjectCard({ project: p, assets }: { project: Project; assets: Asset[] }) {
+/** A project card. Its picture is revealed by a scanner line sweeping across it, once it has loaded. */
+function ProjectCard({ project: p, assets, index }: { project: Project; assets: Asset[]; index: number }) {
   const openProject = useStore(s => s.openProject);
   const exported = useStore(s => !!s.exported[p.id]);
   const local = useThumbs(s => s.urls);
   const geometry = assets.filter(a => a.kind !== 'image');
-  const cover = useMemo(() => {
-    const byId = new Map(geometry.map(a => [a.id, a]));
-    const preferred = p.cover_asset_id ? byId.get(p.cover_asset_id) : undefined;
-    const withThumb = [...geometry].reverse().find(a => a.has_thumbnail || local[a.id]);
-    return preferred && (preferred.has_thumbnail || local[preferred.id]) ? preferred : withThumb;
-  }, [geometry, p.cover_asset_id, local]);
+  const cover = useMemo(() => coverOf(p, geometry, local), [geometry, p, local]);
   const status = journeyStatus(assets, exported, false);
   const done = STEPS.filter(s => status[s.id] !== 'todo').length;
 
+  const ref = useEntrance<HTMLButtonElement>(cover?.id ?? 'none', el => {
+    const img = el.querySelector<HTMLImageElement>('.project-cover img');
+    const line = el.querySelector<HTMLElement>('.project-scan');
+    if (!img || !line || reducedMotion()) return null;
+    const hidden = 'inset(0% 100% 0% 0%)';
+    utils.set(img, { clipPath: hidden });
+    const tl = timeline({ autoplay: false, delay: 620 + index * 90 });
+    tl.add(line, { opacity: [0, 1], duration: 140, ease: 'out(2)' }, 0)
+      .add(line, { left: ['0%', '100%'], duration: 820, ease: 'inOut(2)' }, 0)
+      .add(img, { clipPath: [hidden, 'inset(0% 0% 0% 0%)'], duration: 820, ease: 'inOut(2)' }, 0)
+      .add(line, { opacity: 0, duration: 220, ease: 'out(2)' }, 700);
+    const go = () => tl.play();
+    if (img.complete && img.naturalWidth) go();
+    else {
+      img.addEventListener('load', go, { once: true });
+      img.addEventListener('error', () => tl.seek(tl.duration), { once: true });
+    }
+    return tl;
+  });
+
   return (
-    <button type="button" className="project-card" onClick={() => openProject(p.id)}>
+    <button type="button" className="project-card" onClick={() => openProject(p.id)} ref={ref}>
       <span className="project-cover">
-        {cover ? <img src={local[cover.id] ?? `/api/assets/${cover.id}/thumbnail`} alt="" /> : <Logo size={40} />}
+        {cover ? <img src={thumbUrl(cover, local)} alt="" /> : <Logo size={40} />}
+        <span className="project-scan" aria-hidden />
       </span>
       <span className="project-body">
         <span className="project-name">{p.name}</span>
@@ -230,57 +374,5 @@ function StatusItem({ icon, label, text, tone, mono, onClick }: { icon: React.Re
         <span className={`status-text truncate ${mono ? 'mono' : ''}`} title={text}>{text}</span>
       </span>
     </button>
-  );
-}
-
-/** Signature illustration: a dimensioned side view of a hex bolt, drawn like an engineering sheet. */
-function BoltDrawing() {
-  return (
-    <svg className="bolt-drawing" viewBox="0 0 460 300" role="img" aria-label="Illustration: a nominal M20 bolt drawn with dimension lines">
-      <defs>
-        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 1 9 5 0 9z" fill="currentColor" />
-        </marker>
-        <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-62)">
-          <line x1="0" y1="0" x2="0" y2="7" stroke="currentColor" strokeWidth="1.1" opacity="0.55" />
-        </pattern>
-      </defs>
-      <g className="bd-ink" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-        {/* head */}
-        <path d="M60 92 h56 v116 h-56 z" />
-        <path d="M60 130 h56 M60 170 h56" opacity="0.5" />
-        <path d="M60 92 q-8 58 0 116" opacity="0.4" />
-        {/* shank + thread */}
-        <path d="M116 118 h92 v64 h-92" />
-        <rect x="208" y="112" width="178" height="76" fill="url(#hatch)" />
-        <path d="M208 112 h178 l10 10 v56 l-10 10 h-178" />
-        {/* centre line */}
-        <path d="M40 150 h380" strokeDasharray="14 4 3 4" strokeWidth="1" opacity="0.55" />
-      </g>
-      <g className="bd-dim" fill="none" stroke="currentColor" strokeWidth="1.1">
-        {/* overall length */}
-        <path d="M60 236 v34 M396 236 v34" opacity="0.6" />
-        <path d="M60 262 H396" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        {/* thread diameter */}
-        <path d="M396 112 h40 M396 188 h40" opacity="0.6" />
-        <path d="M428 112 V188" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        {/* head across flats */}
-        <path d="M60 92 v-40 M116 92 v-40" opacity="0.6" />
-        <path d="M60 60 H116" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        {/* pitch */}
-        <path d="M300 112 v-34 M318 112 v-34" opacity="0.6" />
-        <path d="M300 84 H318" markerStart="url(#arr)" markerEnd="url(#arr)" />
-      </g>
-      <g className="bd-text" fontFamily="var(--font-mono)" fontSize="13">
-        <rect x="190" y="251" width="78" height="22" rx="11" className="bd-chip" />
-        <text x="229" y="266" textAnchor="middle">100.00</text>
-        <rect x="401" y="139" width="56" height="22" rx="11" className="bd-chip" />
-        <text x="429" y="154" textAnchor="middle">M20</text>
-        <rect x="58" y="30" width="60" height="22" rx="11" className="bd-chip" />
-        <text x="88" y="45" textAnchor="middle">30 AF</text>
-        <rect x="282" y="52" width="56" height="22" rx="11" className="bd-chip" />
-        <text x="310" y="67" textAnchor="middle">P 2.5</text>
-      </g>
-    </svg>
   );
 }

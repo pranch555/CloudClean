@@ -102,6 +102,7 @@ export function ModelRow({ asset: a, group, picking, child, golden, check }: Row
   return (
     <li
       ref={ref}
+      data-asset={a.id}
       role="treeitem"
       aria-selected={active}
       aria-level={child ? 2 : 1}
