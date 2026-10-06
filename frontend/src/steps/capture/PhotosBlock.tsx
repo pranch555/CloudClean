@@ -6,10 +6,12 @@ import { projectParam } from '../../lib/projects';
 import { useReconStatus } from '../../lib/recon';
 import { local, useProjectAssets, useStore } from '../../store';
 import { Button, Progress, Segmented } from '../../ui/primitives';
+import { PhotoGrid, PhotoViewerHost } from '../../shell/models/photos';
 import { Block } from '../StepFrame';
 import { Callout } from './parts';
 
-const SHOWN = 8;
+/** tiles shown before "+N more" (which opens the photo viewer on the rest) */
+const SHOWN = 10;
 
 type Paper = 'a4' | 'letter';
 
@@ -89,16 +91,8 @@ export function PhotosBlock() {
         </div>
       </section>
 
-      {photos.length > 0 && (
-        <ul className="p3d-strip" aria-label={`${photos.length} photos in this project`}>
-          {photos.slice(-SHOWN).map(p => (
-            <li key={p.id} className="p3d-thumb">
-              <img src={`/api/assets/${p.id}/image`} alt={p.name} loading="lazy" />
-            </li>
-          ))}
-          {photos.length > SHOWN && <li className="p3d-more">+{photos.length - SHOWN}</li>}
-        </ul>
-      )}
+      {photos.length > 0 && <PhotoGrid photos={photos} max={SHOWN} label={`${photos.length} photos in this project`} />}
+      <PhotoViewerHost />
       <p className="p3d-count">
         <Camera size={15} aria-hidden />
         {photos.length === 0 ? 'No photos in this project yet' : `${photos.length} photo${photos.length > 1 ? 's' : ''} in this project`}

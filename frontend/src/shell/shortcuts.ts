@@ -3,13 +3,15 @@ import { applySelection, clearSelection, redoModel, setTool, toggleProjection, u
 import { STEPS } from '../lib/journey';
 import { useStore, panelShown } from '../store';
 import { focusAsk } from '../features/assistant/assistantStore';
+import { chatWindowOpen, expandChat, minimizeChat, useChatWindow } from '../features/assistant/chatWindow';
 
 /*
  * Keyboard map (numpad-style views like CAD packages):
  *   F fit · 1 front · 3 right · 7 top · Ctrl+1/3/7 back/left/bottom · 0 iso · 5 perspective/ortho
  *   V move view · B box · L lasso · M measure · S smoothing brush · P pick pivot · Del delete selection · Esc cancel
  *   Ctrl+Z / Ctrl+Y step back / forward through the models made from each other
- *   Alt+1..6 journey steps · Ctrl+K search · Ctrl+J assistant · Ctrl+B model list · Ctrl+I side panel · ` jobs
+ *   Alt+1..6 journey steps · Ctrl+K ask · Ctrl+J assistant · Ctrl+B model list · Ctrl+I side panel · ` jobs
+ *   (while the chat is popped out, Ctrl+J opens or minimizes the floating chat, and Esc in it minimizes it)
  */
 export function useShortcuts() {
   useEffect(() => {
@@ -41,6 +43,12 @@ export function useShortcuts() {
       }
       if (mod && key === 'j') {
         e.preventDefault();
+        if (useChatWindow.getState().place === 'floating') {
+          if (st.screen !== 'workspace') st.set({ screen: 'workspace' });
+          if (chatWindowOpen() && st.screen === 'workspace') minimizeChat(true);
+          else expandChat();
+          return;
+        }
         const showing = st.rightTab === 'assistant' && panelShown(st, 'right');
         st.set({ rightTab: showing ? 'step' : 'assistant', screen: 'workspace' });
         st.setLayout({ rightOpen: true });

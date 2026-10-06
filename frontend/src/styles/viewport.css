@@ -355,11 +355,45 @@
   bottom: 16px;
   translate: -50% 0;
   width: min(640px, calc(100% - 150px));
+  max-height: calc(100% - 32px);
   display: grid;
   gap: 0;
   padding: 0;
   border-radius: 22px;
   overflow: hidden;
+}
+
+/* with the latest reply on top: one card, the reply above a hairline, the message line below */
+.ask-bar.has-reply {
+  width: min(680px, calc(100% - 150px));
+  border-radius: 18px;
+}
+
+/* the chat is popped out: the floating chat is the one place to type */
+.ask-bar.is-away {
+  display: none;
+}
+
+/* the colour legend sits at the bottom left: the bar moves to its right instead of over it, or, in a view too
+   narrow for both side by side, above it */
+.viewport:has(> .hud-legend) .ask-bar {
+  left: auto;
+  right: 76px;
+  translate: none;
+  width: min(640px, calc(100% - 76px - 14px - 300px - 12px));
+}
+
+@container stage (max-width: 860px) {
+  .viewport:has(> .hud-legend) .ask-bar {
+    left: 50%;
+    right: auto;
+    translate: -50% 0;
+    bottom: 162px;
+    width: min(640px, calc(100% - 150px));
+  }
+  .viewport:has(> .hud-legend) .ask-reply-body {
+    max-height: max(44px, min(92px, calc(36cqh - 300px)));
+  }
 }
 
 .ask-status {
@@ -376,15 +410,309 @@
   min-width: 0;
 }
 
+/* ---- the latest reply, on top of the ask bar (features/assistant/ReplyBox.tsx) */
 .ask-reply {
-  padding: 10px 16px 0;
-  font-size: 14px;
-  color: var(--ink-1);
-  line-height: 1.45;
-  max-height: 88px;
+  display: grid;
+  min-height: 0;
+  border-bottom: 1px solid var(--line);
+  animation: rise var(--dur-2) var(--ease) both;
+}
+
+.ask-reply-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 5px 6px 3px 16px;
+}
+
+.ask-reply-tag {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--assistant);
+}
+
+.ask-reply-q {
+  min-width: 0;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 60%, transparent);
-  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--ink-1);
+}
+
+.ask-reply-you {
+  color: var(--ink-3);
+}
+
+.ask-reply-thumbs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+
+.ask-reply-thumbs img,
+.ask-reply-thumb-chip {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.ask-reply-thumb-chip {
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  color: var(--ink-3);
+}
+
+.ask-reply-more {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.ask-reply-actions {
+  display: flex;
+  flex: none;
+}
+
+.ask-reply-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  color: var(--ink-3);
+}
+
+/* the hairline under the question; while the assistant works it is its progress line */
+.ask-reply-rule {
+  position: relative;
+  height: 1px;
+  margin: 0 16px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.ask-reply-rule.is-busy,
+.ask-reply-rule.is-progress {
+  height: 2px;
+  border-radius: 1px;
+}
+
+.ask-reply-rule.is-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p, 0) * 100%);
+  background: var(--signal);
+  transition: width var(--dur-3) var(--ease);
+}
+
+.ask-reply-rule.is-busy::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 32%;
+  background: linear-gradient(90deg, transparent, var(--signal), transparent);
+  animation: ask-sweep 1.5s var(--ease-in-out) infinite;
+}
+
+/* transform only: the sweep never makes the page lay out again */
+@keyframes ask-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(312.5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-reply-rule.is-busy::after {
+    animation: none;
+    width: 100%;
+    background: var(--signal-line);
+  }
+}
+
+.ask-reply-steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 16px 0;
+}
+
+.ask-reply-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.ask-reply-status svg {
+  flex: none;
+  color: var(--signal);
+}
+
+.ask-reply-trail {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ask-reply-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ask-reply-tool.is-ok svg {
+  color: var(--ok);
+}
+
+.ask-reply-tool.is-failed svg {
+  color: var(--danger);
+}
+
+.ask-reply-tool.is-running svg {
+  color: var(--signal);
+}
+
+.ask-reply-steps:has(+ .ask-reply-frame[hidden]) {
+  padding-bottom: 11px;
+}
+
+.ask-reply-frame {
+  position: relative;
+  min-height: 0;
+}
+
+/* the answer: a few lines with a fade (scroll it, or Show more); never more than about a third of the view */
+.ask-reply-body {
+  max-height: max(44px, min(92px, calc(36cqh - 160px)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 16px 12px;
+}
+
+.ask-reply.is-tall .ask-reply-body {
+  max-height: max(44px, calc(36cqh - 160px));
+}
+
+.ask-reply-body:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--signal-line);
+  border-radius: 0;
+}
+
+.ask-reply-body.has-below {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 34px), transparent);
+}
+
+.ask-reply-body.has-above {
+  mask-image: linear-gradient(to bottom, transparent, #000 22px);
+}
+
+.ask-reply-body.has-above.has-below {
+  mask-image: linear-gradient(to bottom, transparent, #000 22px, #000 calc(100% - 34px), transparent);
+}
+
+.ask-reply-body > * + * {
+  margin-top: 8px;
+}
+
+.ask-reply-body .markdown {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ask-reply-body .markdown table {
+  font-size: 13.5px;
+}
+
+.ask-reply-body .msg-error {
+  padding: 6px 10px;
+}
+
+.ask-reply-body .confirm-card {
+  padding: 10px 12px;
+}
+
+.ask-reply-grow {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 26px;
+  padding: 0 9px 0 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.ask-reply-grow:hover {
+  color: var(--ink-1);
+  border-color: var(--line-strong);
+}
+
+/* the glyph at the start of the line brings a hidden reply back */
+.ask-glyph-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin: 0 -6px;
+  border-radius: 50%;
+  color: var(--assistant);
+}
+
+.ask-glyph-btn:hover {
+  background: var(--assistant-soft);
+}
+
+.ask-glyph-dot {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.ask-glyph-btn.is-live .ask-glyph-dot {
+  animation: pulse 1.2s ease-in-out infinite;
 }
 
 .ask-row {
@@ -406,6 +734,15 @@
   background: none;
   font-size: 15px;
   color: var(--ink-1);
+}
+
+.ask-input:focus-visible {
+  box-shadow: none; /* the whole bar shows the focus */
+}
+
+.ask-bar:has(.ask-input:focus-visible) {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-2), 0 0 0 3px var(--signal-soft);
 }
 
 .ask-input::placeholder {
@@ -824,7 +1161,7 @@
   .size-foot > :not(.segmented):not(button) {
     display: none;
   }
-  .ask-bar {
+  .ask-bar:not(.has-reply) {
     width: calc(100% - 28px);
   }
   .banner-stack {

@@ -1,83 +1,61 @@
-import { useMemo, useState } from 'react';
-import { Box, Camera, Download, Eye, EyeOff, FileInput, FolderInput, FolderOutput, Image as ImageIcon, MoreHorizontal, PanelLeftClose, Pencil, Plus, ScanLine, Search, Shapes, Sparkle, Trash2, Upload, X } from 'lucide-react';
-import { api } from '../lib/api';
+import { useState } from 'react';
+import { Box, Camera, Crosshair, FileInput, FolderInput, PanelLeftClose, Plus, ScanLine, Search, Upload, X } from 'lucide-react';
 import type { Asset } from '../lib/types';
-import { fmtCount } from '../lib/format';
 import { guideTo } from '../lib/guide';
 import { importPaths, pickFiles } from '../lib/importing';
-import { moveAsset, projectsSupported } from '../lib/projects';
-import { ROLE_LABEL, roleOf } from '../lib/journey';
-import { useThumbs } from '../lib/thumbnails';
 import { useProjectAssets, useStore } from '../store';
-import { getViewer } from '../viewer/instance';
 import { Button, Empty, IconButton, Popover } from '../ui/primitives';
+import { checkEntries, displayName, GROUPS, groupOf, type Entry, type GroupId } from './models/groups';
+import { useCheckInfos } from './models/checkInfo';
+import { GroupCard } from './models/GroupCard';
+import { ModelRow } from './models/ModelRow';
+import { PhotoGrid, PhotoViewerHost } from './models/photos';
 
-export const SERIES_VARS = ['--series-1', '--series-2', '--series-3', '--series-4', '--series-5', '--series-6', '--series-7', '--series-8'];
+// kept here: other parts of the app import them from this file
+export { SERIES_VARS, assetColorVar, sizeText, Thumb } from './models/thumb';
 
-/** Stable colour per model (order of creation among geometry assets). */
-export const assetColorVar = (assets: Asset[], id: string) => {
-  const geo = assets.filter(a => a.kind !== 'image');
-  const i = geo.findIndex(a => a.id === id);
-  return SERIES_VARS[(i < 0 ? 0 : i) % SERIES_VARS.length];
-};
+const MODEL_GROUPS: Exclude<GroupId, 'photos'>[] = ['scans', 'made', 'checks', 'cad'];
 
-interface Node {
-  asset: Asset;
-  children: Node[];
-}
+const newestFirst = (x: Asset, y: Asset) => y.created.localeCompare(x.created);
 
-function buildTree(assets: Asset[]): Node[] {
-  const byId = new Map(assets.map(a => [a.id, { asset: a, children: [] as Node[] }]));
-  const roots: Node[] = [];
-  for (const a of assets) {
-    const node = byId.get(a.id)!;
-    const parent = a.parents.map(p => byId.get(p)).find(p => p && p.asset.kind !== 'image');
-    if (parent) parent.children.push(node);
-    else roots.push(node);
-  }
-  const sort = (nodes: Node[], newestFirst: boolean) => {
-    nodes.sort((x, y) => (newestFirst ? y.asset.created.localeCompare(x.asset.created) : x.asset.created.localeCompare(y.asset.created)));
-    nodes.forEach(n => sort(n.children, false));
-  };
-  sort(roots, true);
-  return roots;
-}
-
-/** Part size in the model's own axes when known (smallest box), else the scanner-frame box. */
-export function sizeText(a: Asset): string {
-  const p = a.part?.dimensions;
-  const d = p ? [p.length, p.width, p.height] : a.stats.oriented_dimensions ?? a.stats.dimensions;
-  if (!d) return '';
-  return [...d].sort((x, y) => y - x).map(v => (v >= 100 ? v.toFixed(0) : v.toFixed(1))).join(' × ');
-}
-
-export function Thumb({ asset, size = 52 }: { asset: Asset; size?: number }) {
-  const local = useThumbs(s => s.urls[asset.id]);
-  const assets = useStore(s => s.assets);
-  const [failed, setFailed] = useState(false);
-  const src = local ?? (asset.has_thumbnail && !failed ? `/api/assets/${asset.id}/thumbnail?v=${encodeURIComponent(asset.created)}` : null);
-  const Icon = asset.kind === 'mesh' ? Shapes : asset.kind === 'image' ? ImageIcon : Sparkle;
-  return (
-    <span className="thumb" style={{ width: size, height: size }}>
-      {asset.kind === 'image' ? <img src={`/api/assets/${asset.id}/image`} alt="" loading="lazy" /> : src ? <img src={src} alt="" onError={() => setFailed(true)} /> : <Icon size={20} aria-hidden />}
-      {asset.kind !== 'image' && <span className="swatch" style={{ background: `var(${assetColorVar(assets, asset.id)})` }} aria-hidden />}
-    </span>
-  );
-}
-
+/**
+ * The left panel: every model of the project, sorted into what each thing is (scans, what was made from them,
+ * checks, CAD / golden models, photos), each group a card of its own colour. Click = work on it, double-click =
+ * show only this, Ctrl-click = pick several; the eye shows or hides a model in the 3D view.
+ */
 export function ModelsPanel() {
   const all = useProjectAssets();
   const step = useStore(s => s.step);
-  const [query, setQuery] = useState('');
-  const geometry = all.filter(a => a.kind !== 'image');
-  const cad = geometry.filter(a => roleOf(a) === 'cad');
-  const parts = geometry.filter(a => roleOf(a) !== 'cad');
-  const photos = all.filter(a => a.kind === 'image');
-  const q = query.trim().toLowerCase();
-  const tree = useMemo(() => buildTree(parts), [parts]);
-  const flat = q ? geometry.filter(a => a.name.toLowerCase().includes(q)).reverse() : null;
-  const picking = step === 'align';
   const booted = useStore(s => s.booted);
+  const golden = useStore(s => s.projects.find(p => p.id === s.projectId)?.golden_asset_id ?? null);
+  const picked = useStore(s => s.selected.length);
+  const [query, setQuery] = useState('');
+  const picking = step === 'align';
+
+  const geometry = all.filter(a => a.kind !== 'image');
+  const photosAll = all.filter(a => a.kind === 'image');
+  const goldenChecks = geometry.filter(a => a.operation === 'golden_check').map(a => a.id);
+  const infos = useCheckInfos(goldenChecks);
+
+  const q = query.trim().toLowerCase();
+  const matches = (a: Asset) => !q || a.name.toLowerCase().includes(q) || displayName(a).toLowerCase().includes(q);
+
+  const by: Record<GroupId, Asset[]> = { scans: [], made: [], checks: [], cad: [], photos: [] };
+  for (const a of all) by[groupOf(a, golden)].push(a);
+  const links = Object.fromEntries(goldenChecks.map(id => {
+    const info = infos[id];
+    return [id, info === undefined ? undefined : info === 'none' ? null : info.compareId];
+  }));
+  const flat = (list: Asset[]): Entry[] => list.map(asset => ({ asset, children: [] }));
+  const entries: Record<Exclude<GroupId, 'photos'>, Entry[]> = {
+    scans: flat([...by.scans].sort(newestFirst)),
+    made: flat([...by.made].sort(newestFirst)),
+    checks: checkEntries(by.checks, links),
+    cad: flat([...by.cad].sort((x, y) => Number(y.id === golden) - Number(x.id === golden) || newestFirst(x, y))),
+  };
+  const shownEntries = (g: Exclude<GroupId, 'photos'>) => (q ? entries[g].filter(e => matches(e.asset) || e.children.some(matches)) : entries[g]);
+  const photos = photosAll.filter(matches);
+  const anyMatch = MODEL_GROUPS.some(g => shownEntries(g).length > 0) || photos.length > 0;
 
   return (
     <aside className="island models" aria-label="Models in this project" data-guide="models">
@@ -96,218 +74,82 @@ export function ModelsPanel() {
         <label className="models-search">
           <Search size={15} aria-hidden />
           <input className="input" placeholder="Find a model" value={query} onChange={e => setQuery(e.target.value)} aria-label="Find a model" />
+          {query && (
+            <button type="button" className="mp-search-clear" aria-label="Clear" onClick={() => setQuery('')}>
+              <X size={14} />
+            </button>
+          )}
         </label>
       )}
 
-      <div className="models-scroll">
+      <div className="models-scroll mp-scroll">
         {!booted ? (
           <div className="skeleton-list" aria-label="Loading models">{[0, 1, 2, 3].map(i => <div key={i} className="skeleton-row"><span /><span /></div>)}</div>
-        ) : geometry.length === 0 ? (
-          <Empty
-            icon={<Box size={24} />}
-            title="No models yet"
-            action={
-              <div className="stack tight" style={{ width: 220 }}>
-                <Button variant="primary" icon={<ScanLine size={16} />} onClick={() => useStore.getState().goStep('capture')}>Scan a part</Button>
-                <Button icon={<Upload size={16} />} onClick={() => pickFiles()}>Open scan files</Button>
-              </div>
-            }
-          >
-            Scan with the MetroY, or drop PLY, STL, OBJ and STEP files anywhere.
-          </Empty>
-        ) : flat ? (
-          <ul className="model-list" role="tree">
-            {flat.map(a => <ModelRow key={a.id} asset={a} depth={0} picking={picking} />)}
-            {!flat.length && <li className="caption" style={{ padding: 12 }}>Nothing matches “{query}”.</li>}
-          </ul>
         ) : (
           <>
-            {picking && <div className="group-label">Pick the scans to align · the first pick is the reference</div>}
-            <ul className="model-list" role="tree">
-              {tree.map(n => <TreeNode key={n.asset.id} node={n} depth={0} picking={picking} />)}
-            </ul>
-            {cad.length > 0 && (
-              <>
-                <div className="group-label">CAD models</div>
-                <ul className="model-list" role="tree">
-                  {cad.map(a => <ModelRow key={a.id} asset={a} depth={0} picking={picking} />)}
-                </ul>
-              </>
+            {geometry.length === 0 && (
+              <Empty
+                icon={<Box size={24} />}
+                title="No models yet"
+                action={
+                  <div className="stack tight" style={{ width: 220 }}>
+                    <Button variant="primary" icon={<ScanLine size={16} />} onClick={() => useStore.getState().goStep('capture')}>Scan a part</Button>
+                    <Button icon={<Upload size={16} />} onClick={() => pickFiles()}>Open scan files</Button>
+                  </div>
+                }
+              >
+                Scan with the MetroY, or drop PLY, STL, OBJ and STEP files anywhere.
+              </Empty>
             )}
-          </>
-        )}
 
-        {photos.length > 0 && (
-          <>
-            <div className="group-label">Photos · {photos.length}</div>
-            <div className="photo-strip">
-              {photos.map(p => (
-                <button key={p.id} type="button" className="photo-thumb" title={p.name} onClick={() => useStore.getState().set({ activeId: p.id, step: 'mesh', screen: 'workspace' })}>
-                  <img src={`/api/assets/${p.id}/image`} alt={p.name} loading="lazy" />
-                </button>
-              ))}
-            </div>
+            {picking && geometry.length > 0 && (
+              <div className="mp-picking" role="note">
+                <Crosshair size={16} aria-hidden />
+                <span>
+                  <b>Pick the scans to align.</b> The first one you pick is the reference.
+                  {picked > 0 && <span className="mp-picking-n"> {picked} picked</span>}
+                </span>
+              </div>
+            )}
+
+            {MODEL_GROUPS.map(g => {
+              const list = shownEntries(g);
+              if (!list.length) return null;
+              const ids = entries[g].flatMap(e => [e.asset.id, ...e.children.map(c => c.id)]);
+              return (
+                <GroupCard key={g} id={g} ids={ids} count={ids.length}>
+                  <ul className="mp-list" role="tree" aria-label={GROUPS[g].title}>
+                    {list.map(e => (
+                      <EntryRows key={e.asset.id} entry={e} group={g} picking={picking} golden={golden} check={infos[e.asset.id]} />
+                    ))}
+                  </ul>
+                </GroupCard>
+              );
+            })}
+
+            {photos.length > 0 && (
+              <GroupCard id="photos" ids={[]} count={photosAll.length} photos={photosAll}>
+                <PhotoGrid photos={photos} />
+              </GroupCard>
+            )}
+
+            {q && !anyMatch && <p className="mp-nomatch">Nothing matches “{query}”.</p>}
           </>
         )}
       </div>
+      <PhotoViewerHost />
     </aside>
   );
 }
 
-function TreeNode({ node, depth, picking }: { node: Node; depth: number; picking: boolean }) {
+function EntryRows({ entry, group, picking, golden, check }: { entry: Entry; group: GroupId; picking: boolean; golden: string | null; check: ReturnType<typeof useCheckInfos>[string] | undefined }) {
   return (
     <>
-      <ModelRow asset={node.asset} depth={depth} picking={picking} />
-      {node.children.map(c => <TreeNode key={c.asset.id} node={c} depth={Math.min(depth + 1, 5)} picking={picking} />)}
+      <ModelRow asset={entry.asset} group={group} picking={picking} golden={entry.asset.id === golden} check={check} />
+      {entry.children.map(c => (
+        <ModelRow key={c.id} asset={c} group={group} picking={picking} child />
+      ))}
     </>
-  );
-}
-
-function ModelRow({ asset: a, depth, picking }: { asset: Asset; depth: number; picking: boolean }) {
-  const [renaming, setRenaming] = useState(false);
-  const pickIndex = useStore(s => s.selected.indexOf(a.id));
-  const visible = useStore(s => s.visible.includes(a.id));
-  const active = useStore(s => s.activeId === a.id);
-  const { activate, toggleSelect, toggleVisible } = useStore.getState();
-  const role = roleOf(a);
-  const size = sizeText(a);
-
-  return (
-    <li
-      role="treeitem"
-      aria-selected={active}
-      className={`model ${active ? 'is-active' : ''} ${pickIndex >= 0 ? 'is-picked' : ''}`}
-      style={{ '--depth': depth } as React.CSSProperties}
-      tabIndex={0}
-      onKeyDown={e => {
-        if (e.target !== e.currentTarget) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          if (picking) toggleSelect(a.id);
-          activate(a.id);
-        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          const rows = [...document.querySelectorAll<HTMLElement>('.model[role="treeitem"]')];
-          rows[rows.indexOf(e.currentTarget) + (e.key === 'ArrowDown' ? 1 : -1)]?.focus();
-        } else if (e.key === 'F2') setRenaming(true);
-      }}
-      onClick={e => {
-        if (picking || e.ctrlKey || e.metaKey) toggleSelect(a.id);
-        activate(a.id);
-      }}
-      onDoubleClick={() => {
-        useStore.setState({ visible: [a.id], activeId: a.id });
-        setTimeout(() => getViewer()?.fit([a.id]), 80);
-      }}
-      title={`${a.name}\n${ROLE_LABEL[role]} · ${new Date(a.created).toLocaleString()}\nClick to work on it · double-click to show only this`}
-    >
-      {depth > 0 && <span className="model-branch" aria-hidden />}
-      <Thumb asset={a} size={44} />
-      <div className="model-text">
-        {renaming ? (
-          <input
-            className="input model-rename"
-            autoFocus
-            defaultValue={a.name}
-            aria-label="New name"
-            onClick={e => e.stopPropagation()}
-            onKeyDown={e => {
-              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-              if (e.key === 'Escape') setRenaming(false);
-              e.stopPropagation();
-            }}
-            onBlur={async e => {
-              const name = e.target.value.trim();
-              setRenaming(false);
-              if (!name || name === a.name) return;
-              try {
-                await api.patch(`/api/assets/${a.id}`, { name });
-                await useStore.getState().refreshAssets();
-              } catch (err) {
-                useStore.getState().toast({ kind: 'error', title: 'Rename failed', body: (err as Error).message });
-              }
-            }}
-          />
-        ) : (
-          <div className="model-name">{a.name}</div>
-        )}
-        <div className="model-meta">
-          <span className={`role role-${role}`}>{ROLE_LABEL[role]}</span>
-          <span>·</span>
-          <span>{a.kind === 'mesh' ? `${fmtCount(a.stats.triangles)} tri` : `${fmtCount(a.stats.points)} pts`}</span>
-        </div>
-        {size && <div className="model-meta"><span className="mono">{size} mm</span></div>}
-      </div>
-      <div className="model-actions" onClick={e => e.stopPropagation()}>
-        {picking ? (
-          <button type="button" className={`pick ${pickIndex >= 0 ? 'is-on' : ''}`} aria-label={pickIndex >= 0 ? `Picked #${pickIndex + 1}` : 'Pick for alignment'} onClick={() => toggleSelect(a.id)}>
-            {pickIndex >= 0 ? pickIndex + 1 : ''}
-          </button>
-        ) : (
-          <IconButton size="sm" label={visible ? 'Hide in the 3D view' : 'Show in the 3D view'} className={`eye ${visible ? 'is-on' : ''}`} onClick={() => toggleVisible(a.id)}>
-            {visible ? <Eye size={16} /> : <EyeOff size={16} />}
-          </IconButton>
-        )}
-        <RowMenu asset={a} onRename={() => setRenaming(true)} />
-      </div>
-    </li>
-  );
-}
-
-function RowMenu({ asset: a, onRename }: { asset: Asset; onRename: () => void }) {
-  const formats = useStore(s => s.params?.formats);
-  const projects = useStore(s => s.projects);
-  const others = projects.filter(p => !p.virtual && p.id !== a.project);
-  const move = async (projectId: string, name: string) => {
-    try {
-      await moveAsset(a.id, projectId);
-      await useStore.getState().refreshAssets();
-      await useStore.getState().refreshProjects();
-      useStore.getState().toast({ kind: 'ok', title: `Moved to ${name}` });
-    } catch (err) {
-      useStore.getState().toast({ kind: 'error', title: 'Could not move the model', body: (err as Error).message });
-    }
-  };
-  const del = async () => {
-    if (!confirm(`Delete “${a.name}”? Its files are removed from the workspace. Models made from it stay.`)) return;
-    try {
-      await api.del(`/api/assets/${a.id}`);
-      getViewer()?.forget(a.id);
-      await useStore.getState().refreshAssets();
-      useStore.getState().refreshProjects().catch(() => undefined);
-    } catch (err) {
-      useStore.getState().toast({ kind: 'error', title: 'Delete failed', body: (err as Error).message });
-    }
-  };
-  const fmt = a.kind === 'mesh' ? 'stl' : (formats?.pointcloud?.[0] ?? 'ply');
-  return (
-    <Popover
-      align="end"
-      trigger={({ toggle, open }) => (
-        <IconButton size="sm" label="More" className="more" active={open} onClick={toggle} data-guide="model.menu">
-          <MoreHorizontal size={16} />
-        </IconButton>
-      )}
-    >
-      {({ close }) => (
-        <div className="menu">
-          <button type="button" className="menu-item" onClick={() => { close(); onRename(); }}><Pencil size={15} /><div className="menu-item-title">Rename</div></button>
-          <a className="menu-item" href={`/api/assets/${a.id}/download?format=${fmt}`} download onClick={() => close()}><Download size={15} /><div className="menu-item-title">Download {fmt.toUpperCase()}</div></a>
-          <button type="button" className="menu-item" onClick={() => { close(); useStore.getState().set({ activeId: a.id, step: 'export' }); }}><FileInput size={15} /><div className="menu-item-title">Details & more formats</div></button>
-          {projectsSupported() && others.length > 0 && (
-            <>
-              <div className="menu-sep" />
-              <div className="menu-label"><FolderOutput size={13} style={{ display: 'inline', verticalAlign: -2 }} aria-hidden /> Move to project</div>
-              {others.slice(0, 8).map(p => (
-                <button key={p.id} type="button" className="menu-item" onClick={() => { close(); move(p.id, p.name); }}><div className="menu-item-title truncate">{p.name}</div></button>
-              ))}
-            </>
-          )}
-          <div className="menu-sep" />
-          <button type="button" className="menu-item danger-text" onClick={() => { close(); del(); }}><Trash2 size={15} /><div className="menu-item-title">Delete</div></button>
-        </div>
-      )}
-    </Popover>
   );
 }
 
@@ -317,7 +159,7 @@ function AddMenu() {
     <Popover
       align="end"
       trigger={({ toggle, open }) => (
-        <Button size="sm" variant="primary" icon={<Plus size={15} />} onClick={toggle} aria-expanded={open} data-guide="add">
+        <Button size="sm" variant="primary" icon={<Plus size={15} />} onClick={toggle} aria-expanded={open} aria-label="Add" title="Add a scan, files or photos" data-guide="add">
           Add
         </Button>
       )}

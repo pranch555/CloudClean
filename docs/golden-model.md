@@ -3,7 +3,7 @@
 The golden model is the part as it should be: its CAD file (STEP, IGES) or a trusted mesh (STL, OBJ, PLY). The check
 lines your scan up with it and tells you three things:
 
-1. **What was not scanned properly.** These are named areas of the part, such as "Bottom face" or "Ø6.00 hole",
+1. **What was not scanned properly.** These are named areas of the part, such as "Edge of the narrow end" or "Ø6.00 hole",
    each with its size and why it was flagged.
 2. **What to scan again, and how.** For example, "Turn the part over, scan it again and merge the two scans" or
    "Point the scanner straight into the hole".
@@ -27,11 +27,23 @@ You can also ask the assistant: *"check this scan against the golden model"*. It
 
 ## Reading the result
 
-* **The verdict** at the top:
-  * *matches*: everything was measured and is within tolerance;
-  * *does not match*: something is off;
-  * *scan more*: everything scanned so far matches, but some areas or sizes could not be checked.
-* **Problems view.** The golden model is coloured by what the check found:
+* **The verdict** at the top, with a ring showing how much of the golden surface matches:
+  * *Matches*: everything was measured and is within tolerance;
+  * *Mostly matches*: something is off, but 95 % or more of the surface is within tolerance (amber, not red:
+    the part is close, a few things need a look);
+  * *Does not match*: something is off and less than 95 % of the surface matches;
+  * *Scan more*: everything scanned so far matches, but some areas or sizes could not be checked.
+
+  Under it: how much of the part was scanned, how many sizes match, and how many areas to look at (each jumps to
+  its section).
+* **The surface**: one bar and a list of how much of the golden surface matches, was not scanned, had too few points,
+  is rough, or has less / more material than designed. **Colour the model by** switches the 3D view between:
+
+  | View | Shows |
+  |---|---|
+  | What was found | the golden model in the check's colours (below) |
+  | Distance | the golden model coloured by how far the scan sits from it (blue less material, red more) |
+  | Scan points | every scan point coloured by its distance to the golden model |
 
   | Colour | Meaning |
   |---|---|
@@ -39,15 +51,20 @@ You can also ask the assistant: *"check this scan against the golden model"*. It
   | violet | not scanned |
   | amber | too few points: the area was only seen at a glancing angle |
   | orange | rough: the points scatter more than the tolerance allows, often a shiny or dark surface |
-  | red | off, outside: the scan has more material here |
-  | blue | off, inside: the scan has less material here (for a hole, the hole is bigger) |
+  | red | more material: the scan sits outside the golden surface |
+  | blue | less material: the scan sits inside it (for a hole, the hole is bigger) |
 
-  Sharp edges are never called rough or off. Every scanner rounds edges a little, and the summary says by how much.
-* **Scan again.** Each area comes with why it was flagged and what to do. **Show me** turns the view to it.
-* **Different from the golden model.** These areas are off by more than the tolerance. Either the part really
-  differs there (check it with a caliper or gauge), or that area came from a separate scan that was merged slightly
-  off (redo the line-up in the Align step).
-* **Measurements:** golden value, scanned value and difference. The result column reads:
+  Sharp edges are never called rough or off. Every scanner rounds edges a little, and the notes say by how much.
+* **Areas to look at**, numbered like the pins on the 3D view:
+  * *Different from the golden model* (first: these decide the verdict): how far off, with a bar against the
+    tolerance. Either the part really differs there (measure it), or the area came from a separate scan that was
+    merged slightly off (redo the line-up in the Align step). A recess floor that reads deeper is often real: drilled
+    floors are cone-shaped where the CAD draws them flat.
+  * *Scan these again*: not scanned, too few points or rough, each with how to scan it.
+
+  **Show me** turns the view to the area from a side nothing blocks, keeps only that area in colour and greys out
+  the rest; **Whole part** goes back. Clicking a pin does the same. Pins of areas on the far side of the part fade.
+* **Sizes**: golden value → scanned value and the difference, sizes that are off first:
 
   | Result | Meaning |
   |---|---|
@@ -56,8 +73,29 @@ You can also ask the assistant: *"check this scan against the golden model"*. It
   | Too close to call | within that margin of the limit: measure it by hand |
   | Not measured | not enough of the face was scanned; **Show the area** points to what to scan |
 
-* **Deviation on the golden** and **Deviation of the scan** are the colour maps of the distances, as in the former
-  CAD compare. The **Report** is a printable page of all of the above.
+* **Notes**: the scale of the whole scan against the golden model, line-up doubts and other remarks. The
+  **Printable report** is a page of all of the above.
+
+Checks made before October 2026 name their areas by coordinates; they show a **Run the check again** button.
+
+## Names
+
+Areas and sizes are named after the part, not after coordinates (`cloudclean/golden_words.py`), because CAD files
+use any axis as up and the 3D view turns any way:
+
+* Turned and long parts have a main axis: the axis of their round faces, else their longest side when it is clearly
+  the longest. Its ends are *the wide end* and *the narrow end* when their cross-sections differ by 12 % or more,
+  else they are named from the 3D view's default front view (*top end*, *left end*; the view's up axis is sent
+  with the check).
+* Faces: *wide end face*, *step 25.40 mm from the wide end*, *floor of the recess in the wide end* (a floor with
+  walls all round, found by casting rays sideways), *wall of the recess…*, *flat side…*, *sloped face…*,
+  *Ø6.00 centre hole*, *Ø6.00 cross hole…*, *Ø20.00 round face*. Two faces with the same name get *(1 of 3)*.
+* Areas on no single face: *edge of the narrow end* (a chamfer or rounded edge), *inner corner at the step…* (a ray
+  along the surface normal hits that step), *side surface 40 mm from the narrow end*, *curved area…*.
+* Sizes: *Overall length (end to end)*, *Overall width (left to right)*, *Depth of the recess in the wide end*,
+  *Width across the recess… (1 of 3)*, *Thickness below the recess…*.
+* Parts with no main axis use the default front view: *top face*, *floor of the pocket in the top*, *step facing
+  up…*.
 
 ## How it works
 
@@ -95,12 +133,18 @@ You can also ask the assistant: *"check this scan against the golden model"*. It
 
 The check makes two results: the golden model coloured by the check (operation `golden_check`, with scalars
 `golden_deviation`, `check_status` and `check_region`), and the scan lined up with the golden model (operation
-`compare`, scalar `deviation`).
+`compare`, scalar `deviation`). Before colouring, long edges of the golden mesh are split (`refine_long_edges`, up
+to 520 000 triangles): CAD files draw a flat face as a few huge triangles, and colours painted on their corners,
+which sit on never-judged edges, used to hide a whole off face.
+
+Each area carries `view` (`target`, `from`, `radius`: a camera looking along the area's normal, or the nearest
+direction no other part of the model blocks, framed with some of the part around it) and `pin` (a point on the
+area for its numbered pin). The report has `version` 2, `match_pct` and `part` (`axis`, `ends`, `up_axis`).
 
 ## API
 
 ```
-POST  /api/golden-check {scan_id, golden_id?, tolerance?, align?, remember?}   -> job "golden_check"
+POST  /api/golden-check {scan_id, golden_id?, tolerance?, align?, remember?, up_axis?}   -> job "golden_check"
       golden_id defaults to the project's golden model; remember makes golden_id the project's golden model
 PATCH /api/projects/{id} {golden_asset_id}                                    (a mesh of that project, or null)
 GET   /api/assets/{check_id}/golden-report                                    printable page

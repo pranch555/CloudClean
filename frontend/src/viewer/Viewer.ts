@@ -54,12 +54,15 @@ interface Item {
   originalColors?: THREE.BufferAttribute;
   scalarName?: string;
   scalars?: Float32Array;
+  /** spotlight(): this mesh shows one area in colour and greys out the rest */
+  focused?: boolean;
 }
 
 type Listener = () => void;
 
 const PALETTE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
 const HIGHLIGHT = new THREE.Color('#ee4b1f');
+const FOCUS_REST = new THREE.Color('#b3ac9f');
 
 export interface ViewerTheme {
   dark: boolean;
@@ -572,21 +575,31 @@ export class Viewer {
     // every model carries a (zeroed) selection mask: a shader attribute with no buffer reads a stale generic value
     // from whatever used that attribute slot last, which painted whole meshes in the highlight colour
     geom.setAttribute('selected', new THREE.BufferAttribute(new Float32Array(geom.attributes.position.count), 1));
+    geom.setAttribute('focus', new THREE.BufferAttribute(new Float32Array(geom.attributes.position.count), 1));
     const it: Item = { meta, object, geometry: geom, hasColor, hasNormal: !!geom.attributes.normal };
     this.applyMaterial(it);
     return it;
   }
 
-  private meshMaterial(): THREE.MeshStandardMaterial {
+  private meshMaterial(focused = false): THREE.MeshStandardMaterial {
     const mat = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.04, side: THREE.DoubleSide });
+    // spotlight(): 1 turns every vertex outside the focus mask the plain model colour
+    const uFocus = { value: focused ? 1 : 0 };
+    mat.userData.uFocus = uFocus;
     mat.onBeforeCompile = shader => {
       shader.uniforms.uHighlight = { value: HIGHLIGHT };
+      shader.uniforms.uFocus = uFocus;
+      shader.uniforms.uFocusRest = { value: FOCUS_REST };
       shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', '#include <common>\nattribute float selected;\nvarying float vSelected;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSelected = selected;');
+        .replace('#include <common>', '#include <common>\nattribute float selected;\nattribute float focus;\nvarying float vSelected;\nvarying float vFocus;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSelected = selected;\nvFocus = focus;');
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform vec3 uHighlight;\nvarying float vSelected;')
-        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, step(0.5, vSelected) * 0.65);');
+        .replace('#include <common>', '#include <common>\nuniform vec3 uHighlight;\nuniform float uFocus;\nuniform vec3 uFocusRest;\nvarying float vSelected;\nvarying float vFocus;')
+        .replace(
+          '#include <color_fragment>',
+          '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, step(0.5, vSelected) * 0.65);\n' +
+            'diffuseColor.rgb = mix(diffuseColor.rgb, uFocusRest, uFocus * (1.0 - smoothstep(0.25, 0.75, vFocus)) * 0.85);',
+        );
     };
     return mat;
   }
@@ -621,7 +634,7 @@ export class Viewer {
     } else {
       if (!(mesh.material instanceof THREE.MeshStandardMaterial)) {
         (mesh.material as THREE.Material).dispose();
-        mesh.material = this.meshMaterial();
+        mesh.material = this.meshMaterial(!!it.focused);
       }
       const mat = mesh.material as THREE.MeshStandardMaterial;
       const useVertex = scalarOn || (colorMode === 'original' && it.hasColor);
@@ -1211,6 +1224,7 @@ export class Viewer {
   setTheme(patch: Partial<ViewerTheme>) {
     Object.assign(this.theme, patch);
     HIGHLIGHT.set(this.theme.highlight);
+    FOCUS_REST.set(this.theme.mesh);
     const gridU = (this.grid.material as THREE.ShaderMaterial).uniforms;
     gridU.uColor.value.setRGB(...this.theme.grid);
     gridU.uStrength.value = this.theme.dark ? 0.8 : 1.15;
@@ -1290,12 +1304,58 @@ export class Viewer {
     this.controls.animateTo(pos, cam.quaternion.clone(), t, undefined, duration);
   }
 
-  /** Look at a world point from a given position (Measure -> Golden model: "show me this area"). */
-  viewFrom(target: [number, number, number], from: [number, number, number], duration = 600) {
+  /**
+   * Look at a world point from a given position (Measure -> Golden model: "show me this area"). radius: how much
+   * around the point should fill the view (the orthographic camera's zoom; for the perspective camera the distance
+   * is already in `from`).
+   */
+  viewFrom(target: [number, number, number], from: [number, number, number], duration = 600, radius?: number) {
     const t = new THREE.Vector3(...target);
     const eye = new THREE.Vector3(...from);
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(eye, t, this.camera.up));
-    this.controls.animateTo(eye, q, t, undefined, duration);
+    // keep the camera's current up unless the new view looks (nearly) along it
+    const dir = t.clone().sub(eye).normalize();
+    let up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+    if (Math.abs(up.dot(dir)) > 0.95) up = this.controls.up.clone();
+    if (Math.abs(up.dot(dir)) > 0.95) up = new THREE.Vector3(1, 0, 0);
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(eye, t, up));
+    const zoom = this.camera === this.orthographic && radius ? (this.orthographic.top - this.orthographic.bottom) / (radius * 2.3) : undefined;
+    this.controls.animateTo(eye, q, t, zoom, duration);
+  }
+
+  /**
+   * Spotlight one area of a mesh: vertices whose scalar `name` equals `value` keep their colours, the rest turn the
+   * plain model colour (Measure -> Golden model: "Show me"). spotlight(null) ends it on every model. Returns how
+   * many vertices are in the spotlight.
+   */
+  async spotlight(assetId: string | null, name = 'check_region', value = -1): Promise<number> {
+    for (const it of this.items.values()) {
+      if (!it.focused) continue;
+      it.focused = false;
+      const u = (it.object.material as THREE.Material).userData?.uFocus;
+      if (u) u.value = 0;
+    }
+    this.invalidate();
+    const it = assetId ? this.items.get(assetId) : undefined;
+    if (!it || !(it.object instanceof THREE.Mesh)) return 0;
+    const res = await fetch(`/api/assets/${it.meta.id}/scalars/${name}`);
+    if (!res.ok) return 0;
+    const values = new Float32Array(await res.arrayBuffer());
+    const n = it.geometry.attributes.position.count;
+    if (values.length !== n || this.items.get(it.meta.id) !== it) return 0;
+    const mask = new Float32Array(n);
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+      if (values[i] === value) {
+        mask[i] = 1;
+        count++;
+      }
+    }
+    it.geometry.setAttribute('focus', new THREE.BufferAttribute(mask, 1));
+    it.focused = true;
+    const u = (it.object.material as THREE.Material).userData?.uFocus;
+    if (u) u.value = 1;
+    this.invalidate();
+    return count;
   }
 
   /** Re-centre the view on a world point, keeping direction and distance. */

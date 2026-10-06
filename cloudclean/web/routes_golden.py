@@ -23,6 +23,7 @@ class GoldenReq(BaseModel):
     align: str | None = None
     remember: bool = False
     name: str | None = None
+    up_axis: str | None = None      # the 3D view's up axis ('y' or 'z'): only for the few names that say 'top'
 
 
 STATUS_TEXT = {"ok": "Matches", "off": "Off", "close": "Too close to call", "not_measured": "Not measured"}
@@ -151,7 +152,8 @@ def create_router(workspace, jobs) -> APIRouter:
                 ws.update_project(scan["project"], golden_asset_id=golden_id)
             except (KeyError, ValueError) as exc:
                 raise HTTPException(400, str(exc))
-        payload = {"scan_id": req.scan_id, "golden_id": golden_id, "params": params.to_dict(), "name": req.name}
+        payload = {"scan_id": req.scan_id, "golden_id": golden_id, "params": params.to_dict(), "name": req.name,
+                   "up_axis": req.up_axis if req.up_axis in ("y", "z") else "y"}
         return jobs.submit("golden_check", f"Check {scan['name']} against {golden['name']}", payload)
 
     @router.get("/api/assets/{asset_id}/golden-report", response_class=HTMLResponse)

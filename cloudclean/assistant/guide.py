@@ -59,6 +59,31 @@ FEATURES: list[Feature] = [
             "Add photos of the real part from this computer, a picture of the 3D view, or photos saved in the "
             "project. New photos are kept in the project as reference photos the assistant can look at again.",
             "image picture reference attach upload camera phone", {"right": "assistant"}),
+    Feature("chat.reply", "Latest reply", "the Latest reply box above the Ask bar under the 3D view (it shows while "
+            "the side panel is not showing the chat)",
+            "The assistant's last answer in short while you work: your question, the step it is working on and the "
+            "answer. Show more makes it taller; its buttons open the whole chat in the side panel, pop the chat out, "
+            "or hide the box until the next reply (the assistant sign at the start of the Ask bar shows it again).",
+            "answer response reply preview last message snippet result box", {"screen": "workspace"}),
+    Feature("chat.popout", "Pop out the chat", "the Pop out the chat button at the top of the Assistant tab, or on the "
+            "Latest reply box above the Ask bar",
+            "Moves the conversation into a small window over the app that you can drag anywhere and resize, so you "
+            "can keep talking to the assistant while you work in Clean, Mesh or any other step with its tools in the "
+            "side panel. It stays open when you change steps.",
+            "floating chat window detach undock drag move separate keep open while working picture in picture",
+            {"right": "assistant"}),
+    Feature("chat.minimize", "Minimize the chat", "the – button at the top right of the floating chat (or Esc in it; "
+            "Ctrl J opens it again)",
+            "Shrinks the floating chat to a small bubble you can drag anywhere. The bubble shows when the assistant "
+            "is working or has a new reply; click it to open the chat again.",
+            "minimise collapse hide bubble small out of the way", {}),
+    Feature("chat.size", "Make the chat tall", "the Make the chat tall / Make the chat compact button at the top of "
+            "the floating chat, or drag its bottom-right corner",
+            "Switches the floating chat between compact and the full height of the 3D view; drag the corner for any "
+            "size.", "resize bigger smaller larger taller compact chat window size", {}),
+    Feature("chat.dock", "Dock the chat", "the Dock the chat button at the top right of the floating chat, or Dock it "
+            "here in the Assistant tab", "Puts the floating chat back into the side panel's Assistant tab.",
+            "dock attach put back side panel restore", {"right": "assistant"}),
     Feature("settings", "Settings", "the gear button at the top right",
             "Theme, text size, units, scanner and turntable, the assistant's LLM server, automations, shortcuts.",
             "preferences options configuration", {}),
@@ -88,14 +113,63 @@ FEATURES: list[Feature] = [
             {"jobs": True}),
     # ---- models
     Feature("models", "Model list", "the Models panel on the left (in a narrow window: the button at the top left of "
-            "the 3D view)", "Every scan, merge, mesh and result of this project, with its lineage; click one to work "
-            "on it, the eye shows or hides it.", "assets files scans list tree left panel",
+            "the 3D view)", "Every scan, merge, mesh and result of this project in coloured groups (Scans, Made from "
+            "scans, Checks, CAD & golden models, Photos); click one to work on it, the eye shows or hides it.", "assets files scans list tree left panel",
             {"screen": "workspace", "left": True}),
     Feature("add", "Add", "Models → + Add",
             "Scan a part, open scan files from this computer (PLY, STL, OBJ, STEP, photos) or import big files from "
             "the server's disk.", "import open upload load file new scan", {"screen": "workspace", "left": True}),
     Feature("model.menu", "Model menu", "the … button on a model in the Models list",
             "Rename, download, move to another project, delete.", "rename download delete move model options",
+            {"screen": "workspace", "left": True}),
+    Feature("models.scans", "Scans", "Models → Scans (the blue group at the top of the Models list)",
+            "Scans straight from the scanner, or opened from files. Every group of the Models list has its own "
+            "colour: Scans, Made from scans, Checks, CAD & golden models, Photos.",
+            "scanned raw captures imported files point clouds group", {"screen": "workspace", "left": True}),
+    Feature("models.made", "Made from scans", "Models → Made from scans (the violet group)",
+            "Cleaned, merged and meshed versions of your scans; each says what it was made from. The original "
+            "scans stay as they are.", "results versions cleaned merged mesh derived group",
+            {"screen": "workspace", "left": True}),
+    Feature("model.made-from", "Made from", "Models → the From … line under a model",
+            "What a model was made from; click a name to go to that model.", "lineage parent source history origin",
+            {"screen": "workspace", "left": True}),
+    Feature("models.checks", "Checks", "Models → Checks (the red group)",
+            "Golden checks and deviation maps: your scans compared with the golden model, newest first, each with "
+            "its verdict (Matches, Mostly matches, Does not match, Scan more) and its deviation map under it.",
+            "inspection results golden check deviation map compare verdict group", {"screen": "workspace", "left": True}),
+    Feature("model.check-result", "Golden check verdict", "Models → Checks → the verdict on a golden check (Matches, "
+            "Mostly matches, Does not match or Scan more)", "Click the verdict to open the full result in Measure → "
+            "Golden model.", "verdict pass fail result open outcome", {"screen": "workspace", "left": True}),
+    Feature("models.cad", "CAD & golden models", "Models → CAD & golden models (the green group)",
+            "CAD models (STEP) and the golden model: the part as it should be. The ★ Golden model tag marks the one "
+            "golden checks compare your scans with.", "cad step reference design nominal group",
+            {"screen": "workspace", "left": True}),
+    Feature("model.golden", "Golden model tag", "Models → CAD & golden models → the ★ Golden model tag",
+            "Marks the golden model of this project, the one golden checks compare scans with.",
+            "star golden reference nominal tag", {"screen": "workspace", "left": True}),
+    Feature("model.make-golden", "Make it the golden model", "the … button on a mesh or CAD model in the Models "
+            "list → Make it the golden model", "Makes this model the golden model of the project: Measure → Golden "
+            "model then checks scans against it.", "set golden reference nominal choose", {"screen": "workspace", "left": True}),
+    Feature("model.show", "Show or hide in 3D", "the eye button on each model in the Models list",
+            "A red eye means the model is shown in the 3D view, a closed eye means hidden; click to switch. "
+            "Double-click a model to show only that one.", "visible visibility hidden eye model",
+            {"screen": "workspace", "left": True}),
+    Feature("models.show-all", "Show all / hide all", "the eye in the title bar of a group in the Models list",
+            "Shows or hides every model of that group in the 3D view at once.", "show all hide all group visibility eye",
+            {"screen": "workspace", "left": True}),
+    Feature("models.photos", "Photos", "Models → Photos (the pink group at the bottom of the Models list)",
+            "The photos of the real part in this project. Click one to see it full size; the × on a photo deletes it.",
+            "pictures images gallery list", {"screen": "workspace", "left": True}),
+    Feature("photo.viewer", "Photo viewer", "Models → Photos → click a photo (or Scan → Make a 3D model from photos → "
+            "click a photo)", "A photo full size; arrow keys step through them. Download it, delete it, or use the "
+            "photos to colour a model.", "view enlarge bigger big see zoom full size lightbox preview picture open",
+            {"screen": "workspace", "left": True}),
+    Feature("photo.delete", "Delete photo", "the × on a photo (Models → Photos, or Scan → Make a 3D model from "
+            "photos), or Delete in the photo viewer", "Removes a photo from the project after you confirm. Models "
+            "already made or coloured from it stay.", "delete remove erase picture image trash",
+            {"screen": "workspace", "left": True}),
+    Feature("photos.delete-all", "Delete all photos", "Models → Photos → the … button → Delete all photos",
+            "Removes every photo of this project after you confirm.", "delete remove all clear pictures images",
             {"screen": "workspace", "left": True}),
     # ---- 3D view
     Feature("view.tools", "Tool bar", "the bar on the left of the 3D view",
@@ -278,7 +352,24 @@ FEATURES: list[Feature] = [
             "measured on the scan with ok / off.",
             "golden model master reference cad compare deviation inspection tolerance heatmap step stl rescan "
             "missing not scanned coverage measurements match pass fail", _m("cad")),
-    Feature("measure.fill-photos", "Fill from photos", "Measure → Golden model → Scan again → Fill from photos",
+    Feature("golden.verdict", "Golden check verdict", "Measure → Golden model → the box at the top of a result",
+            "Matches, Mostly matches (95 % or more of the surface within the tolerance, a few things to look at), "
+            "Does not match, or Scan more; the ring shows how much of the surface matches, the three numbers under "
+            "it how much was scanned, how many sizes match and how many areas to look at.",
+            "verdict result pass fail percent match score summary how good", _m("cad")),
+    Feature("golden.areas", "Areas to look at", "Measure → Golden model → Areas to look at",
+            "Every problem area of the check, numbered like the pins on the 3D view: Different from the golden "
+            "model (less or more material than designed, with a bar against the tolerance) and Scan these again "
+            "(not scanned, too few points, rough), each with what it means and what to do.",
+            "problem areas list regions off different rescan scan again pins numbers", _m("cad")),
+    Feature("golden.show-me", "Show me", "Measure → Golden model → Areas to look at → Show me on an area",
+            "Turns the 3D view to that area, greys out the rest of the part so only the area keeps its colour, and "
+            "marks its pin. Whole part goes back to the full view. Clicking a numbered pin on the model does the same.",
+            "show me zoom focus where locate find area highlight pin", _m("cad")),
+    Feature("golden.colour-by", "Colour the model by", "Measure → Golden model → The surface → Colour the model by",
+            "What was found (the check's colours), Distance (blue less material, red more) or Scan points (every scan "
+            "point coloured by its distance).", "colour color heatmap deviation distance view map", _m("cad")),
+    Feature("measure.fill-photos", "Fill from photos", "Measure → Golden model → Scan these again → Fill from photos",
             "Fills the areas a scan missed with points from photos of the part, when it cannot be scanned again. "
             "Photos are only good to about 1-2 mm, so filled areas complete the model but are not measured.",
             "fill gaps holes missing photos images complete model rescan cannot scan", _m("cad")),

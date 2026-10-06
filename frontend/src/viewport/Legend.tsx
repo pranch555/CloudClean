@@ -7,6 +7,8 @@ import { NumberInput, Popover, Segmented } from '../ui/primitives';
 export function Legend() {
   const display = useStore(s => s.display);
   const setDisplay = useStore(s => s.setDisplay);
+  const byId = useStore(s => s.byId);
+  const activeId = useStore(s => s.activeId);
   const sc = display.scalar;
   if (display.colorMode !== 'scalar' || !sc) return null;
   const st = sc.style;
@@ -15,7 +17,13 @@ export function Legend() {
   const hi = diverging ? -lo : st.max;
   const ticks = diverging ? [lo, -st.tolerance, 0, st.tolerance, hi] : [lo, (lo + hi) / 2, hi];
   const update = (patch: Partial<typeof st>) => setDisplay({ scalar: { ...sc, style: { ...st, ...patch } } });
-  const title = sc.name === 'deviation' ? 'Deviation from CAD' : sc.name === 'reference_distance' ? 'Distance to nearest scan point' : sc.name === 'density' ? 'Scan density' : sc.name;
+  const golden = sc.name === 'golden_deviation' || (sc.name === 'deviation' && byId.get(activeId ?? '')?.operation === 'compare');
+  const title =
+    sc.name === 'golden_deviation' ? 'Scan vs golden model'
+      : sc.name === 'deviation' ? (golden ? 'Scan vs golden model' : 'Deviation from CAD')
+        : sc.name === 'reference_distance' ? 'Distance to nearest scan point'
+          : sc.name === 'density' ? 'Scan density'
+            : sc.name.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 
   return (
     <div className="hud hud-legend" aria-label={`${title} colour legend`}>
@@ -61,9 +69,9 @@ export function Legend() {
       </div>
       {diverging && (
         <div className="legend-keys">
-          <span><i className="swatch neg" /> below surface</span>
+          <span><i className="swatch neg" /> {golden ? 'less material' : 'below surface'}</span>
           <span><i className="swatch mid" /> in tolerance</span>
-          <span><i className="swatch pos" /> above surface</span>
+          <span><i className="swatch pos" /> {golden ? 'more material' : 'above surface'}</span>
         </div>
       )}
     </div>

@@ -9,17 +9,20 @@ docs/photos-to-3d.md (True size from the scale sheet). The page holds
 - a 100 mm check bar with mm ticks: measure it with a caliper to catch a printer that scales the page;
 - one line of instructions.
 
+The photo check sheet (style "check") is the same page with a blank middle: no dots, so a part lying there shows a
+clean outline, also lit from behind on a light pad. Its markers and bar are where the scale sheet has them.
+
 The same design sits in the middle of an A4 or a US Letter page, so the marker positions do not depend on the paper.
 
 The sheet's frame (the frame of a true-size photo model): origin in the middle of the page (the middle of the clear
 area), x to the right, y towards the top edge of the page, z up out of the paper; millimetres.
 
     marker_corners(ruler_mm=None) -> {id: 4x3 corners (mm)}
-    pdf(paper) -> bytes                              vector PDF at exact size (print at 100 % / actual size)
-    raster(paper, px_per_mm) -> uint8 grey array     same drawing, for previews and synthetic test photos
-    png(paper, px_per_mm) -> bytes
+    pdf(paper, style) -> bytes                       vector PDF at exact size (print at 100 % / actual size)
+    raster(paper, px_per_mm, style=) -> uint8 grey array   same drawing, for previews and synthetic test photos
+    png(paper, px_per_mm, style) -> bytes
 
-`python -m cloudclean.scale_sheet [folder]` writes the PDFs and PNG previews for both papers.
+`python -m cloudclean.scale_sheet [folder]` writes the PDFs and PNG previews of both sheets for both papers.
 """
 from __future__ import annotations
 
@@ -48,6 +51,12 @@ BAR_MM = 100.0                     # the check bar: x from -50 to +50
 BAR_Y = (-127.0, -124.5)           # its bottom and top edge
 INSTRUCTIONS = ("CloudClean scale sheet  -  Print at 100 % (actual size, not 'fit to page'), then measure the "
                 "100 mm bar with a caliper.")
+# style -> (title, instructions, dot pattern in the middle)
+STYLES = {"scale": ("CloudClean scale sheet", INSTRUCTIONS, True),
+          "check": ("CloudClean photo check sheet",
+                    "CloudClean photo check sheet  -  Print at 100 % (actual size), measure the 100 mm bar with a "
+                    "caliper, lay the part in the blank middle.", False)}
+FILE_STEMS = {"scale": "cloudclean-scale-sheet", "check": "cloudclean-photo-check-sheet"}
 _MM = 72.0 / 25.4                  # PDF points per mm
 
 
@@ -84,9 +93,17 @@ def _dots() -> tuple[tuple[float, float, float], ...]:
     return tuple(dots)
 
 
-def _items(paper: str) -> list[tuple]:
+def _style(style: str) -> tuple[str, str, bool]:
+    try:
+        return STYLES[style]
+    except KeyError:
+        raise ValueError(f"Unknown sheet {style!r}: use {' or '.join(STYLES)}") from None
+
+
+def _items(paper: str, style: str = "scale") -> list[tuple]:
     """Everything on the page in drawing order, in the sheet's frame (mm): ("rect", x0, y0, x1, y1, grey),
     ("disc", x, y, r, grey), ("text", x, y, size, text, bold, align); grey 0 = black, 1 = white."""
+    _, instructions, dots = _style(style)
     items: list[tuple] = []
     cell = MARKER_MM / 6
     for i, (cx, cy) in MARKERS.items():
@@ -104,7 +121,7 @@ def _items(paper: str) -> list[tuple]:
                     end += 1
                 items.append(("rect", x0 + col * cell, y1 - (row + 1) * cell, x0 + end * cell, y1 - row * cell, 1.0))
                 col = end
-    for x, y, r in _dots():
+    for x, y, r in _dots() if dots else ():
         items.append(("disc", x, y, r, 0.28))
     # the 100 mm bar: a solid bar (a caliper's jaws go on its ends) with mm ticks above it and numbers every 10 mm
     b0, b1 = BAR_Y
@@ -118,7 +135,7 @@ def _items(paper: str) -> list[tuple]:
             items.append(("text", x, b1 + 4.3, 2.4, str(k), False, "centre"))
     items.append(("text", half + 3.0, b0 + 0.2, 3.2, f"{BAR_MM:.0f} mm", True, "left"))
     items.append(("text", -90.0, b0 + 0.2, 2.6, PAPERS[paper][2], False, "left"))
-    items.append(("text", -90.0, 117.0, 2.85, INSTRUCTIONS, False, "left"))
+    items.append(("text", -90.0, 117.0, 2.85, instructions, False, "left"))
     return items
 
 
@@ -141,7 +158,7 @@ def _pdf_text(s: str) -> str:
 
 
 @lru_cache(maxsize=None)
-def pdf(paper: str = "a4") -> bytes:
+def pdf(paper: str = "a4", style: str = "scale") -> bytes:
     """The sheet as a one-page vector PDF of the exact paper size (MediaBox in points; drawn in mm with the page's
     middle as the origin). It asks viewers not to scale it when printing (/PrintScaling /None)."""
     paper = paper.lower()
@@ -149,7 +166,7 @@ def pdf(paper: str = "a4") -> bytes:
     ops = [f"{_num(_MM)} 0 0 {_num(_MM)} 0 0 cm", f"1 0 0 1 {_num(w / 2)} {_num(h / 2)} cm"]
     grey = None
     k = 0.5523   # Bezier handle of a quarter circle
-    for it in _items(paper):
+    for it in _items(paper, style):
         kind = it[0]
         if kind in ("rect", "disc") and it[-1] != grey:
             grey = it[-1]
@@ -183,7 +200,7 @@ def pdf(paper: str = "a4") -> bytes:
         f"<< /Length {len(content)} /Filter /FlateDecode >>\nstream\n".encode("ascii") + content + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
-        f"<< /Title (CloudClean scale sheet, {PAPERS[paper][2]}) /Creator (CloudClean) >>".encode("latin-1"),
+        f"<< /Title ({_style(style)[0]}, {PAPERS[paper][2]}) /Creator (CloudClean) >>".encode("latin-1"),
     ]
     out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
     offsets = []
@@ -200,7 +217,8 @@ def pdf(paper: str = "a4") -> bytes:
 
 
 # --------------------------------------------------------------------------- raster (preview, test photos)
-def raster(paper: str = "a4", px_per_mm: float = 4.0, supersample: int = 1, text: bool = True) -> np.ndarray:
+def raster(paper: str = "a4", px_per_mm: float = 4.0, supersample: int = 1, text: bool = True,
+           style: str = "scale") -> np.ndarray:
     """The page as a grey image (uint8, row 0 = top edge of the paper), px_per_mm pixels per mm. Pixel (r, c)
     covers x from c / px_per_mm, measured from the left edge of the paper; at a whole number of pixels per mm the
     markers' edges fall exactly on pixel edges. supersample > 1 draws finer and averages (smooth edges)."""
@@ -214,7 +232,7 @@ def raster(paper: str = "a4", px_per_mm: float = 4.0, supersample: int = 1, text
     col = lambda x: int(round((x + cx) * s))
     row = lambda y: int(round((h - (y + cy)) * s))
     texts = []
-    for it in _items(paper.lower()):
+    for it in _items(paper.lower(), style):
         if it[0] == "rect":
             _, x0, y0, x1, y1, grey = it
             img[row(y1):row(y0), col(x0):col(x1)] = int(round(grey * 255))
@@ -245,22 +263,26 @@ def raster(paper: str = "a4", px_per_mm: float = 4.0, supersample: int = 1, text
 
 
 @lru_cache(maxsize=None)
-def png(paper: str = "a4", px_per_mm: float = 3.0) -> bytes:
-    """A PNG preview of the page (anti-aliased)."""
+def png(paper: str = "a4", px_per_mm: float = 3.0, style: str = "scale") -> bytes:
+    """A PNG preview of the page (anti-aliased). It records its true resolution, so a program that prints it at its
+    own size prints it at 100 % (without it, one printer dialog assumed 100 dpi: the 100 mm bar came out 76 mm)."""
     from PIL import Image
 
     buf = io.BytesIO()
-    Image.fromarray(raster(paper, px_per_mm, supersample=4)).save(buf, "PNG", optimize=True)
+    dpi = px_per_mm * 25.4
+    Image.fromarray(raster(paper, px_per_mm, supersample=4, style=style)).save(buf, "PNG", optimize=True,
+                                                                               dpi=(dpi, dpi))
     return buf.getvalue()
 
 
 def main(argv: list[str] | None = None) -> int:
     folder = Path((argv if argv is not None else sys.argv[1:] or ["."])[0])
     folder.mkdir(parents=True, exist_ok=True)
-    for paper in PAPERS:
-        (folder / f"cloudclean-scale-sheet-{paper}.pdf").write_bytes(pdf(paper))
-        (folder / f"cloudclean-scale-sheet-{paper}.png").write_bytes(png(paper))
-    print(f"Wrote the scale sheet (A4 and US Letter, PDF + PNG) to {folder}")
+    for style, stem in FILE_STEMS.items():
+        for paper in PAPERS:
+            (folder / f"{stem}-{paper}.pdf").write_bytes(pdf(paper, style))
+            (folder / f"{stem}-{paper}.png").write_bytes(png(paper, style=style))
+    print(f"Wrote the scale sheet and the photo check sheet (A4 and US Letter, PDF + PNG) to {folder}")
     return 0
 
 

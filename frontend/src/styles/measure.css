@@ -1369,11 +1369,278 @@
   color: var(--ink-1);
 }
 
-/* Measure -> Golden model (steps/measure/GoldenCheck.tsx) */
-.gold-summary {
-  margin: 6px 0 0;
-  padding-left: 18px;
-  font-size: var(--text-sm);
+/* Measure -> Golden model (steps/measure/GoldenCheck.tsx, viewport/GoldenPins.tsx) */
+.gold {
+  display: grid;
+  gap: var(--sp-4);
+  font-size: 14.5px;
+  line-height: var(--lh-normal);
+}
+
+/* the verdict: how much matches, in one look */
+.gold-hero {
+  --tone: var(--ok);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--ok-soft);
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent);
+}
+
+.gold-hero-warn {
+  --tone: var(--warn-glyph);
+  background: var(--warn-soft);
+}
+
+.gold-hero-fail {
+  --tone: var(--danger);
+  background: var(--danger-soft);
+}
+
+.gold-hero-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.gold-hero-kicker svg {
+  color: var(--tone);
+}
+
+.gold-hero-title {
+  margin: 2px 0 4px;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--ink-1);
+}
+
+.gold-hero-sub {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+
+.gold-ring {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+
+.gold-ring svg {
+  display: block;
+}
+
+.gold-ring circle {
+  fill: none;
+  stroke-width: 8;
+}
+
+.gold-ring-track {
+  stroke: color-mix(in srgb, var(--ink-1) 10%, transparent);
+}
+
+.gold-ring-value {
+  stroke: var(--tone, var(--ok));
+  stroke-linecap: round;
+}
+
+.gold-ring-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1;
+}
+
+.gold-ring-text b {
+  font: 600 22px var(--font-mono);
+  color: var(--ink-1);
+}
+
+.gold-ring-text small {
+  font-size: 12px;
+  margin-left: 1px;
+}
+
+.gold-ring-text span {
+  margin-top: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* three numbers under the verdict; each jumps to its section */
+.gold-glance {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.gold-stat {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-1);
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+
+.gold-stat:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+.gold-stat:disabled {
+  cursor: default;
+}
+
+.gold-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.gold-stat-value small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.gold-stat.is-fail .gold-stat-value {
+  color: var(--danger);
+}
+
+.gold-stat-label {
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+
+.gold-legacy {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+}
+
+.gold-legacy p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-1);
+}
+
+/* sections */
+.gold-section {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.gold-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px var(--sp-3);
+}
+
+.gold-section-head h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.gold-section-note {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.gold-report-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.gold-report-link:hover {
+  color: var(--ink-1);
+  text-decoration: underline;
+}
+
+/* the surface, as one bar */
+.gold-bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  padding: 2px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.gold-bar span {
+  min-width: 4px;
+  border-radius: var(--r-pill);
+}
+
+.gold-shares {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px var(--sp-5);
+}
+
+.gold-shares li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-1);
+}
+
+.gold-shares i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.gold-shares b {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--ink-2);
 }
 
@@ -1381,157 +1648,375 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
+  gap: var(--sp-2) var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
 }
 
-.gold-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin: 0;
-  font-size: var(--text-xs);
+.gold-views-label {
+  font-size: 13.5px;
+  font-weight: 550;
   color: var(--ink-2);
 }
 
-.gold-legend i {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  margin-right: 6px;
-  border-radius: 3px;
-  vertical-align: -1px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+/* the areas */
+.gold-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-1);
 }
 
-.gold-list {
+.gold-group svg {
+  color: var(--ink-3);
+}
+
+.gold-group .mono {
+  padding: 0 7px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.gold-group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.gold-cards {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--sp-2);
+  gap: 10px;
 }
 
-.gold-area {
+.gold-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: var(--sp-3);
-  row-gap: 4px;
-  padding: var(--sp-3);
+  gap: 10px;
+  padding: 14px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
+  background: var(--surface-raised, var(--surface));
+  scroll-margin: 12px;
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+
+.gold-card.is-on {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-soft);
+}
+
+.gold-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.gold-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid var(--pin, var(--ink-3));
+  display: grid;
+  place-items: center;
+  font: 600 13.5px var(--font-mono);
+  color: var(--ink-1);
   background: var(--surface);
 }
 
-.gold-area > :not(.gold-num) {
-  grid-column: 2;
-}
-
-.gold-num {
-  grid-row: 1 / span 4;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 3px solid var(--ink-3);
-  display: grid;
-  place-items: center;
-  font: 600 12px var(--font-mono);
+.gold-card-title h4 {
+  margin: 3px 0 0;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.3;
   color: var(--ink-1);
-  background: var(--surface-raised, var(--surface));
 }
 
-.gold-area-head {
+.gold-card-tags {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
+  gap: 6px 10px;
+  margin-top: 6px;
 }
 
-.gold-area-name {
+.gold-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
   font-weight: 600;
+  background: var(--surface-sunken);
   color: var(--ink-1);
 }
 
-.gold-area-size {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+.gold-tag i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.gold-tag b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gold-tag-off_in,
+.gold-tag-off_out {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.gold-tag-thin,
+.gold-tag-rough {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.gold-card-size {
+  font-size: 12.5px;
   color: var(--ink-3);
 }
 
-.gold-why,
-.gold-advice {
+.gold-card-why,
+.gold-card-todo {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: var(--lh-normal);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.gold-why {
+.gold-card-why {
   color: var(--ink-2);
 }
 
-.gold-advice {
+.gold-card-todo {
   color: var(--ink-1);
 }
 
-.gold-area .btn {
-  justify-self: start;
-  margin-top: 2px;
+.gold-card-todo span {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-.gold-meas {
+.gold-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.gold-showing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--signal-ink);
+}
+
+/* a deviation against the tolerance */
+.gold-meter {
+  display: grid;
+  gap: 4px;
+}
+
+.gold-meter-track {
+  position: relative;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+}
+
+.gold-meter-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--ok) 32%, transparent);
+}
+
+.gold-meter-zero {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--ink-4);
+}
+
+.gold-meter-mark {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.gold-meter-mark.is-in {
+  background: #3b82f6;
+}
+
+.gold-meter-mark.is-out {
+  background: #e5484d;
+}
+
+.gold-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.gold-meter-labels .mono {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+/* the sizes */
+.gold-rows {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.gold-m {
+.gold-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  column-gap: var(--sp-2);
-  row-gap: 2px;
-  padding: var(--sp-2) 0;
+  gap: var(--sp-3);
+  padding: 10px 0;
   border-bottom: 1px solid var(--line);
 }
 
-.gold-m:last-child {
+.gold-row:last-child {
   border-bottom: 0;
 }
 
-.gold-m-name {
-  font-size: var(--text-sm);
+.gold-row-off {
+  padding-left: 12px;
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.gold-row-close {
+  padding-left: 12px;
+  box-shadow: inset 3px 0 0 var(--warn-glyph);
+}
+
+.gold-row-name {
+  display: block;
+  font-size: 14.5px;
   font-weight: 550;
+  line-height: 1.35;
   color: var(--ink-1);
 }
 
-.gold-m-vals,
-.gold-m-note {
-  grid-column: 1 / -1;
-  font-size: var(--text-xs);
+.gold-row-vals,
+.gold-row-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
   color: var(--ink-3);
 }
 
-.gold-m-vals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-}
-
-.gold-m-vals b,
-.gold-m-note b {
+.gold-row-vals b {
   font-weight: 500;
   color: var(--ink-1);
 }
 
-.gold-m-off .gold-m-vals span:nth-child(3) b {
+.gold-diff {
+  display: grid;
+  justify-items: end;
+  font: 600 15px var(--font-mono);
+  white-space: nowrap;
+}
+
+.gold-diff small {
+  font: 600 11.5px var(--font-sans);
+  letter-spacing: 0.02em;
+}
+
+.gold-diff-pass {
+  color: var(--ok);
+}
+
+.gold-diff-fail {
   color: var(--danger);
+}
+
+.gold-diff-warn {
+  color: var(--warn);
+}
+
+.gold-diff-none {
+  color: var(--ink-3);
+}
+
+.gold-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.gold-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gold-more[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.gold-notes {
+  padding: 4px var(--sp-4) var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+}
+
+.gold-notes ul {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.gold-notes li.is-warn {
+  color: var(--warn);
+}
+
+.gold-fine {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
 
 .gold-fill {
   display: grid;
   gap: var(--sp-2);
   justify-items: start;
-  margin-top: var(--sp-3);
   padding: var(--sp-3);
   border-radius: var(--r-md);
   background: var(--surface-sunken);
@@ -1539,4 +2024,122 @@
 
 .gold-fill .hint-text {
   margin: 0;
+}
+
+/* numbered pins on the 3D view */
+.gold-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.gold-pin3d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  will-change: transform;
+  transition: opacity var(--dur-2) var(--ease);
+}
+
+.gold-pin3d::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pin);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.gold-pin3d span {
+  position: absolute;
+  left: -15px;
+  bottom: 9px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid var(--pin);
+  background: var(--surface);
+  color: var(--ink-1);
+  font: 600 13px var(--font-mono);
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+  transform-origin: 50% 120%;
+}
+
+.gold-pin3d span::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 7px;
+  margin-left: -1px;
+  background: var(--pin);
+}
+
+.gold-pin3d:hover span,
+.gold-pin3d:focus-visible span {
+  transform: scale(1.12);
+}
+
+.gold-pin3d:focus-visible {
+  outline: none;
+}
+
+.gold-pin3d:focus-visible span {
+  box-shadow: var(--focus);
+}
+
+.gold-pin3d.is-active {
+  z-index: 2;
+}
+
+.gold-pin3d.is-active span {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 4px var(--signal-soft), var(--shadow-2);
+  border-color: var(--signal);
+}
+
+.gold-pin3d.is-behind {
+  opacity: 0.3;
+}
+
+.gold-pin3d.is-dim {
+  opacity: 0.55;
+}
+
+/* while one area is shown, pins hidden behind the part go away */
+.gold-pin3d.is-dim.is-behind {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gold-pin3d.is-dim.is-behind span {
+  pointer-events: none;
+}
+
+.gold-pin3d.is-active.is-behind,
+.gold-pin3d.is-active.is-dim {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-pin3d span,
+  .gold-card {
+    transition: none;
+  }
 }

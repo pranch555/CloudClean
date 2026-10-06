@@ -2,6 +2,7 @@
 (tools/recon/photos_to_3d.py: markers found, triangulated and fitted to the layout). The recon script's part runs on
 virtual cameras here: the sheet drawn into each photo by its homography, no COLMAP, Docker or GPU."""
 import importlib.util
+import io
 import re
 import zlib
 from pathlib import Path
@@ -137,8 +138,28 @@ def test_unknown_paper_is_refused():
 def test_cli_writes_both_papers(tmp_path):
     assert ss.main([str(tmp_path)]) == 0
     assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "cloudclean-photo-check-sheet-a4.pdf", "cloudclean-photo-check-sheet-a4.png",
+        "cloudclean-photo-check-sheet-letter.pdf", "cloudclean-photo-check-sheet-letter.png",
         "cloudclean-scale-sheet-a4.pdf", "cloudclean-scale-sheet-a4.png",
         "cloudclean-scale-sheet-letter.pdf", "cloudclean-scale-sheet-letter.png"]
+
+
+def test_check_sheet_is_the_scale_sheet_with_a_blank_middle():
+    ppm = 4.0
+    scale, check = ss.raster("a4", ppm, text=False), ss.raster("a4", ppm, text=False, style="check")
+    h, w = scale.shape
+    r0, r1 = int(h / 2 - ss.DOTS_MM[1] / 2 * ppm), int(h / 2 + ss.DOTS_MM[1] / 2 * ppm)
+    c0, c1 = int(w / 2 - ss.DOTS_MM[0] / 2 * ppm), int(w / 2 + ss.DOTS_MM[0] / 2 * ppm)
+    assert (scale[r0:r1, c0:c1] < 255).any() and (check[r0:r1, c0:c1] == 255).all()
+    outside = np.ones_like(scale, bool)
+    outside[r0:r1, c0:c1] = False
+    assert (scale[outside] == check[outside]).all()     # markers and bar in the same places
+    assert b"photo check sheet" in ss.pdf("letter", "check")
+    from PIL import Image
+    dpi = Image.open(io.BytesIO(ss.png("letter", 3.0, "check"))).info["dpi"]
+    assert abs(dpi[0] - 76.2) < 0.01 and abs(dpi[1] - 76.2) < 0.01    # prints at true size
+    with pytest.raises(ValueError):
+        ss.pdf("a4", "nope")
 
 
 # --------------------------------------------------------------------------- the route
