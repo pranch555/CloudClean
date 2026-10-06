@@ -35,8 +35,15 @@ without a login, and takes `--port` and `--workspace` (default `~/cloudclean-wor
 ```bash
 systemctl --user status cloudclean
 journalctl --user -u cloudclean -f
-git pull && ./cloudclean.sh setup && systemctl --user restart cloudclean    # update (check no scan or job is running)
+deploy/update.sh               # update to the newest code on GitHub now (only while no capture, job or chat is running)
+deploy/update.sh --check       # is an update waiting, and is CloudClean busy?
 ```
+
+To have the Spark follow GitHub by itself, run `deploy/install-autoupdate.sh` once: a timer runs `update.sh` every
+2 minutes, so a `git push` from the PC you develop on reaches the Spark within a few minutes. It waits while a
+capture, a job or an assistant reply is running, saves the old code to `~/cc-backups/` first, installs new
+requirements when `pyproject.toml` changed, and puts the old code back if CloudClean does not start. It never
+overwrites files edited by hand on the Spark. Log: `journalctl --user -u cloudclean-update`; off: `--off`.
 
 The browser UI is prebuilt into `cloudclean/web/static`, so Node is **not** needed on the Spark.
 
