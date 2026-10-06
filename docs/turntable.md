@@ -9,9 +9,14 @@ Code: `cloudclean/capture/turntable/` (protocol, drivers, program runner, manage
 `cloudclean/web/routes_turntable.py`, tests in `tests/test_turntable.py`, hardware CLI in
 `tools/turntable/turntable_cli.py`. The contract is Contract 4 in `docs/v3-plan.md`.
 
-**Status (2026-09-24).** We recovered the protocol from Revo Metro V5.8.7.415. Revo Metro's own logs of the
-user's turntable confirm the key commands and replies. CloudClean itself has **not** moved the real table yet,
-so the Bluetooth driver reports `validated: false` until the first test in section 6 succeeds.
+**Status (2026-10-06): validated on the user's dual-axis table.** CloudClean on the DGX Spark connected over
+Bluetooth (Revo Metro closed on the laptop, which otherwise holds the table), turned +10 / -10 deg
+(`+OK;` then `+OK,TURNANGLE=-287.79` after ~1.5 s) and tilted 5 -> 0 deg (`+OK;`, then `+OK,TOZERO;`; the
+tilt reads 0.4 at level and -0.6 before: about half a degree of play). The version reply is
+`+DATA=HW.V0.02,SW.V3.28;` (hardware, then firmware: the firmware is the second field, as Revo Metro reads it).
+Speed range reply `+DATA=17.5,90.0,2.0;`, tilt range `+DATA=-30.0,30.0,0.3;`. Still open: which way a positive
+angle turns seen from above (ask the user), and the large TA500 (never seen). The protocol was recovered from
+Revo Metro V5.8.7.415 (below).
 
 Labels, as in `docs/revo-metro-internals.md`:
 

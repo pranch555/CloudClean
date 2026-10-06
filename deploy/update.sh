@@ -103,10 +103,13 @@ busy_reason() {  # why CloudClean must not restart now; prints nothing when it i
     echo "it does not answer on :$PORT (starting up, or a different port/workspace)"
     return 0
   fi
-  if "$PY" - "$cap" "$jobs" "$chat" <<'EOF'
+  table=$(api turntable/status) || table='{}'
+  if "$PY" - "$cap" "$jobs" "$chat" "$table" <<'EOF'
 import json, sys
-cap, jobs, chat = (json.loads(a) for a in sys.argv[1:])
+cap, jobs, chat, table = (json.loads(a) for a in sys.argv[1:])
 why = []
+if table.get("moving") or (table.get("program") or {}).get("state") in ("running", "paused"):
+    why.append("the turntable is moving or running a program")
 if cap.get("active"):
     why.append(f"a capture session is open ({cap.get('state')})")
 n = sum(1 for j in jobs if j.get("status") in ("queued", "running"))
