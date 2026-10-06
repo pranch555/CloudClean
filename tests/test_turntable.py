@@ -106,6 +106,9 @@ def test_reply_parser():
 
 def test_version_parsing_and_completion_switch():
     assert P.parse_version(P.parse_reply("+DATA=DUALAXIS,V3.28;")) == "3.28"
+    # the user's table: hardware version first, the firmware second (2026-10-06)
+    assert P.parse_version(P.parse_reply("+DATA=HW.V0.02,SW.V3.28;")) == "3.28"
+    assert P.reports_completion(P.parse_version("HW.V0.02,SW.V3.28")) is True
     assert P.parse_version("V3.27") == "3.27"
     assert P.parse_version("3.30") == "3.30"
     assert P.parse_version(None) is None and P.parse_version("+DATA=") is None
@@ -308,7 +311,8 @@ def fake_ble(monkeypatch):
 def test_ble_driver_against_fake_peripheral(fake_ble):
     created, _ = fake_ble
     drv = ble.RevopointBleTurntable("E4:8F:80:46:12:43", "REVO_DUAL_AXIS_TABLE", "dual_axis")
-    assert drv.validated is False
+    assert drv.validated is True      # driven on the user's table, 2026-10-06
+    assert ble.RevopointBleTurntable("AA:BB:CC:DD:EE:FF", "REVO_TA500", "large").validated is False
     drv.connect()
     dev = created[0]
     assert drv.firmware == "3.28" and P.reports_completion(drv.firmware)
