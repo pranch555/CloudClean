@@ -29,7 +29,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .base import Frame, ScannerDriver, option, setting
+from .base import Frame, ScannerDriver, camera_settings_schema, option, setting
 
 # Fuzhou Rockchip Electronics, "REVO_PRODUCT" - the MetroY family's composite UVC device.
 USB_IDS = {("2207", "110c")}
@@ -229,6 +229,12 @@ class MetroyUsbDriver(ScannerDriver):
         self._recording = None
         self.phase = "scanning"       # or "mapping": markers only, nothing fused (Revo Metro's marker scan)
         self._track_lock = threading.Lock()    # commands arrive on request threads, frames on the capture thread
+        self._stream_lock = threading.RLock()  # starting / stopping the stream: preview, scan, stop
+        self._preview_guard = threading.Lock()
+        self._preview_thread: threading.Thread | None = None
+        self._preview_error: str | None = None
+        from ..metroy.camera import PreviewLease
+        self._lease = PreviewLease(lambda: self.camera_preview(False))
 
     # -- description
     def availability(self) -> tuple[bool, str]:
@@ -278,10 +284,10 @@ class MetroyUsbDriver(ScannerDriver):
             setting("surface", "Object surface", "select", "general",
                     options=[option("general", "General"), option("dark", "Dark"),
                              option("reflective", "Reflective / shiny")],
-                    help="Revo Metro's exposure presets: general 200 us / gain 1, dark 1000 us / gain 2, "
-                         "reflective 800 us / gain 1, each with its own marker light."),
-            setting("fill_light", "Marker light", "number", -1, min=-1, max=255, step=1,
-                    help="IR fill-light brightness that makes the markers shine; -1 = the surface preset's value."),
+                    help="Revo Metro's presets: general 200 us / gain 1 / laser 44 of 51, dark 1000 us / gain 2 / "
+                         "laser 193 of 255, reflective 800 us / gain 1 / laser 90 of 204, each with its own marker "
+                         "light. Scan -> Camera view changes it live."),
+            *camera_settings_schema(),
             setting("record", "Record for diagnosis", "boolean", False,
                     help="Keep every frame's points, markers and pose, and every 10th raw camera image, in "
                          "~/.cache/cloudclean/metroy/recordings/ so a capture can be replayed offline."),
@@ -293,15 +299,16 @@ class MetroyUsbDriver(ScannerDriver):
     def capabilities(self) -> dict:
         return {"range_mm": list(WORKING_RANGE_MM), "optimal_mm": OPTIMAL_MM, "streaming": True,
                 "provides_pose": self.settings.get("tracking", "markers") == "markers",
-                "detected": bool(self.devices), "sweeps": True}   # cross laser lines: a few lines per frame
+                "detected": bool(self.devices), "sweeps": True,   # cross laser lines: a few lines per frame
+                "camera": True}                                    # live camera view with exposure control
 
     # -- lifecycle
     def _connect(self) -> None:
+        from ..metroy.exposure import camera_from_driver_settings
         from ..metroy.scanner import MetroyScanner
         from ..metroy.markers import MarkerTracker
         workers = int(self.settings.get("workers") or 0) or None
         by_markers = self.settings.get("tracking", "markers") == "markers"
-        fill = int(self.settings.get("fill_light", -1))
         self._recording = None
         record_dir = None
         if self.settings.get("record"):
@@ -310,13 +317,20 @@ class MetroyUsbDriver(ScannerDriver):
             self._recording = {"dir": record_dir, "frames": []}
         self._scanner = MetroyScanner(cache_dir=_cache_dir(), workers=workers, record_dir=record_dir,
                                       matching=self.settings.get("matching", "lines"), markers=by_markers,
-                                      surface=self.settings.get("surface", "general"),
-                                      fill_light=fill if fill >= 0 else None)
+                                      camera=camera_from_driver_settings(self.settings, markers=by_markers))
         self._scanner.open()
         self._tracker = MarkerTracker() if by_markers else None
 
     def _start(self) -> None:
-        self._scanner.start()
+        with self._stream_lock:
+            self._lease.end()
+            sc = self._scanner
+            if sc.running and sc.failed is None:
+                sc.begin_delivery()           # the camera preview becomes the scan: no restart, exposure kept
+                return
+            if sc.running:
+                sc.stop()                     # a preview whose stream failed: start afresh
+            sc.start()
 
     def read(self, timeout: float = 0.1) -> Frame | None:
         if self._scanner is None or not self.running:
@@ -328,7 +342,8 @@ class MetroyUsbDriver(ScannerDriver):
         distance = float(np.median(pts[:, 2])) if len(pts) else 0.0
         meta = {"distance_mm": distance, "sequence": f.sequence, "process_ms": 1000.0 * f.process_s,
                 "markers": int(len(f.markers)), "marker_points": f.markers,
-                **{k: v for k, v in f.info.items() if k in ("family", "assigned", "tracks", "paired")}}
+                **{k: v for k, v in f.info.items() if k in ("family", "assigned", "tracks", "paired", "stripe_peak",
+                                                             "saturated")}}
         pose = None
         if self._tracker is not None:
             # the map starts on the first frame with enough markers, often before the laser lines come up: without
@@ -353,11 +368,81 @@ class MetroyUsbDriver(ScannerDriver):
         return Frame(points=pts, pose=pose, timestamp=f.timestamp, coordinates="sensor", meta=meta)
 
     def stop(self) -> None:
-        if self._scanner is not None:
-            self._scanner.stop()
+        self._lease.end()
+        with self._stream_lock:
+            if self._scanner is not None:
+                self._scanner.stop()
         super().stop()
 
+    # -- camera view
+    def camera(self) -> dict | None:
+        from ..metroy.camera import camera_payload
+        from ..metroy.exposure import AutoState, CameraSettings
+        sc = self._scanner
+        if sc is None:
+            return camera_payload(CameraSettings(), AutoState(), {}, streaming=False, preview=False)
+        out = sc.camera_status()
+        starting = self._preview_thread is not None and self._preview_thread.is_alive()
+        out.update(starting=starting, error=out["error"] or self._preview_error)
+        return out
+
+    def set_camera(self, changes: dict) -> dict:
+        if self._scanner is None:
+            raise ValueError("Connect the scanner first")
+        self._scanner.set_camera(changes)
+        self.settings.update(self.camera_remembered())
+        return self.camera()
+
+    def camera_remembered(self) -> dict:
+        from ..metroy.exposure import remembered
+        return remembered(self._scanner.camera) if self._scanner is not None else {}
+
+    def camera_preview(self, on: bool) -> None:
+        """The camera without scanning, as Revo Metro shows it before a scan: laser on, frames measured, auto exposure
+        running, the view live - nothing tracked or fused. Held by a lease that every view request renews."""
+        if self._scanner is None:
+            raise ValueError("Connect the scanner first")
+        if not on:
+            self._lease.end()
+            with self._stream_lock:
+                if not self.running and self._scanner is not None and self._scanner.running:
+                    self._scanner.stop()
+            return
+        if self.running:
+            return                            # scanning: the camera is live anyway
+        self._lease.renew()
+        with self._preview_guard:
+            if self._scanner.running or (self._preview_thread is not None and self._preview_thread.is_alive()):
+                return
+            self._preview_error = None
+            # the start-up takes a few seconds of paced register writes: never in the web request
+            self._preview_thread = threading.Thread(target=self._start_preview, name="metroy-preview", daemon=True)
+            self._preview_thread.start()
+
+    def _start_preview(self) -> None:
+        with self._stream_lock:
+            sc = self._scanner
+            if self.running or sc is None or sc.running or not self._lease.active:
+                return
+            try:
+                sc.start(deliver=False)
+            except Exception as exc:          # tell the camera view; the scan start reports it again if it persists
+                self._preview_error = f"The camera did not start: {exc}"
+                try:
+                    sc.stop()
+                except Exception:
+                    pass
+
+    def camera_view(self, cams: str = "both", overlay: bool = True, width: int = 960) -> bytes | None:
+        sc = self._scanner
+        if sc is None:
+            return None
+        if not self.running and sc.running:
+            self._lease.renew()               # someone is still looking at the preview
+        return sc.camera_view(cams, overlay, width)
+
     def disconnect(self) -> None:
+        self._lease.end()
         super().disconnect()
         rec = getattr(self, "_recording", None)
         if rec and rec["frames"]:
@@ -378,6 +463,9 @@ class MetroyUsbDriver(ScannerDriver):
         out = dict(self._scanner.stats) if self._scanner is not None else {}
         if self._tracker is not None:
             out.update(phase=self.phase, map_markers=int(len(self._tracker.world)), map_frozen=self._tracker.frozen)
+        if self._scanner is not None:
+            from ..metroy.camera import camera_brief
+            out["camera"] = camera_brief(self.camera())
         return out
 
     def command(self, name: str, args: dict | None = None) -> dict:

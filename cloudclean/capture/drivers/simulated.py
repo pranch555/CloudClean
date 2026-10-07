@@ -7,12 +7,13 @@ when the pose is withheld from the session)."""
 from __future__ import annotations
 
 import math
+import threading
 import time
 
 import numpy as np
 import open3d as o3d
 
-from .base import Frame, ScannerDriver, option, revo_settings, setting
+from .base import Frame, ScannerDriver, camera_settings_schema, option, revo_settings, setting
 
 RANGE_MM = (150.0, 400.0)
 OPTIMAL_MM = 250.0
@@ -119,6 +120,11 @@ class SimulatedDriver(ScannerDriver):
         self._t0 = 0.0
         self._done = False
         self._rng = np.random.default_rng(0)
+        self._cam = None                       # the simulated camera view (simulated_camera.py)
+        self._render_lock = threading.Lock()   # the preview thread and the capture thread both render
+        self._preview_thread: threading.Thread | None = None
+        from ..metroy.camera import PreviewLease
+        self._lease = PreviewLease(lambda: self.camera_preview(False))
 
     def settings_schema(self) -> list[dict]:
         return revo_settings(0.1) + [
@@ -138,11 +144,17 @@ class SimulatedDriver(ScannerDriver):
             setting("max_frames", "Stop after frames", "number", 0, min=0, max=1_000_000, step=1,
                     help="0 = run until stopped."),
             setting("seed", "Random seed", "number", 0, min=0, max=1_000_000, step=1),
+            setting("camera_surface", "Camera preset", "select", "match",
+                    options=[option("match", "Same as Object surface"), option("general", "General"),
+                             option("dark", "Dark"), option("reflective", "Reflective / shiny")],
+                    help="The simulated camera's preset (Scan -> Camera view changes it live). Object surface is "
+                         "what the simulated part is made of."),
+            *camera_settings_schema(),
         ]
 
     def capabilities(self) -> dict:
         return {"range_mm": list(RANGE_MM), "optimal_mm": OPTIMAL_MM, "streaming": True,
-                "provides_pose": bool(self.settings.get("provide_pose", True))}
+                "provides_pose": bool(self.settings.get("provide_pose", True)), "camera": True}
 
     # ----------------------------------------------------------------- lifecycle
     def _connect(self) -> None:
@@ -158,11 +170,79 @@ class SimulatedDriver(ScannerDriver):
         self._rng = np.random.default_rng(int(s["seed"]))
         phases = np.random.default_rng(int(s["seed"]) + 99).uniform(0, 2 * np.pi, 12)
         self._phases = phases
+        from .simulated_camera import SimulatedCamera
+        self._cam = SimulatedCamera(s)
 
     def _start(self) -> None:
+        self._lease.end()
         self._index = 0
         self._done = False
         self._t0 = time.monotonic()
+        if self._cam is not None:
+            self._cam.streaming, self._cam.preview = True, False
+
+    def stop(self) -> None:
+        self._lease.end()
+        super().stop()
+        if self._cam is not None:
+            self._cam.streaming = self._cam.preview = False
+
+    # ----------------------------------------------------------------- camera view (simulated_camera.py)
+    def camera(self) -> dict | None:
+        return self._cam.payload() if self._cam is not None else None
+
+    def set_camera(self, changes: dict) -> dict:
+        if self._cam is None:
+            raise ValueError("Connect the scanner first")
+        self._cam.set(changes)
+        self.settings.update(self._cam.remembered())
+        return self.camera()
+
+    def camera_remembered(self) -> dict:
+        return self._cam.remembered() if self._cam is not None else {}
+
+    def camera_preview(self, on: bool) -> None:
+        if self._cam is None:
+            raise ValueError("Connect the scanner first")
+        if not on:
+            self._lease.end()
+            if not self.running:
+                self._cam.streaming = self._cam.preview = False
+            return
+        if self.running:
+            return
+        self._lease.renew()
+        self._cam.streaming = self._cam.preview = True
+        if self._preview_thread is None or not self._preview_thread.is_alive():
+            self._preview_thread = threading.Thread(target=self._preview_loop, name="sim-camera-preview", daemon=True)
+            self._preview_thread.start()
+
+    def _preview_loop(self) -> None:
+        """Frames for the camera view while not scanning: shown and measured, never handed to the session. One thread
+        for the whole connection: it idles while nobody looks or while the scan itself renders the frames."""
+        t0 = time.monotonic()
+        while self.connected and self._cam is not None:
+            cam = self._cam
+            if not self.running and self._lease.active:
+                with self._render_lock:
+                    frame = self.render(time.monotonic() - t0)
+                cam.observe(frame)
+            elif not self.running and cam.preview:
+                cam.streaming = cam.preview = False
+            time.sleep(0.1)
+
+    def camera_view(self, cams: str = "both", overlay: bool = True, width: int = 960) -> bytes | None:
+        if self._cam is None:
+            return None
+        if not self.running and self._cam.preview:
+            self._lease.renew()
+        return self._cam.view(cams, overlay, width) if self._cam.streaming else None
+
+    def status(self) -> dict:
+        if self._cam is None:
+            return {}
+        from ..metroy.camera import camera_brief
+        return {"camera": camera_brief(self.camera())}
 
     @property
     def exhausted(self) -> bool:
@@ -251,8 +331,11 @@ class SimulatedDriver(ScannerDriver):
                 if max_frames and self._index >= max_frames:
                     self._done = True
                     return None
-        frame = self.render(self._index / self.fps)
+        with self._render_lock:
+            frame = self.render(self._index / self.fps)
         self._index += 1
+        if self._cam is not None:
+            self._cam.observe(frame)
         return frame
 
     def _rays(self, pose: np.ndarray) -> np.ndarray:

@@ -64,6 +64,55 @@ class CaptureManager:
             s.log(f"{name}: {result}")
         return {"result": result, "status": self.status()}
 
+    # ----------------------------------------------------------------- camera view
+    def camera(self) -> dict:
+        """The scanner's camera: settings, slider limits, what auto exposure does and the live readout."""
+        s = self.session
+        if s is None or s.state == "closed":
+            return {"available": False, "reason": "Connect a scanner to see what its cameras see."}
+        try:
+            info = s.driver.camera()
+        except Exception as exc:  # a driver's camera must never break the page
+            return {"available": False, "reason": f"The camera view failed: {exc}"}
+        if info is None:
+            return {"available": False, "reason": f"{s.driver.name} has no camera view."}
+        return {"available": True, "state": s.state, "driver": s.driver.id, **info}
+
+    def set_camera(self, changes: dict) -> dict:
+        """Change the camera settings now (also while scanning) and remember them with the driver settings."""
+        with self.lock:
+            s = self._require()
+            try:
+                s.driver.set_camera(changes)
+            except ValueError as exc:
+                raise CaptureError(str(exc)) from None
+            keep = s.driver.camera_remembered()
+            s.driver_settings.update(keep)
+            saved = self.settings.get("capture", {}).get("driver_settings", {})
+            mine = saved.get(s.driver.id) if isinstance(saved.get(s.driver.id), dict) else {}
+            self.settings.update("capture", {"driver_settings": {**saved, s.driver.id: {**mine, **keep}}})
+        return {**self.camera(), "remembered": keep}
+
+    def camera_preview(self, on: bool) -> dict:
+        """Show the camera before scanning (Revo Metro does): streamed, auto exposed, nothing fused. Ends by itself
+        when nobody asks for pictures any more, and when scanning starts (the preview becomes the scan)."""
+        s = self._require()
+        if on and s.state in ("error", "closed"):
+            raise CaptureError(f"The scanner session is {s.state} - reconnect it first", 409)
+        if s.state not in LIVE_STATES:
+            try:
+                s.driver.camera_preview(on)
+            except ValueError as exc:
+                raise CaptureError(str(exc)) from None
+        return self.camera()
+
+    def camera_view(self, cams: str = "both", overlay: bool = True, width: int = 960) -> bytes | None:
+        s = self._require()
+        try:
+            return s.driver.camera_view(cams, overlay, width)
+        except ValueError as exc:
+            raise CaptureError(str(exc), 404) from None
+
     @staticmethod
     def _unsaved(s: CaptureSession) -> bool:
         return bool(s.n_points) and s.n_points != s.saved_at_points or bool(s.pending)

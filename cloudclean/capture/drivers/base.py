@@ -85,6 +85,26 @@ def revo_settings(point_distance: float = 0.1) -> list[dict]:
     ]
 
 
+CAMERA_KEYS = ("camera_mode", "laser_level", "exposure_us", "gain", "fill_light")
+
+
+def camera_settings_schema() -> list[dict]:
+    """The camera settings a driver with a camera view remembers (Scan -> Camera view sets them live; -1 = the
+    surface preset's value; used only in manual mode)."""
+    return [
+        setting("camera_mode", "Camera exposure", "select", "auto",
+                options=[option("auto", "Auto (adjusts the laser and gain by itself)"), option("manual", "Manual")],
+                help="Auto keeps the laser lines bright but not washed out, as Revo Metro does."),
+        setting("laser_level", "Laser brightness (manual)", "number", -1, min=-1, max=255, step=1,
+                help="Laser level on the surface preset's scale; -1 = the preset's value."),
+        setting("exposure_us", "Exposure (manual)", "number", -1, min=-1, max=2000, step=10, unit="us",
+                help="-1 = the surface preset's value."),
+        setting("gain", "Gain (manual)", "number", -1, min=-1, max=5, step=1, help="-1 = the surface preset's value."),
+        setting("fill_light", "Marker light (manual)", "number", -1, min=-1, max=255, step=1,
+                help="IR light that makes the markers shine; -1 = the surface preset's value."),
+    ]
+
+
 def resolve_settings(schema: list[dict], values: dict | None, extra_keys=()) -> dict:
     """Merge user values over schema defaults, coercing and validating each one. Raises ValueError."""
     values = dict(values or {})
@@ -192,6 +212,28 @@ class ScannerDriver(ABC):
     def status(self) -> dict:
         """Live driver state for the UI (counters, phase); empty when there is nothing to report."""
         return {}
+
+    # -- camera view (drivers with a live camera and exposure control; see routes_capture "Camera view")
+    def camera(self) -> dict | None:
+        """Camera settings, slider limits, what auto exposure is doing and the live readout; None = no camera view."""
+        return None
+
+    def set_camera(self, changes: dict) -> dict:
+        """Change the camera settings (surface, mode, laser_level, exposure_us, gain, marker_light). ValueError if
+        this scanner has none or a value is out of range."""
+        raise ValueError(f"{self.name} has no camera view")
+
+    def camera_remembered(self) -> dict:
+        """Driver-setting values that bring the current camera settings back at the next connect."""
+        return {}
+
+    def camera_preview(self, on: bool) -> None:
+        """Stream the camera without scanning (shown, auto exposed, nothing fused), or end that."""
+        raise ValueError(f"{self.name} has no camera view")
+
+    def camera_view(self, cams: str = "both", overlay: bool = True, width: int = 960) -> bytes | None:
+        """The latest camera picture as a JPEG, None while there is none yet."""
+        raise ValueError(f"{self.name} has no camera view")
 
     def stop(self) -> None:
         self.running = False
