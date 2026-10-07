@@ -20,7 +20,7 @@ MEASURE_KINDS = ["points", "distance", "extent", "caliper", "faces", "diameter",
 CAPTURE_ACTIONS = ["status", "drivers", "connect", "start", "pause", "resume", "stop", "discard", "save",
                    "marker_map", "follow", "pending", "decide"]
 TURNTABLE_ACTIONS = ["status", "devices", "connect", "disconnect", "rotate", "tilt", "stop", "speed", "program",
-                     "stop_program"]
+                     "stop_program", "spin", "stop_spin"]
 PROJECT_ACTIONS = ["list", "create", "open", "rename", "move_asset"]
 MARKER_COMMANDS = ["map_markers", "finish_map", "clear_map"]
 PENDING_DECISIONS = ["fuse", "discard", "keep_separate"]
@@ -989,6 +989,13 @@ async def h_turntable(ctx: ToolContext, args: dict) -> ToolResult:
             if args.get("sync_scan") is not None:
                 program["sync_scan"] = bool(args["sync_scan"])
             status = await call(manager.start_program, program)
+        elif action == "spin":
+            if args.get("direction") is not None and args["direction"] not in ("cw", "ccw"):
+                raise ToolError("direction must be cw or ccw")
+            status = await call(manager.spin, True, True, _number(args, "speed_s_per_rev", required=False),
+                                args.get("direction"))
+        elif action == "stop_spin":
+            status = await call(manager.spin, False)
         else:  # stop_program
             status = await call(manager.stop_program)
     except (ToolError, ToolCancelled):
@@ -1314,7 +1321,9 @@ def v3_tools() -> list[Tool]:
         Tool("turntable", "Turntable. status; devices; connect{device?, kind?}; disconnect; rotate{degrees relative, "
              "+ = clockwise from above, speed_s_per_rev?} (waits); tilt{degrees absolute}; stop; speed{speed_s_per_rev}; "
              "program{interval_deg, "
-             "frames_per_stop, direction, speed_s_per_rev, rotations [{tilt_deg}] (max 5), sync_scan}; stop_program.",
+             "frames_per_stop, direction, speed_s_per_rev, rotations [{tilt_deg}] (max 5), sync_scan}; stop_program; "
+             "spin{speed_s_per_rev?, direction?} turns until stop_spin/stop, holding while the scan is "
+             "paused (how the MetroY scans all round); stop_spin.",
              _obj({"action": {"type": "string", "enum": TURNTABLE_ACTIONS}, "degrees": {"type": "number"},
                    "speed_s_per_rev": {"type": "number"}, "device": {"type": "string"}, "kind": {"type": "string"},
                    "scan_seconds": {"type": "number"}, "interval_deg": {"type": "number"},

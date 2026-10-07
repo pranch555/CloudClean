@@ -606,6 +606,47 @@ def test_laser_line_scanner_scans_while_the_table_turns(tmp_path):
         m.shutdown()
 
 
+def test_turning_while_scanning_follows_the_scan(tmp_path):
+    """The user wanted to start and stop the table themselves and have it keep turning until they stop it - holding
+    while the scan is paused and turning again when it resumes."""
+    m = TurntableManager(tmp_path)
+    m.connect("simulated", options={"time_scale": 1.0})
+    cap = FakeCapture(m.driver)
+    m.capture_provider = lambda: cap
+    turning = lambda: m.driver.state()["continuous"]
+    try:
+        st = m.spin(True, speed_s_per_rev=40)
+        assert turning() and st["spin"]["turning"] and st["spin"]["follow_scan"]   # turns before the scan starts
+        assert m.spin(True)["spin"]["turning"]                                       # pressing again changes nothing
+        with pytest.raises(TurntableError, match="turn while scanning"):
+            m.rotate(10)
+        cap.start()
+        time.sleep(0.5)
+        assert turning()
+        cap.pause()
+        assert wait_for(lambda: not turning(), 3), "the table holds while the scan is paused"
+        assert m.status()["spin"]["held_by_scan"]
+        cap.resume()
+        assert wait_for(turning, 3), "the table turns again when the scan resumes"
+        cap.state = "stopped"
+        assert wait_for(lambda: not turning(), 3)
+        cap.start()
+        assert wait_for(turning, 3), "a new scan turns it again until the user stops"
+        st = m.spin(False)
+        assert st["spin"] is None and wait_for(lambda: not m.driver.state()["moving"], 3)
+        cap.pause()
+        cap.resume()
+        time.sleep(0.6)
+        assert not m.driver.state()["moving"], "stopped means stopped: the scan no longer drives the table"
+        m.spin(True, follow_scan=False)
+        m.stop()                                                                     # Stop ends it too
+        assert m.status()["spin"] is None and wait_for(lambda: not m.driver.state()["moving"], 3)
+        assert "+CT,TURNSPEED=40;" in m.driver.commands
+    finally:
+        cap.close()
+        m.shutdown()
+
+
 def test_program_without_capture_and_stop(tmp_path):
     m = TurntableManager(tmp_path)
     m.capture_provider = lambda: None

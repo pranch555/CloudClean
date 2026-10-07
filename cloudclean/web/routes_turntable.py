@@ -13,6 +13,9 @@ POST /api/turntable/program     {mode?, interval_deg, frames_per_stop, direction
                                  rotations: [{tilt_deg}], sync_scan, dwell_s?, settle_s?, level_at_end?,
                                  capture_timeout_s?}
 POST /api/turntable/program/stop
+POST /api/turntable/spin        {on: true|false, follow_scan?: true, speed_s_per_rev?, direction?: cw|ccw}
+                                turn continuously until stopped; with follow_scan the table holds while the live
+                                scan is paused or stopped and turns again when it runs (status `spin`)
 
 Every response is the status dict (rotate/tilt add `move`, speed adds `speed`). Errors: HTTP 400 with one sentence.
 Handlers are plain `def`s: FastAPI runs them in its thread pool, so Bluetooth scans and waits never block the
@@ -48,6 +51,13 @@ class TiltReq(BaseModel):
 
 class SpeedReq(BaseModel):
     s_per_rev: float
+
+
+class SpinReq(BaseModel):
+    on: bool = True
+    follow_scan: bool = True
+    speed_s_per_rev: float | None = None
+    direction: str | None = None
 
 
 def create_router(workspace, jobs) -> APIRouter:
@@ -106,5 +116,9 @@ def create_router(workspace, jobs) -> APIRouter:
     @router.post("/program/stop")
     def program_stop():
         return call(manager.stop_program)
+
+    @router.post("/spin")
+    def spin(req: SpinReq):
+        return call(manager.spin, req.on, req.follow_scan, req.speed_s_per_rev, req.direction)
 
     return router

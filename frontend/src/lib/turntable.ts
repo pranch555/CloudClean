@@ -78,6 +78,8 @@ export interface TurntableStatus {
   speed_s_per_rev: number | null;
   direction: 'cw' | 'ccw';
   program: TurntableProgramState | null;
+  /** turning continuously until stopped; with follow_scan it holds while the live scan is paused or stopped */
+  spin?: { follow_scan: boolean; turning: boolean; held_by_scan: boolean; since: string } | null;
   error: string | null;
   capabilities: TurntableCapabilities | null;
   validated: boolean;
@@ -183,6 +185,7 @@ export const turntable = {
   speed: (s_per_rev: number) => command('speed', '/speed', { s_per_rev }),
   startProgram: (program: TurntableProgram) => command('program', '/program', program),
   stopProgram: () => command('program-stop', '/program/stop'),
+  spin: (on: boolean, speed_s_per_rev?: number | null) => command(on ? 'spin' : 'spin-stop', '/spin', { on, follow_scan: true, ...(on && speed_s_per_rev ? { speed_s_per_rev } : {}) }),
   clearError: () => useTurntable.setState({ error: null }),
 };
 

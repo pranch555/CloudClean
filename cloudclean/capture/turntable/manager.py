@@ -53,6 +53,7 @@ class TurntableManager:
         self.direction = "cw"
         self.error: str | None = None
         self.program: ProgramRunner | None = None
+        self._spin: dict | None = None            # turning continuously until stopped (spin())
         self._op_lock = threading.RLock()        # serializes connect/disconnect/start/stop
         self._scan_lock = threading.Lock()
         self._move: dict | None = None
@@ -116,6 +117,8 @@ class TurntableManager:
         drv = self._require_driver()
         if self._program_running():
             raise TurntableError("A turntable program is running - stop it first")
+        if self._spin is not None:
+            raise TurntableError("The turntable is set to turn while scanning - stop turning first")
         if self._move_running() or drv.state().get("moving"):
             raise TurntableError("The turntable is still moving - wait for it or stop it first")
         return drv
@@ -251,6 +254,7 @@ class TurntableManager:
         with self._op_lock:
             if self.program is not None and self.program.running:
                 self.program.stop()
+            self._end_spin()
             self._disconnect_current()
             return self.status()
 
@@ -259,6 +263,7 @@ class TurntableManager:
             try:
                 if self.program is not None and self.program.running:
                     self.program.stop(wait=5)
+                self._end_spin()
                 self._disconnect_current()
             finally:
                 self.closed = True
@@ -291,6 +296,7 @@ class TurntableManager:
             "speed_s_per_rev": st.get("speed_s_per_rev"),
             "direction": self.direction,
             "program": program,
+            "spin": ({k: v for k, v in self._spin.items() if k != "stop"} if self._spin is not None else None),
             "error": self.error or st.get("error") or (move or {}).get("error"),
             "capabilities": drv.capabilities() if drv is not None else None,
             "validated": bool(drv.validated) if drv is not None else False,
@@ -411,7 +417,11 @@ class TurntableManager:
             return out
 
     def stop(self) -> dict:
-        """Stop everything now: a running program and any motion."""
+        """Stop everything now: a running program, turning while scanning and any motion."""
+        spin, self._spin = self._spin, None
+        if spin is not None:
+            spin["stop"].set()
+            self.log("Stopped turning")
         prog = self.program
         if prog is not None and prog.running:
             prog.stop()
@@ -427,6 +437,87 @@ class TurntableManager:
         if self._move_thread is not None:
             self._move_thread.join(timeout=10)
         return self.status()
+
+    # ----------------------------------------------------------------- turning while scanning
+    def spin(self, on: bool = True, follow_scan: bool = True, speed_s_per_rev: float | None = None,
+             direction: str | None = None) -> dict:
+        """Turn continuously until stopped (on=False, stop() or disconnect) - how a laser-line scanner scans a part
+        all the way round. With follow_scan the table holds while the live scan is paused or stopped and turns again
+        as soon as it runs; it starts turning at once whatever the scan is doing."""
+        with self._op_lock:
+            if not on:
+                self._end_spin("Stopped turning")
+                return self.status()
+            if self._spin is not None:
+                return self.status()
+            drv = self._require_idle()
+            caps = drv.capabilities()
+            if not caps.get("continuous"):
+                raise TurntableError(f"The {drv.name} cannot turn continuously")
+            if direction is not None:
+                if direction not in ("cw", "ccw"):
+                    raise TurntableError("direction must be 'cw' or 'ccw'")
+                self.direction = direction
+            if speed_s_per_rev is not None:
+                speed, _ = self._check_speed(speed_s_per_rev, caps)
+                drv.set_speed(speed)
+            drv.rotate_continuous(self.direction == "cw")
+            stop = threading.Event()
+            self._spin = {"follow_scan": bool(follow_scan), "turning": True, "held_by_scan": False,
+                          "since": datetime.now().isoformat(timespec="seconds"), "stop": stop}
+            self.log(f"Turning {self.direction}" + (" while scanning" if follow_scan else "") + " until stopped")
+            if follow_scan:
+                threading.Thread(target=self._follow_scan, args=(stop,), name="turntable-spin", daemon=True).start()
+            return self.status()
+
+    def _end_spin(self, msg: str | None = None) -> None:
+        spin, self._spin = self._spin, None
+        if spin is None:
+            return
+        spin["stop"].set()
+        drv = self.driver
+        if spin.get("turning") and drv is not None and drv.connected:
+            try:
+                drv.stop()
+            except TurntableError as exc:
+                self.error = str(exc)
+        if msg:
+            self.log(msg)
+
+    def _scan_state(self) -> str | None:
+        try:
+            cm = self._capture_manager()
+            if cm is None or getattr(cm, "session", None) is None:
+                return None
+            return cm.status().get("state")
+        except Exception:
+            return None
+
+    def _follow_scan(self, stop: threading.Event) -> None:
+        """Hold the table when the live scan stops running, turn it again when it runs (edges only, so the table
+        also turns before a scan starts)."""
+        last = self._scan_state()
+        while not stop.wait(0.2):
+            state = self._scan_state()
+            if state == last:
+                continue
+            with self._op_lock:
+                spin, drv = self._spin, self.driver
+                if stop.is_set() or spin is None or drv is None or not drv.connected:
+                    return
+                try:
+                    if state == "running" and not spin["turning"]:
+                        drv.rotate_continuous(self.direction == "cw")
+                        spin.update(turning=True, held_by_scan=False)
+                        self.log("Scan running: turning again")
+                    elif state != "running" and last == "running" and spin["turning"]:
+                        drv.stop()
+                        spin.update(turning=False, held_by_scan=True)
+                        self.log(f"Scan {state or 'closed'}: holding the table")
+                except TurntableError as exc:
+                    self.error = str(exc)
+                    self.log(f"Turning while scanning: {exc}")
+            last = state
 
     # ----------------------------------------------------------------- programs
     def start_program(self, program: dict) -> dict:
