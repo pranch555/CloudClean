@@ -14,6 +14,7 @@ import './styles/assistant.css';
 import './styles/home.css';
 import './styles/settings.css';
 import './styles/capture.css';
+import './styles/camera.css';
 import './styles/measure.css';
 import './styles/golden.css';
 import './styles/auth.css';

@@ -91,7 +91,7 @@ class CaptureManager:
             saved = self.settings.get("capture", {}).get("driver_settings", {})
             mine = saved.get(s.driver.id) if isinstance(saved.get(s.driver.id), dict) else {}
             self.settings.update("capture", {"driver_settings": {**saved, s.driver.id: {**mine, **keep}}})
-        return self.camera()
+        return {**self.camera(), "remembered": keep}
 
     def camera_preview(self, on: bool) -> dict:
         """Show the camera before scanning (Revo Metro does): streamed, auto exposed, nothing fused. Ends by itself

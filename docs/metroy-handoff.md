@@ -59,11 +59,63 @@ The `metroy_usb` driver is a real streaming driver, live in the CloudClean servi
    section 3, a 3D surface - formula in docs/revo-metro-internals.md 4.4) are decoded but not wired.
 7. **Where the per-frame family ("direction") byte lives on USB** - probably the UVC metadata node `/dev/video1`.
    Not needed today (the family is inferred per frame, reliably), but it would remove the inference.
-8. Auto exposure (Revo's `RPALaserAutoExposure`), Revo's online constant adjustment of the line maps, flying-point
+8. Auto exposure is implemented (section "Camera view" below) but not yet run on the scanner. Still missing: Revo's online constant adjustment of the line maps, flying-point
    removal and bilateral denoise (parameters in docs/revo-metro-internals.md 2.2).
 
 **Open question for the user, still unanswered:** hand-held sweeping or a turntable? With markers, both work the same
 way (markers on the table for a turntable).
+
+## Camera view, laser light and auto exposure (2026-10-07, NOT yet run on the scanner)
+
+Scan → Camera view shows the two IR cameras live (before scanning as a preview, and while scanning; "Show over the 3D
+view" floats it top right), with the laser lines CloudClean found in green, saturated pixels red and markers ringed
+blue, a plain-words readout ("Laser lines: bright enough / too dim / 12 % too bright"), Normal / Dark / Shiny, and Auto
+or Manual (laser brightness, exposure, gain, marker light). Code: `metroy/exposure.py` (presets, pulse formula, write
+plan, measurement, controller - pure, unit tested), `metroy/camera.py` (the one paced register writer, preview lease,
+the picture), `metroy/scanner.py` (wiring), `drivers/metroy_usb.py` (preview lifecycle), API in `web/routes_capture.py`
+("Camera view"), tests in `tests/test_camera.py` (fakes and the simulated scanner only).
+
+| | status |
+|---|---|
+| Presets: general 200 us / gain 1 / level 44 of 51 / marker 30; dark 1000 / 2 / 193 of 255 / 3; reflective 800 / 1 / 90 of 204 / 6 | **verified** (Revo's crosswire_param.json) |
+| Marker light per gain on a gain step (`/data/brightnessGainMap.json`, read at connect; fallback = our scanner's copy) | **verified** values (Revo log `set IR tmpLuminance`); reading the file at connect is new |
+| `0xb08 = 45 + int(level * exposure_us / level_max)`: general 44 -> 217, 38 -> 194, 48 -> 233, 51 -> 245 | **verified** (four Revo log pairs, general only) |
+| the same formula for dark (193 -> **801**, Revo's AE end point 213 -> 880) and reflective (90 -> **397**) | **inferred, not measured**: no SDK log of a dark session survives. Capped at 1045 (dark at 255), never more |
+| `0x48d` laser power stays 255 (start-up); AE never touches exposure, only level, gain, marker light | verified (Revo writes 0x48d 255 always) |
+| AE target: stripe-centre brightness (95th pct) 200 of 255, band 175-230, <= 3 % saturated, every 0.8 s, only at 220-380 mm | window/interval **verified** from Revo; the target is **CloudClean's choice** (Revo's not recovered) |
+| Write rules: 0x910+0x911 in one command; every other register alone; >= 0.15 s between commands from any thread (`MetroyHid.shell` paces itself); a register is never re-written with the value it holds; writes coalesce | as measured before; enforced in code + tests |
+
+What changed on the wire: after `startup()` CloudClean now writes only the registers that differ from what startup()
+left (general + markers writes nothing extra; dark writes 0x910/0x911, 0xb08, 0x903, 0xb07 - four commands, one more
+than before: **the 0xb08 write for dark/reflective is new**). While streaming, auto exposure writes 0xb08 (and on a gain
+step 0x903 + 0xb07) at most once per 0.8 s, one command each - the same registers Revo writes while scanning.
+The preview streams with the laser on only while a camera view is open (the browser renews a 6 s lease); it ends by
+itself when nobody looks, and Start scanning turns it into the scan without a restart. In preview only ~12 frames a
+second are triangulated (the scan uses the full pool).
+
+### Hardware check before trusting Dark (one register at a time; Revo Metro closed)
+
+1. Connect native, tracking = Markers, surface **General**, Camera view open, **Manual**. A flat matte black target
+   (the turntable plate) at ~300 mm. Note the readout: stripe brightness, points per frame. Expect ~1-4 grey levels
+   above black on the plate, as in the 10-06 recording.
+2. Choose **Dark** (writes 0x910 8000 + 0x911 1000 together, then 0xb08 801, 0x903 0x20, 0xb07 3 - one per command,
+   0.15 s apart). Watch that the stream keeps running (frames/s in the session card), no re-enumeration (`dmesg`).
+3. In Manual, step Laser brightness down to ~22 % (level 55 -> 0xb08 260) and back up in a few steps to 100 % (level
+   255 -> 1045). Per step, read the stripe brightness on the same spot. **The formula holds** if brightness above
+   black grows roughly in proportion to (0xb08 - 45) while 0x911 stays 1000. **It is wrong** if (a) brightness stops
+   growing above some 0xb08 well below 1045 (the pulse is clipped by something else - then the cap or the formula
+   for dark is off), (b) it does not change at all (0xb08 is not the pulse in this mode, or not microseconds), or
+   (c) it rises as fast at 0xb08 217 with 0x911 200 as at 1045 with 1000 (the pulse is independent of exposure).
+   Also compare with Revo Metro on the same spot: Revo's log line `AutoExposure ... Adjusted laser brightness: N`
+   with the SDK log's `echo s 0xb08 M` at the same time gives one more (level, pulse) pair for dark - one pair is
+   enough to confirm or refute 45 + N * 1000 / 255.
+4. Switch to **Auto**: it should settle within a few seconds (Revo ended at level 213, gain 3 on the screw).
+   Points per frame on the black plate/screw should rise well above what General gives.
+5. Back to General: 0xb08 must return to 217.
+
+Risk: 0xb08 values above 245 have never been written by CloudClean; Revo's own dark preset implies it writes ~800-880.
+If the scanner resets after a write (it re-enumerates in ~15 s), note which register and value, disconnect, and do not
+retry that value; everything else is the unchanged start-up.
 
 ## Where everything is
 

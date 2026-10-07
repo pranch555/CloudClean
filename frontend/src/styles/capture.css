@@ -616,6 +616,11 @@
   min-width: 0;
 }
 
+/* its title is a sentence: let it wrap (nowrap made the whole Scan panel wider than the panel and scroll sideways) */
+.cap-bridge > summary {
+  white-space: normal;
+}
+
 .cap-code {
   display: flex;
   align-items: center;

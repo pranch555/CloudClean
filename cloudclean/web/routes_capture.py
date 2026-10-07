@@ -42,7 +42,8 @@ GET  /api/capture/camera         -> {available, reason?, state, driver,
                                      readout: {stripe_brightness (0-255, 95th pct), saturated_pct, points_per_frame,
                                                depth_mm, lines_seen, target, band, saturation_max_pct},
                                      streaming, preview, starting, error, gain_map: scanner|defaults, applied}
-POST /api/capture/camera         {surface?, mode?, laser_level?, exposure_us?, gain?, marker_light?} -> as GET.
+POST /api/capture/camera         {surface?, mode?, laser_level?, exposure_us?, gain?, marker_light?} -> as GET, plus
+                                 remembered: {the driver-setting values stored for the next connect}.
                                  Applied at once, also while scanning; a laser/exposure/gain/marker value switches
                                  to manual unless mode is given. Remembered with the driver settings (surface,
                                  camera_mode, laser_level, exposure_us, gain, fill_light).

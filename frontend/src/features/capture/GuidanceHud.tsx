@@ -8,6 +8,8 @@ import { ScanGlyph } from '../../ui/icons';
 import { Button, Empty, IconButton } from '../../ui/primitives';
 import { getViewer } from '../../viewer/instance';
 import { applyLiveStyle, loadDrivers, loadPending, openStream, useCapture, type Guidance, type Hole } from './captureStore';
+import { CameraFloat } from './CameraFloat';
+import { useCamera } from './cameraStore';
 import { TurntableDial } from './TurntableDial';
 import { fmtClock, HOLE_TOKEN, HOLE_WORD, STATE_WORD, TRACKING_HELP, TRACKING_WORD, type Tone } from './vocabulary';
 
@@ -16,7 +18,8 @@ import { fmtClock, HOLE_TOKEN, HOLE_WORD, STATE_WORD, TRACKING_HELP, TRACKING_WO
  *   top centre   — what to do now, as a pill ("Move closer", "Tracking lost — go back to scanned surface");
  *   bottom left  — the instrument cluster: completeness ring, tracking, distance, speed, density;
  *   on the model — numbered markers and labels on the gaps still to scan;
- *   bottom right — the turntable dial while a turntable is connected (with Stop).
+ *   bottom right — the turntable dial while a turntable is connected (with Stop);
+ *   top right    — the scanner's camera pictures, when Scan → Camera view is shown over the 3D view.
  * Only the widgets themselves take the pointer; everything around them lets camera drags through.
  * Status colours always come with an icon and a word.
  */
@@ -32,6 +35,8 @@ export function GuidanceHud() {
   const status = useCapture(s => s.status);
   const active = capture && !!status?.active && status.state !== 'closed';
   const hasGuidance = useCapture(s => !!s.guidance);
+  const hasCamera = useCapture(s => !!s.drivers.find(d => d.id === s.status?.driver)?.capabilities?.camera);
+  const cameraFloat = useCamera(s => s.float);
 
   useCaptureMode(capture);
 
@@ -43,6 +48,7 @@ export function GuidanceHud() {
         <>
           <StatusPill />
           {hasGuidance && <Instruments />}
+          {hasCamera && cameraFloat && <CameraFloat />}
         </>
       ) : (
         <EmptyStage />
