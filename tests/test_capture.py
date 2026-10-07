@@ -277,7 +277,8 @@ def test_driver_commands_route(tmp_path):
         client.post("/api/capture/connect", json={"driver": "simulated", "settings": {"realtime": False}})
         r = client.post("/api/capture/driver/map_markers")
         assert r.status_code == 400 and "no command" in r.json()["detail"]
-        assert client.get("/api/capture/status").json()["device"] == {}
+        device = client.get("/api/capture/status").json()["device"]
+        assert "phase" not in device and set(device) <= {"camera"}       # no marker map; only its camera view
         client.post("/api/capture/discard")
 
 

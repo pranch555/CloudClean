@@ -28,6 +28,33 @@ POST /api/capture/bridge/upload  multipart `files` (+ optional form `source` = p
                                  -> {results: [{file, queued, message, import_job}], status}
 GET  /api/capture/bridge/ping    -> {ok, server, extensions}  (used by `cloudclean bridge` on start-up)
 
+Camera view (scanners with a live camera: the MetroY, the simulated scanner; others answer available=false)
+------------------------------------------------------------------------------------------------------------
+GET  /api/capture/camera         -> {available, reason?, state, driver,
+                                     settings: {surface: general|dark|reflective, mode: auto|manual, laser_level,
+                                                level_max, laser_pct, laser_pulse (0xb08), exposure_us, gain,
+                                                marker_light},
+                                     limits: {laser_level: [min, max], exposure_us, gain, marker_light: [min, max],
+                                              presets: {surface: {exposure_us, gain, laser_level, level_max,
+                                                                  marker_light}}},
+                                     auto: {state: off|waiting|adjusting|steady|limit, message, verdict:
+                                            none|dim|good|bright},
+                                     readout: {stripe_brightness (0-255, 95th pct), saturated_pct, points_per_frame,
+                                               depth_mm, lines_seen, target, band, saturation_max_pct},
+                                     streaming, preview, starting, error, gain_map: scanner|defaults, applied}
+POST /api/capture/camera         {surface?, mode?, laser_level?, exposure_us?, gain?, marker_light?} -> as GET.
+                                 Applied at once, also while scanning; a laser/exposure/gain/marker value switches
+                                 to manual unless mode is given. Remembered with the driver settings (surface,
+                                 camera_mode, laser_level, exposure_us, gain, fill_light).
+POST /api/capture/camera/preview {on}  -> as GET. Streams the camera while connected and not scanning (laser on, auto
+                                 exposure running, nothing tracked or fused). It ends by itself ~6 s after the last
+                                 picture was asked for, and becomes the scan when scanning starts.
+GET  /api/capture/camera/view?cams=both|left|right&overlay=1&width=960 -> image/jpeg (204 while there is none yet).
+                                 Pictures are made only while someone asks (poll at 5-8 per second). Overlay: laser
+                                 lines CloudClean found in green, washed-out pixels red, markers ringed blue.
+The status message's `device.camera` carries {mode, surface, laser_pct, gain, verdict, auto_state, auto_message,
+stripe_brightness, saturated_pct, points_per_frame, streaming, preview} live.
+
 Settings schema entries: {key, label, type: number|boolean|select|text, default, min?, max?, step?,
 options?: [{value, label}], unit?, help?}.
 
@@ -85,7 +112,7 @@ import weakref
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from ..accuracy import jsonable
@@ -114,6 +141,19 @@ class SaveReq(BaseModel):
     name: str | None = None
     auto_process: bool | None = None
     project_id: str | None = None   # default: the most recently updated project
+
+
+class CameraReq(BaseModel):
+    surface: str | None = None
+    mode: str | None = None
+    laser_level: float | None = None
+    exposure_us: float | None = None
+    gain: float | None = None
+    marker_light: float | None = None
+
+
+class PreviewReq(BaseModel):
+    on: bool = True
 
 
 def create_router(workspace, jobs) -> APIRouter:
@@ -184,6 +224,31 @@ def create_router(workspace, jobs) -> APIRouter:
     @router.get("/api/capture/status")
     def status():
         return jsonable(manager.status())
+
+    @router.get("/api/capture/camera")
+    def camera():
+        return jsonable(manager.camera())
+
+    @router.post("/api/capture/camera")
+    def set_camera(req: CameraReq):
+        return call(manager.set_camera, req.model_dump(exclude_none=True))
+
+    @router.post("/api/capture/camera/preview")
+    def camera_preview(req: PreviewReq):
+        return call(manager.camera_preview, req.on)
+
+    @router.get("/api/capture/camera/view")
+    def camera_view(cams: str = "both", overlay: bool = True, width: int = 960):
+        if cams not in ("both", "left", "right"):
+            raise HTTPException(400, "cams must be both, left or right")
+        try:
+            jpeg = manager.camera_view(cams, overlay, max(160, min(3200, width)))
+        except CaptureError as exc:
+            raise HTTPException(exc.status, str(exc))
+        headers = {"Cache-Control": "no-store"}
+        if jpeg is None:
+            return Response(status_code=204, headers=headers)
+        return Response(jpeg, media_type="image/jpeg", headers=headers)
 
     @router.get("/api/capture/pending")
     def pending():

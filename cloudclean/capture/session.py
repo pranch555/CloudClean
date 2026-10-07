@@ -878,7 +878,16 @@ class CaptureSession:
                            float(caps.get("expected_points") or 0.0))
             if expected and dstate == "ok" and 50 <= last.get("points", 0) < 0.4 * expected:
                 surface = self.driver_settings.get("surface")
-                if surface == "reflective":
+                if caps.get("camera"):
+                    # the camera view shows the laser lines and has the surface choice and Auto / Manual
+                    if surface == "reflective":
+                        hint = "shiny surface: open Scan → Camera view and lower the laser, or use scanning spray"
+                    elif surface == "dark":
+                        hint = "dark surface: open Scan → Camera view and keep it on Auto, or move a little closer"
+                    else:
+                        hint = ("open Scan → Camera view: choose Dark for a black part, Shiny for polished metal, "
+                                "and keep it on Auto")
+                elif surface == "reflective":
                     hint = "shiny surface: lower the brightness or exposure, or use scanning spray"
                 elif surface == "dark":
                     hint = "dark surface: raise the laser brightness or use a longer exposure"
