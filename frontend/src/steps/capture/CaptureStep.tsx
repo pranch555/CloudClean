@@ -591,10 +591,14 @@ function FilesBlock({ compact }: { compact?: boolean }) {
   const bridge = (
     <details className="disclosure">
       <summary>
-        <Wifi size={16} aria-hidden /> How the Revo Metro bridge works
+        <Wifi size={16} aria-hidden /> Optional: scans made in Revo Metro on another PC
         <ChevronDown size={16} className="chev" aria-hidden />
       </summary>
       <div className="disclosure-body">
+        <p className="hint-text">
+          Not needed when the scanner is plugged into this computer: <b>MetroY by USB</b> drives it directly, without Revo Metro. This is only
+          for a scanner plugged into a different PC that runs Revo Metro, so its exports arrive here by themselves.
+        </p>
         <ol className="cap-howto">
           <li>
             <span className="index-bubble">1</span>
