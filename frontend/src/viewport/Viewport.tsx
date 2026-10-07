@@ -66,7 +66,7 @@ export function Viewport({ theme }: { theme: ResolvedTheme }) {
     const grid = cssVar('--vp-grid', '0.2, 0.18, 0.15').split(',').map(Number) as [number, number, number];
     v.setTheme({
       dark: theme === 'carbon',
-      points: cssVar('--vp-points', '#45423c'),
+      points: cssVar('--vp-points', '#8c8579'),
       mesh: cssVar('--vp-mesh', '#b3ac9f'),
       highlight: cssVar('--vp-highlight', '#ee4b1f'),
       grid: grid.length === 3 && grid.every(Number.isFinite) ? grid : hexToRgb('#333333'),
@@ -92,6 +92,12 @@ export function Viewport({ theme }: { theme: ResolvedTheme }) {
   useEffect(() => {
     getViewer()?.setSettings({ colorMode: display.colorMode, pointScale: display.pointScale, wireframe: display.wireframe, showBox: display.showBox, showGrid: display.showGrid, scalar: display.scalar });
   }, [ready, display.colorMode, display.pointScale, display.wireframe, display.showBox, display.showGrid, display.scalar]);
+
+  useEffect(() => {
+    const v = getViewer();
+    v?.setSettings({ shade: display.shade });
+    v?.invalidate(); // also with only the live scan on screen
+  }, [ready, display.shade]);
 
   useEffect(() => {
     getViewer()?.setUpAxis(display.upAxis);

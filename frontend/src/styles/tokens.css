@@ -125,7 +125,7 @@
   --vp-top: #f8f6f2;
   --vp-bottom: #e2ded4;
   --vp-grid: 0.2, 0.18, 0.15;
-  --vp-points: #45423c;
+  --vp-points: #8c8579; /* a mid tone: the shape shading reads on it (a near-black scan was one flat silhouette) */
   --vp-mesh: #b3ac9f;
   --vp-highlight: #ee4b1f;
 

@@ -46,9 +46,48 @@ export const revealUniforms = () => ({
 });
 
 /*
+ * Colour by height (Display -> Colour -> Height, and the live scan's "Height"): a colour ramp along the up axis
+ * from the bottom to the top of what is on screen. The uniforms are shared by every material of a viewer (one
+ * object each, see heightUniforms), so a new range or up axis costs one assignment, not a pass over the points.
+ */
+export const heightUniforms = () => {
+  const blank = new THREE.DataTexture(new Uint8Array([200, 200, 200, 255]), 1, 1);
+  blank.needsUpdate = true;
+  return {
+    uHeightLut: { value: blank as THREE.Texture },
+    uHeightRange: { value: new THREE.Vector2(0, 1) },
+    uUp: { value: new THREE.Vector3(0, 1, 0) },
+  };
+};
+export type HeightUniforms = ReturnType<typeof heightUniforms>;
+
+export const HEIGHT_PARS = /* glsl */ `
+  uniform sampler2D uHeightLut;
+  uniform vec2 uHeightRange;
+  uniform vec3 uUp;
+  vec3 heightColor(vec3 world) {
+    float t = (dot(world, uUp) - uHeightRange.x) / max(uHeightRange.y - uHeightRange.x, 1e-9);
+    return texture2D(uHeightLut, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb;
+  }`;
+
+/** The same for meshes (Viewer.meshMaterial): uHeightOn 1 replaces the surface colour, the lighting stays. */
+export const HEIGHT_MESH_VERTEX_PARS = /* glsl */ `
+  varying vec3 vHeightWorld;`;
+export const HEIGHT_MESH_VERTEX = /* glsl */ `
+  vHeightWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;`;
+export const HEIGHT_MESH_FRAGMENT_PARS = /* glsl */ `
+  uniform float uHeightOn;
+  varying vec3 vHeightWorld;
+  ${HEIGHT_PARS}`;
+export const HEIGHT_MESH_FRAGMENT = /* glsl */ `
+  if (uHeightOn > 0.5) diffuseColor.rgb = heightColor(vHeightWorld);`;
+
+/*
  * Points are round splats sized in world units (density looks right at any zoom) and lit by a headlight
  * using their normals, which makes the surface shape readable. The same material renders a pick pass that
- * writes world position into a float target (exact 3D picking for pivots, measuring and point pairs).
+ * writes world position into a float target (exact 3D picking for pivots, measuring and point pairs), and a
+ * depth pass for the shape shading (edl.ts: view depth and splat size in pixels; points without normals get
+ * their shape from it).
  */
 const VERT = /* glsl */ `
   #include <clipping_planes_pars_vertex>
@@ -60,7 +99,7 @@ const VERT = /* glsl */ `
   uniform float uScale;
   uniform float uOrtho;       // 1 when the camera is orthographic
   uniform float uOrthoPx;     // pixels per world unit for ortho cameras
-  uniform int uMode;          // 0 scan colour, 1 solid, 2 normals, 3 scalar
+  uniform int uMode;          // 0 scan colour, 1 solid, 2 normals, 3 scalar, 4 height
   uniform vec3 uColor;
   uniform bool uHasColor;
   uniform bool uHasNormal;
@@ -68,10 +107,12 @@ const VERT = /* glsl */ `
   uniform vec2 uRange;
   uniform sampler2D uLut;
   uniform vec3 uNanColor;
-  uniform int uPick;
+  uniform int uPick;          // 1 world position (picking), 2 depth + splat size (shape shading)
+  ${HEIGHT_PARS}
   varying vec3 vColor;
   varying vec3 vWorld;
   varying float vSelected;
+  varying vec2 vDepth;
   void main() {
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition;
@@ -80,8 +121,9 @@ const VERT = /* glsl */ `
     gl_PointSize = clamp(px, 1.0, 64.0);
     vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
     vSelected = selected;
+    vDepth = vec2(-mvPosition.z, gl_PointSize);
     ${REVEAL_VERTEX}
-    if (uPick == 1) { vColor = vec3(0.0); return; }
+    if (uPick != 0) { vColor = vec3(0.0); return; }
     vec3 base = uColor;
     bool unlitColor = false;
     if (uMode == 0 && uHasColor) { base = color; unlitColor = true; }
@@ -95,6 +137,7 @@ const VERT = /* glsl */ `
       }
       unlitColor = true;
     }
+    if (uMode == 4) { base = heightColor(vWorld); unlitColor = true; }
     if (uMode == 2 && uHasNormal) {
       vColor = normalize(normal) * 0.5 + 0.5;
     } else if (uHasNormal) {
@@ -113,12 +156,19 @@ const FRAG = /* glsl */ `
   varying vec3 vColor;
   varying vec3 vWorld;
   varying float vSelected;
+  varying vec2 vDepth;
   void main() {
     #include <clipping_planes_fragment>
     vec2 c = gl_PointCoord - 0.5;
     if (dot(c, c) > 0.25) discard;
     // picking sees every point, revealed or not
     if (uPick == 1) { gl_FragColor = vec4(vWorld, 1.0); return; }
+    // the shape shading's depth pass sees only what is drawn
+    if (uPick == 2) {
+      if (uReveal < 1.0) revealBeam();
+      gl_FragColor = vec4(vDepth, 0.0, 1.0);
+      return;
+    }
     vec3 col = vSelected > 0.5 ? mix(vColor, uHighlight, 0.65) : vColor;
     if (uReveal < 1.0) {
       vec3 beam = revealBeam();
@@ -148,6 +198,7 @@ export function createPointMaterial(): THREE.ShaderMaterial {
       uPick: { value: 0 },
       uHighlight: { value: new THREE.Color('#ffb547') },
       ...revealUniforms(),
+      ...heightUniforms(),
     },
     vertexShader: VERT,
     fragmentShader: FRAG,

@@ -7,8 +7,10 @@ import type { JSAnimation } from 'animejs';
 import { animate, reducedMotion } from '../lib/motion';
 import { shapeTester } from '../lib/regions';
 import { FreeControls, type RotatePivot, type RotateStyle } from './controls';
-import { lutTexture, scalarColor, type ScalarStyle } from './colormaps';
+import { heightLut, lutTexture, scalarColor, type ScalarStyle } from './colormaps';
 import { createMeshPickMaterial, createPointMaterial, REVEAL_FRAGMENT_PARS, REVEAL_VERTEX, REVEAL_VERTEX_PARS, revealUniforms } from './pointMaterial';
+import { HEIGHT_MESH_FRAGMENT, HEIGHT_MESH_FRAGMENT_PARS, HEIGHT_MESH_VERTEX, HEIGHT_MESH_VERTEX_PARS, heightUniforms } from './pointMaterial';
+import { EyeDome } from './edl';
 import { ViewCube } from './ViewCube';
 
 export interface DisplaySettings {
@@ -18,6 +20,8 @@ export interface DisplaySettings {
   showBox: boolean;
   showGrid: boolean;
   scalar: { name: string; style: ScalarStyle } | null;
+  /** shade the point clouds by their shape (eye-dome lighting, edl.ts); on unless false */
+  shade?: boolean;
 }
 
 export interface Marker {
@@ -143,7 +147,7 @@ export class Viewer {
   onItemLoaded?: (id: string) => void;
   /** The user grabbed the view with the mouse, wheel or touch. */
   onInteract?: () => void;
-  theme: ViewerTheme = { dark: false, points: '#45423c', mesh: '#b3ac9f', highlight: '#ee4b1f', grid: [0.2, 0.18, 0.15], bgTop: '#f8f6f2', bgBottom: '#e2ded4' };
+  theme: ViewerTheme = { dark: false, points: '#8c8579', mesh: '#b3ac9f', highlight: '#ee4b1f', grid: [0.2, 0.18, 0.15], bgTop: '#f8f6f2', bgBottom: '#e2ded4' };
   colorFor: (id: string) => string = () => PALETTE[0];
 
   private dirty = true;
@@ -180,6 +184,9 @@ export class Viewer {
   /** models the scan beam is sweeping right now, and every asset that has had its reveal this session */
   private revealing = new Set<Item>();
   private revealed = new Set<string>();
+  /** the point shape shading, and the colour-by-height uniforms every material shares */
+  private edl = new EyeDome();
+  private heightU = { ...heightUniforms(), uHeightLut: { value: heightLut(false) as THREE.Texture } };
 
   constructor(readonly canvas: HTMLCanvasElement, readonly container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
@@ -256,6 +263,7 @@ export class Viewer {
     for (const it of this.items.values()) this.finishReveal(it);
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();
+    this.edl.dispose();
     this.renderer.dispose();
   }
 
@@ -335,8 +343,9 @@ export class Viewer {
     for (const it of this.items.values()) if (it.object instanceof THREE.Points) pointUniforms(it.object.material as THREE.ShaderMaterial);
     if (this.live) pointUniforms(this.live.material);
     cam.updateMatrixWorld();
+    this.updateHeightRange();
     if (this.panes.length) this.renderPanes(cam);
-    else this.renderer.render(this.scene, cam);
+    else this.draw(cam);
     this.viewCube.render(this.renderer, cam, this.container.clientWidth, this.container.clientHeight);
     this.onFrame?.(this);
     this.listeners.forEach(l => l());
@@ -395,7 +404,7 @@ export class Viewer {
       }
       this.renderer.setViewport(x, H - y - h, w, h);
       this.renderer.setScissor(x, H - y - h, w, h);
-      this.renderer.render(this.scene, cam);
+      this.draw(cam);
     }
     this.renderer.setScissorTest(false);
     this.renderer.setViewport(0, 0, this.container.clientWidth, H);
@@ -404,6 +413,36 @@ export class Viewer {
       aspectCam.updateProjectionMatrix();
     }
     for (const [id, it] of this.items) it.object.visible = prevVisible.get(id) ?? false;
+  }
+
+  /** The scene into the current viewport: point clouds shaded by their shape unless that is switched off (edl.ts). */
+  private draw(cam: THREE.PerspectiveCamera | THREE.OrthographicCamera) {
+    if (this.settings.shade === false) {
+      this.renderer.render(this.scene, cam);
+      return;
+    }
+    const shapes: THREE.Object3D[] = [...this.items.values()].map(it => it.object);
+    if (this.live) shapes.push(this.live.points);
+    this.edl.render(this.renderer, this.scene, cam, shapes);
+  }
+
+  /** Colour by height spans what is shown (the models and the live scan) along the up axis; cheap: boxes only. */
+  private updateHeightRange() {
+    const k = this.upAxis === 'z' ? 2 : 1;
+    this.heightU.uUp.value.set(0, k === 1 ? 1 : 0, k === 2 ? 1 : 0);
+    const box = new THREE.Box3();
+    let lo = Infinity, hi = -Infinity;
+    for (const it of this.items.values()) {
+      if (!it.object.visible || !it.geometry.boundingBox) continue;
+      box.copy(it.geometry.boundingBox).applyMatrix4(it.object.matrixWorld);
+      lo = Math.min(lo, box.min.getComponent(k));
+      hi = Math.max(hi, box.max.getComponent(k));
+    }
+    if (this.live && this.live.points.visible && this.live.count > 0) {
+      lo = Math.min(lo, this.live.bounds.min.getComponent(k));
+      hi = Math.max(hi, this.live.bounds.max.getComponent(k));
+    }
+    if (lo <= hi) this.heightU.uHeightRange.value.set(lo, hi);
   }
 
   // ------------------------------------------------------------------ camera
@@ -714,6 +753,7 @@ export class Viewer {
     } else {
       const mat = createPointMaterial();
       for (const name of REVEAL_UNIFORMS) mat.uniforms[name] = fx[name];
+      Object.assign(mat.uniforms, this.heightU);
       object = new THREE.Points(geom, mat);
     }
     object.userData.assetId = meta.id;
@@ -728,6 +768,9 @@ export class Viewer {
 
   private meshMaterial(fx: FocusFx): THREE.MeshStandardMaterial {
     const mat = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.04, side: THREE.DoubleSide });
+    // colour by height (pointMaterial.ts): applyMaterial sets heightOn 1, the range and ramp are the viewer's
+    const heightOn = { value: 0 };
+    mat.userData.heightOn = heightOn;
     // highlight(): uFocus 1 turns every vertex outside the focus mask the plain model colour; uGlow lifts the ones
     // inside it toward white and makes them faintly emissive (both fade with uFocus). The scan-beam reveal
     // (pointMaterial.ts) cuts away what its plane has not reached and lights the band at its front.
@@ -737,14 +780,16 @@ export class Viewer {
       shader.uniforms.uGlow = fx.uGlow;
       shader.uniforms.uFocusRest = { value: FOCUS_REST };
       for (const name of REVEAL_UNIFORMS) shader.uniforms[name] = fx[name];
+      Object.assign(shader.uniforms, this.heightU, { uHeightOn: heightOn });
       shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', `#include <common>\nattribute float selected;\nattribute float focus;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_VERTEX_PARS}`)
-        .replace('#include <begin_vertex>', `#include <begin_vertex>\nvSelected = selected;\nvFocus = focus;\n${REVEAL_VERTEX}`);
+        .replace('#include <common>', `#include <common>\nattribute float selected;\nattribute float focus;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_VERTEX_PARS}\n${HEIGHT_MESH_VERTEX_PARS}`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>\nvSelected = selected;\nvFocus = focus;\n${REVEAL_VERTEX}\n${HEIGHT_MESH_VERTEX}`);
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', `#include <common>\nuniform vec3 uHighlight;\nuniform float uFocus;\nuniform float uGlow;\nuniform vec3 uFocusRest;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_FRAGMENT_PARS}`)
+        .replace('#include <common>', `#include <common>\nuniform vec3 uHighlight;\nuniform float uFocus;\nuniform float uGlow;\nuniform vec3 uFocusRest;\nvarying float vSelected;\nvarying float vFocus;\n${REVEAL_FRAGMENT_PARS}\n${HEIGHT_MESH_FRAGMENT_PARS}`)
         .replace(
           '#include <color_fragment>',
-          '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, step(0.5, vSelected) * 0.65);\n' +
+          `#include <color_fragment>\n${HEIGHT_MESH_FRAGMENT}\n` +
+            'diffuseColor.rgb = mix(diffuseColor.rgb, uHighlight, step(0.5, vSelected) * 0.65);\n' +
             'float focusIn = smoothstep(0.25, 0.75, vFocus);\n' +
             'diffuseColor.rgb = mix(diffuseColor.rgb, uFocusRest, uFocus * (1.0 - focusIn) * 0.85);\n' +
             'float focusGlow = uGlow * uFocus * focusIn;\n' +
@@ -767,7 +812,7 @@ export class Viewer {
     if (it.object instanceof THREE.Points) {
       const m = it.object.material as THREE.ShaderMaterial;
       const u = m.uniforms;
-      u.uMode.value = scalarOn ? 3 : colorMode === 'original' ? 0 : colorMode === 'normal' ? 2 : 1;
+      u.uMode.value = scalarOn ? 3 : colorMode === 'original' ? 0 : colorMode === 'normal' ? 2 : colorMode === 'height' ? 4 : 1;
       u.uColor.value.set(colorMode === 'asset' ? solid : this.theme.points);
       u.uHighlight.value.set(this.theme.highlight);
       u.uHasColor.value = it.hasColor;
@@ -801,6 +846,7 @@ export class Viewer {
       }
       mat.vertexColors = useVertex;
       mat.color.set(colorMode === 'asset' ? solid : useVertex ? '#ffffff' : this.theme.mesh);
+      if (mat.userData.heightOn) mat.userData.heightOn.value = colorMode === 'height' ? 1 : 0;
       mat.needsUpdate = true;
     }
     const mat = mesh.material as THREE.Material & { wireframe?: boolean };
@@ -1249,6 +1295,7 @@ export class Viewer {
   liveCloud(): LiveCloud {
     if (!this.live) {
       this.live = new LiveCloud();
+      Object.assign(this.live.material.uniforms, this.heightU);
       this.live.material.uniforms.uColor.value.set(this.theme.points);
       this.live.material.uniforms.uHighlight.value.set(this.theme.highlight);
       this.live.onFlush = () => this.invalidate();
@@ -1387,6 +1434,8 @@ export class Viewer {
     (this.pivotMarker.material as THREE.MeshBasicMaterial).color.set(this.theme.highlight);
     this.scene.environmentIntensity = this.theme.dark ? 0.32 : 0.5;
     this.viewCube.setTheme(this.theme.dark);
+    this.heightU.uHeightLut.value.dispose();
+    this.heightU.uHeightLut.value = heightLut(this.theme.dark);
     if (this.live) {
       this.live.material.uniforms.uColor.value.set(this.theme.points);
       this.live.material.uniforms.uHighlight.value.set(this.theme.highlight);
@@ -2135,11 +2184,14 @@ export class LiveCloud {
   private col = new Float32Array(0);
   private den = new Float32Array(0);
   spacing = 0.1;
+  /** what has streamed in so far (colour by height spans it) */
+  readonly bounds = new THREE.Box3();
 
   constructor() {
     this.points = new THREE.Points(this.geometry, this.material);
     this.points.frustumCulled = false;
     this.ensure(200_000);
+    this.geometry.setDrawRange(0, 0); // nothing yet (not the empty buffer's points at the origin)
   }
 
   private ensure(n: number) {
@@ -2165,6 +2217,16 @@ export class LiveCloud {
     const n = xyz.length / 3;
     this.ensure(this.count + n);
     this.pos.set(xyz, this.count * 3);
+    const b = this.bounds;
+    for (let i = 0; i < xyz.length; i += 3) {
+      const x = xyz[i], y = xyz[i + 1], z = xyz[i + 2];
+      if (x < b.min.x) b.min.x = x;
+      if (x > b.max.x) b.max.x = x;
+      if (y < b.min.y) b.min.y = y;
+      if (y > b.max.y) b.max.y = y;
+      if (z < b.min.z) b.min.z = z;
+      if (z > b.max.z) b.max.z = z;
+    }
     if (rgb) for (let i = 0; i < rgb.length; i++) this.col[this.count * 3 + i] = rgb[i] / 255;
     if (density) this.den.set(density, this.count);
     for (const name of ['position', 'color', 'scalar']) {
@@ -2218,12 +2280,13 @@ export class LiveCloud {
 
   reset() {
     this.count = 0;
+    this.bounds.makeEmpty();
     this.geometry.setDrawRange(0, 0);
   }
 
-  style(mode: 'color' | 'density' | 'solid', lut?: { texture: THREE.DataTexture; lo: number; hi: number }) {
+  style(mode: 'color' | 'density' | 'solid' | 'height', lut?: { texture: THREE.DataTexture; lo: number; hi: number }) {
     const u = this.material.uniforms;
-    u.uMode.value = mode === 'density' ? 3 : mode === 'color' ? 0 : 1;
+    u.uMode.value = mode === 'density' ? 3 : mode === 'color' ? 0 : mode === 'height' ? 4 : 1;
     u.uHasScalar.value = mode === 'density';
     if (lut) {
       u.uLut.value = lut.texture;

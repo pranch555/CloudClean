@@ -171,6 +171,8 @@ export interface Display {
   units: string;
   /** Size readout: the part's own axes (robust, default) or the scanner's world axes. */
   sizeFrame: 'part' | 'world';
+  /** Shade the points by their shape (edges and slopes darker) so scans without normals do not read as a flat silhouette. */
+  shade: boolean;
 }
 
 interface State {
@@ -283,6 +285,7 @@ export const useStore = create<State>((set, get) => ({
     scalar: null,
     units: local.get('units', 'mm'),
     sizeFrame: local.get('sizeFrame', 'part'),
+    shade: local.get('shade', true),
   },
   clip: { enabled: false, axis: 'x', position: 0, flip: false },
   jobs: [],
@@ -347,6 +350,7 @@ export const useStore = create<State>((set, get) => ({
     if (patch.rotatePivot) local.set('rotatePivot', patch.rotatePivot);
     if (patch.units) local.set('units', patch.units);
     if (patch.sizeFrame) local.set('sizeFrame', patch.sizeFrame);
+    if (patch.shade !== undefined) local.set('shade', patch.shade);
   },
 
   refreshAssets: async () => {

@@ -195,9 +195,13 @@ FEATURES: list[Feature] = [
             "Cuts the view open along X, Y or Z to look inside (the data is not changed).",
             "clip cut away inside clipping plane", {"screen": "workspace"}),
     Feature("view.display", "Display", "the sliders button on the right of the 3D view",
-            "Colours (scan colours, plain, per model, surface direction, deviation / data), point size, wireframe, "
-            "box, floor grid, up axis, turning mode, units shown.", "colour color point size wireframe grid display "
-            "options heatmap", {"screen": "workspace"}),
+            "Colours (scan colours, plain, per model, surface direction, height from bottom to top, deviation / "
+            "data), 'Shade the points (show the shape)' (on by default: darkens edges and slopes so a scan without "
+            "colours does not look like one flat dark shape; display only), point size, wireframe, box, floor grid, "
+            "up axis, turning mode, units shown. While scanning, Scan → Live view has the same shading switch and "
+            "colours the live points by density, height, texture or plain.",
+            "colour color point size wireframe grid display options heatmap height shade shading shape dark black "
+            "flat silhouette cannot see make out", {"screen": "workspace"}),
     Feature("view.fullscreen", "Full screen 3D view", "the expand button on the right of the 3D view",
             "Shows only the 3D view (Esc to leave).", "fullscreen maximize big", {"screen": "workspace"}),
     Feature("view.picture", "Save a picture of the view", "the camera button on the right of the 3D view",
