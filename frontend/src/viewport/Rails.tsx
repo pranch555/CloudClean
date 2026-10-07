@@ -4,6 +4,7 @@ import type { ColorMode, ViewName, ViewportTool } from '../lib/types';
 import { copyScreenshot, setTool, viewCamera } from '../lib/actions';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
+import { heightGradientCss } from '../viewer/colormaps';
 import { Field, IconButton, Popover, Segmented, Select, Slider, Switch } from '../ui/primitives';
 
 const TOOLS: { id: ViewportTool; label: string; key: string; icon: typeof MousePointer2 }[] = [
@@ -46,6 +47,7 @@ export function ViewRail() {
   const clip = useStore(s => s.clip);
   const visible = useStore(s => s.visible);
   const byId = useStore(s => s.byId);
+  useStore(s => s.theme); // the height key follows the stage colours
   const [recording, setRecording] = useState(false);
   const [full, setFull] = useState(false);
 
@@ -66,6 +68,7 @@ export function ViewRail() {
     { value: 'solid', label: 'Plain' },
     { value: 'asset', label: 'One colour per model' },
     { value: 'normal', label: 'Surface direction' },
+    { value: 'height', label: 'Height' },
     ...(scalarNames.length ? [{ value: 'scalar' as ColorMode, label: 'Data (deviation, density…)' }] : []),
   ];
 
@@ -194,6 +197,18 @@ export function ViewRail() {
               <Select value={display.scalar?.name ?? scalarNames[0]} onChange={name => setDisplay({ scalar: { name, style: display.scalar?.style ?? { kind: 'sequential', min: 0, max: 1, tolerance: 0, steps: 0 } } })} options={scalarNames.map(n => ({ value: n, label: n }))} />
             </Field>
           )}
+          {display.colorMode === 'height' && (
+            <div className="colour-key">
+              <span className="colour-key-ramp" style={{ background: heightGradientCss(document.documentElement.dataset.theme === 'carbon') }} aria-hidden />
+              <div className="row spread caption">
+                <span>bottom</span>
+                <span>top (up is {display.upAxis.toUpperCase()})</span>
+              </div>
+            </div>
+          )}
+          <Field label="Shade the points (show the shape)" help="Darkens edges and slopes so the shape stands out. Only the picture changes, not the scan.">
+            <Switch checked={display.shade} onChange={shade => setDisplay({ shade })} label="Shade the points (show the shape)" />
+          </Field>
           <Field label="Point size" inline={false}>
             <Slider value={display.pointScale} min={0.3} max={4} step={0.05} format={v => `${v.toFixed(2)}×`} onChange={pointScale => setDisplay({ pointScale })} />
           </Field>

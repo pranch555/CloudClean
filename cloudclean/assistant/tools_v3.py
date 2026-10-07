@@ -1066,7 +1066,7 @@ async def h_holes(ctx: ToolContext, args: dict) -> ToolResult:
 UI_ACTIONS = ["show", "focus", "select", "display", "camera", "navigate", "open", "tool", "section",
               "clear_highlight", "measure_overlay", "annotate", "clear_annotations", "follow_scanner", "layout",
               "project"]
-COLOR_MODES = ["original", "solid", "asset", "normal", "scalar"]
+COLOR_MODES = ["original", "solid", "asset", "normal", "scalar", "height"]
 VIEWS = ["front", "back", "left", "right", "top", "bottom", "iso", "fit"]
 PANELS = ["process", "inspect", "capture", "autopilot"]
 SCREENS = ["home", "workspace"]
