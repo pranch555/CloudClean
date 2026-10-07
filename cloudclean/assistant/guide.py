@@ -210,8 +210,10 @@ FEATURES: list[Feature] = [
             "draws them on the model.", "dimensions size length width height bounding box", {"screen": "workspace"}),
     # ---- Scan
     Feature("capture.scanner", "Scanner", "Scan → Scanner",
-            "Choose the scanner: MetroY by USB (native on the DGX), the Revo Metro bridge (scan in Revo Metro on "
-            "the PC, exports arrive here) or the simulated scanner for practice; then start scanning.",
+            "Choose the scanner: MetroY by USB (plugged into the machine running CloudClean, e.g. the DGX: "
+            "CloudClean drives it directly, no Revo Metro involved), the Revo Metro bridge (only for a scanner on "
+            "another PC that runs Revo Metro: its exports arrive here) or the simulated scanner for practice; then "
+            "start scanning.",
             "scanner metroy revo metro usb connect start scanning capture bridge", _s("capture")),
     Feature("capture.turntable", "Turntable", "Scan → Turntable",
             "Connect the turntable over Bluetooth, turn and tilt it, set the speed, and run stop-and-go scan "
