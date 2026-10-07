@@ -222,6 +222,10 @@ thread inside the driver, so the web event loop is never blocked.
   last move of a rotation is shorter, so **every rotation ends exactly where it started**; there is no 20 deg
   overlap as in Revo Metro. `level_at_end` tilts back to 0.
 * **continuous.** One 360 deg move per rotation with the capture running ("Turntable Sync" style).
+* **Laser-line scanners always sweep.** When the connected scanner's driver reports `sweeps` (the MetroY in laser
+  mode: a few cross lines per frame), a synced program runs **continuous** whatever mode was asked for, and the UI
+  hides the stop settings. Stop-and-go records the same few lines at every stop: the user's first MetroY turntable
+  scans (2026-10-07, 12 stops x 3 frames) came out as a handful of lines, 756 points. Capture pauses only to tilt.
 * **sync_scan.** Uses the workspace's capture session (`routes_capture.manager_for`) the way Revo Metro does.
   **Capture is paused while the platter moves** and resumed at each stop until `frames_per_stop` new frames have
   arrived. The first stop starts a connected session; at the end the capture is **left paused** so it can be

@@ -573,6 +573,39 @@ def test_program_step_and_scan_with_capture_sync(tmp_path):
         m.shutdown()
 
 
+def test_laser_line_scanner_scans_while_the_table_turns(tmp_path):
+    """The user's first MetroY turntable scans stopped every 30 deg and recorded 3 frames there: a laser-line scanner
+    then sees the same few lines at each stop and the scan came out as a few lines (756 points). With a scanner that
+    sweeps, the program turns each rotation in one move while the scanner records, whatever mode was asked for."""
+    from types import SimpleNamespace
+
+    m = TurntableManager(tmp_path)
+    m.connect("simulated", options={"time_scale": FAST})
+    cap = FakeCapture(m.driver)
+    cap.session = SimpleNamespace(driver=SimpleNamespace(capabilities=lambda: {"sweeps": True}))
+    m.capture_provider = lambda: cap
+    try:
+        st = m.start_program({"interval_deg": 30, "frames_per_stop": 3, "speed_s_per_rev": 25,
+                              "rotations": [{"tilt_deg": 0}, {"tilt_deg": 15}], "sync_scan": True, "settle_s": 0})
+        assert st["program"]["mode"] == "continuous"
+        assert wait_for(lambda: m.status()["program"]["state"] not in ("starting", "running"), 30)
+        p = m.status()["program"]
+        assert p["state"] == "done", p
+        assert p["turned_deg"] == 720 and p["completed_stops"] == 2
+        assert cap.frames_while_moving > 0, "a laser-line scanner must record while the platter turns"
+        assert p["capture"]["frames"] >= cap.frames_while_moving > 0
+        cmds = m.driver.commands
+        assert cmds.count("+CT,TURNANGLE=360;") == 2 and "+CT,TURNANGLE=30;" not in cmds
+        assert any("laser lines" in n for n in p.get("notes", []) + m.program.plan["notes"])
+        # without sync (the scanner is not driven by the table) the asked-for stops are kept
+        st = m.start_program({"interval_deg": 30, "sync_scan": False, "dwell_s": 0, "settle_s": 0})
+        assert st["program"]["mode"] == "step"
+        assert wait_for(lambda: m.status()["program"]["state"] not in ("starting", "running"), 30)
+    finally:
+        cap.close()
+        m.shutdown()
+
+
 def test_program_without_capture_and_stop(tmp_path):
     m = TurntableManager(tmp_path)
     m.capture_provider = lambda: None

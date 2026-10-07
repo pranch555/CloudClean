@@ -172,6 +172,8 @@ export class Viewer {
   private live: LiveCloud | null = null;
   private liveFrame: THREE.Points | null = null;
   private liveMarkers: THREE.Points | null = null;
+  /** setLiveVisible(): the live scan (points, frame, markers) is shown (the Scan step) */
+  private liveShown = true;
   private mapMarkers: THREE.Points | null = null;
   private panes: Pane[] = [];
   private resizeObserver: ResizeObserver;
@@ -1351,8 +1353,12 @@ export class Viewer {
   }
 
   setLiveVisible(visible: boolean) {
+    this.liveShown = visible;
     if (this.live) this.live.points.visible = visible;
     if (this.liveFrame) this.liveFrame.visible = visible;
+    // the marker squares are part of the live scan: they used to stay on every other step
+    if (this.liveMarkers) this.liveMarkers.visible = visible && this.liveMarkers.geometry.getAttribute('position')?.count > 0;
+    if (this.mapMarkers) this.mapMarkers.visible = visible && this.mapMarkers.geometry.getAttribute('position')?.count > 0;
     this.invalidate();
   }
 
@@ -1367,7 +1373,7 @@ export class Viewer {
       this.scene.add(this.liveMarkers);
     }
     this.liveMarkers.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points.flat()), 3));
-    this.liveMarkers.visible = points.length > 0;
+    this.liveMarkers.visible = points.length > 0 && this.liveShown;
     this.invalidate();
   }
 
@@ -1382,7 +1388,7 @@ export class Viewer {
       this.scene.add(this.mapMarkers);
     }
     this.mapMarkers.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points.flat()), 3));
-    this.mapMarkers.visible = points.length > 0;
+    this.mapMarkers.visible = points.length > 0 && this.liveShown;
     this.invalidate();
   }
 

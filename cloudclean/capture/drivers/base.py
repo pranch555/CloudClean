@@ -155,8 +155,9 @@ class ScannerDriver(ABC):
         return []
 
     def capabilities(self) -> dict:
-        """Static facts the session uses for guidance."""
-        return {"range_mm": None, "optimal_mm": None, "streaming": True, "provides_pose": False}
+        """Static facts the session uses for guidance. sweeps: each frame sees only a few laser lines, so a surface
+        builds up only while the part moves through them (a turntable then turns while scanning, never stop-and-go)."""
+        return {"range_mm": None, "optimal_mm": None, "streaming": True, "provides_pose": False, "sweeps": False}
 
     # -- lifecycle
     def connect(self, settings: dict | None = None) -> dict:

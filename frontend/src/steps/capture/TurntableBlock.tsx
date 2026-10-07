@@ -361,6 +361,8 @@ function ProgramSection({ status, caps, speed, locked }: { status: TurntableStat
   const captureState = useCapture(s => s.status?.state);
   const captureActive = useCapture(s => !!s.status?.active && s.status.state !== 'closed');
   const fps = useCapture(s => s.status?.fps ?? 0);
+  // a laser-line scanner (the MetroY) sees a few lines per frame: it scans while the table turns, never at stops
+  const sweeps = useCapture(s => captureActive && !!s.drivers.find(d => d.id === s.status?.driver)?.capabilities?.sweeps);
   const [form, setFormState] = useState<TurntableProgram>(() => ({ ...DEFAULT_PROGRAM, ...local.get<Partial<TurntableProgram>>('ttProgram', {}) }));
   const [confirm, setConfirm] = useState(false);
   const busy = useTurntable(s => s.busy);
@@ -385,10 +387,12 @@ function ProgramSection({ status, caps, speed, locked }: { status: TurntableStat
       frames_per_stop: clamp(Math.round(form.frames_per_stop), 1, 100),
       rotations: form.rotations.slice(0, maxTurns).map(r => ({ tilt_deg: caps.tilt ? clamp(Math.round(r.tilt_deg), tLo, tHi) : 0 })),
       speed_s_per_rev: speed,
+      mode: sweeps && form.sync_scan ? 'continuous' : 'step',
     }),
-    [form, caps, speed],
+    [form, caps, speed, sweeps],
   );
-  const stops = Math.ceil(360 / plan.interval_deg - 1e-9);
+  const sweep = plan.mode === 'continuous';
+  const stops = sweep ? 1 : Math.ceil(360 / plan.interval_deg - 1e-9);
   const seconds = estimateProgramSeconds(plan, speed, status.tilt_deg ?? 0, fps > 1 ? fps : 10);
   const tilts = plan.rotations.some(r => r.tilt_deg !== Math.round(status.tilt_deg ?? 0));
 
@@ -403,15 +407,19 @@ function ProgramSection({ status, caps, speed, locked }: { status: TurntableStat
     <section className="tt-program" aria-label="Turntable scan">
       <div className="tt-program-head">
         <h4>Scan all the way round</h4>
-        <span className="caption">The table stops every {plan.interval_deg}° and the scanner records at each stop.</span>
+        <span className="caption">{sweep ? 'The table turns slowly all the way round while the scanner records: its laser lines build the surface as the part moves through them.' : `The table stops every ${plan.interval_deg}° and the scanner records at each stop.`}</span>
       </div>
       {p && !running && <ProgramResult status={status} />}
-      <Field label="Stop every" inline={false}>
-        <Slider value={plan.interval_deg} min={iLo} max={iHi} step={1} label="Stop every" format={v => `${v}° · ${Math.ceil(360 / v - 1e-9)} stops`} onChange={v => setForm({ interval_deg: Math.round(v) })} />
-      </Field>
-      <Field label="Frames at each stop">
-        <NumberInput value={plan.frames_per_stop} step={1} min={1} max={100} onChange={v => setForm({ frames_per_stop: Math.round(v) })} />
-      </Field>
+      {!sweep && (
+        <>
+          <Field label="Stop every" inline={false}>
+            <Slider value={plan.interval_deg} min={iLo} max={iHi} step={1} label="Stop every" format={v => `${v}° · ${Math.ceil(360 / v - 1e-9)} stops`} onChange={v => setForm({ interval_deg: Math.round(v) })} />
+          </Field>
+          <Field label="Frames at each stop">
+            <NumberInput value={plan.frames_per_stop} step={1} min={1} max={100} onChange={v => setForm({ frames_per_stop: Math.round(v) })} />
+          </Field>
+        </>
+      )}
       <Field label="Direction" inline={false}>
         <Segmented size="sm" ariaLabel="Direction" value={plan.direction} onChange={direction => setForm({ direction })} options={[{ value: 'cw', label: 'Clockwise' }, { value: 'ccw', label: 'Counter-clockwise' }]} />
       </Field>
@@ -444,13 +452,13 @@ function ProgramSection({ status, caps, speed, locked }: { status: TurntableStat
         )}
       </div>
 
-      <Field label="Start and pause scanning with the turntable" help="Scanning pauses while the platter moves and records at every stop — Revo Metro’s turntable sync.">
+      <Field label="Start and pause scanning with the turntable" help={sweeps ? 'Scanning starts with the table and pauses only while it tilts between turns.' : 'Scanning pauses while the platter moves and records at every stop — Revo Metro’s turntable sync.'}>
         <Switch checked={plan.sync_scan} onChange={sync_scan => setForm({ sync_scan })} label="Start and pause scanning with the turntable" />
       </Field>
       {plan.sync_scan && !captureActive && <p className="caption tt-hint"><TriangleAlert size={13} aria-hidden /> Connect the scanner above first, so it can record at each stop.</p>}
 
       <Button variant="primary" block icon={<Play size={16} />} disabled={locked} loading={busy === 'program'} onClick={start}>
-        Start: {plan.rotations.length} turn{plan.rotations.length > 1 ? 's' : ''} · {stops * plan.rotations.length} stops · about {fmtMinutes(seconds)}
+        Start: {plan.rotations.length} turn{plan.rotations.length > 1 ? 's' : ''}{sweep ? '' : ` · ${stops * plan.rotations.length} stops`} · about {fmtMinutes(seconds)}
       </Button>
 
       {confirm && (
@@ -473,6 +481,7 @@ function ProgramSection({ status, caps, speed, locked }: { status: TurntableStat
 
 function ProgramProgress({ status }: { status: TurntableStatus }) {
   const p = status.program!;
+  const captureFrames = useCapture(s => s.status?.frames ?? 0);
   const phase = p.phase ? PHASE_LABEL[p.phase] ?? p.phase : 'Starting';
   return (
     <section className="tt-program is-running" aria-live="polite">
@@ -495,7 +504,7 @@ function ProgramProgress({ status }: { status: TurntableStatus }) {
         <span className="tt-phase">{phase}{p.tilt_deg ? ` · tilt ${fmtDeg(p.tilt_deg, 0, true)}` : ''}</span>
       </div>
       <div className="caption">
-        {p.sync_scan ? (p.capture?.linked ? `${p.capture.frames} frames recorded at the stops so far` : 'Waiting for the scanner at each stop') : `Holding still at every stop; the scanner is not linked`}
+        {p.mode === 'continuous' && p.sync_scan ? (p.capture?.linked ? `Scanning while the table turns · ${captureFrames} frames` : 'Waiting for the scanner') : p.sync_scan ? (p.capture?.linked ? `${p.capture.frames} frames recorded at the stops so far` : 'Waiting for the scanner at each stop') : `Holding still at every stop; the scanner is not linked`}
       </div>
       {p.warnings?.map(w => (
         <p key={w} className="warn-text">
