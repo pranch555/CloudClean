@@ -186,6 +186,78 @@
   border-radius: 12px;
 }
 
+/* ---- the Floor: lining a model up with the floor (beside the view rail) */
+.floor-panel {
+  top: 132px;
+  right: 76px;
+  width: min(296px, calc(100% - 76px - 84px));
+  max-height: calc(100% - 132px - 84px);
+  overflow-y: auto;
+  display: grid;
+  gap: 9px;
+  padding: 11px 12px 12px;
+  font-size: 13.5px;
+}
+
+.floor-head {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.floor-head strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.floor-head .muted {
+  font-size: 13px;
+}
+
+.floor-tip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.floor-tip svg {
+  margin-top: 2px;
+  color: var(--signal);
+}
+
+.floor-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.floor-label {
+  min-width: 46px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.floor-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.floor-panel .hint-text {
+  margin: 0;
+}
+
+.floor-note {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+
 
 .rec-dot {
   width: 12px;

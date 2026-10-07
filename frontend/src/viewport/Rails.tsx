@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Axis3d, Brush, Camera, Crosshair, Eye, Fullscreen, Grid3x3, Lasso, Maximize2, MousePointer2, Rotate3d, Ruler, Scissors, Shrink, SlidersHorizontal, SquareDashedMousePointer } from 'lucide-react';
+import { ArrowDownToLine, Axis3d, Brush, Camera, Crosshair, Eye, Fullscreen, Grid3x3, Lasso, Maximize2, MousePointer2, Rotate3d, Ruler, Scissors, Shrink, SlidersHorizontal, SquareDashedMousePointer } from 'lucide-react';
 import type { ColorMode, ViewName, ViewportTool } from '../lib/types';
 import { copyScreenshot, setTool, viewCamera } from '../lib/actions';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 import { Field, IconButton, Popover, Segmented, Select, Slider, Switch } from '../ui/primitives';
+import { toggleFloor, useFloor } from './FloorPanel';
 
 const TOOLS: { id: ViewportTool; label: string; key: string; icon: typeof MousePointer2 }[] = [
   { id: 'navigate', label: 'Move the view', key: 'V', icon: MousePointer2 },
@@ -48,6 +49,7 @@ export function ViewRail() {
   const byId = useStore(s => s.byId);
   const [recording, setRecording] = useState(false);
   const [full, setFull] = useState(false);
+  const floorOn = useFloor(s => s.on);
 
   useEffect(() => {
     const onChange = () => setFull(!!document.fullscreenElement);
@@ -213,6 +215,9 @@ export function ViewRail() {
       </Popover>
       <IconButton label={display.showGrid ? 'Hide the floor grid' : 'Show the floor grid'} tip="top" active={display.showGrid} onClick={() => setDisplay({ showGrid: !display.showGrid })}>
         <Grid3x3 size={18} />
+      </IconButton>
+      <IconButton data-guide="view.floor" label={floorOn ? 'Hide the floor' : 'Floor: stand the model on it'} tip="top" active={floorOn} onClick={toggleFloor}>
+        <ArrowDownToLine size={18} />
       </IconButton>
       <span className="rail-sep" aria-hidden style={{ height: 1, margin: '3px 6px', background: 'var(--line)' }} />
       <IconButton data-guide="view.fullscreen" label={full ? 'Leave full screen (Esc)' : 'Full screen 3D view'} tip="top" active={full} onClick={toggleFull}>
