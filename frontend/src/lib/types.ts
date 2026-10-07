@@ -93,7 +93,7 @@ export interface ParamsResponse {
   workspace: string;
 }
 
-export type ColorMode = 'original' | 'solid' | 'asset' | 'normal' | 'scalar';
+export type ColorMode = 'original' | 'solid' | 'asset' | 'normal' | 'scalar' | 'height';
 
 export type ViewName = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom' | 'iso' | 'fit';
 

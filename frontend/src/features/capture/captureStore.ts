@@ -50,6 +50,8 @@ export interface CaptureStatus {
   fps?: number;
   elapsed_s?: number;
   point_distance_mm?: number | null;
+  /** the live view keeps one point per cell of this size (coarser than the point distance) */
+  display_voxel_mm?: number | null;
   tracking?: string;
   has_colors?: boolean;
   saved_asset_id?: string | null;
@@ -98,7 +100,7 @@ interface CaptureState {
   guidance: Guidance | null;
   timeline: { t: number; c: number }[];
   connected: boolean;
-  colorBy: 'density' | 'color' | 'solid';
+  colorBy: 'density' | 'color' | 'solid' | 'height';
   pending: PendingScan[];
   /**
    * Look from the scanner while capturing (as Revo Metro does). Any drag, wheel or double-click in the viewport turns
@@ -147,8 +149,10 @@ export const useCapture = create<CaptureState>(() => ({
 
 // Sparse surface (0) recedes into the background and surface at target density (≥ 1) stands out: on the dark Carbon
 // stage sparse is dark and dense light (dataviz dark-mode anchor flip), on the light Paper stage the other way round.
+// On Paper the ramp stops at a mid blue: its near-black end made a well scanned part one dark silhouette, and the
+// shape shading cannot show on near black.
 export const DENSITY_STYLE = { kind: 'sequential' as const, min: 1.2, max: 0, tolerance: 0, steps: 0 };
-export const DENSITY_STYLE_LIGHT = { ...DENSITY_STYLE, min: 0, max: 1.2 };
+export const DENSITY_STYLE_LIGHT = { ...DENSITY_STYLE, min: 0, max: 1.2, part: [0, 0.68] as [number, number] };
 
 const darkStage = () => typeof document !== 'undefined' && document.documentElement.dataset.theme === 'carbon';
 export const densityStyle = () => (darkStage() ? DENSITY_STYLE : DENSITY_STYLE_LIGHT);
@@ -162,7 +166,10 @@ export function applyLiveStyle() {
   const live = v.liveCloud();
   const mode = useCapture.getState().colorBy;
   const s = useCapture.getState().status;
-  if (s?.point_distance_mm) live.spacing = s.point_distance_mm;
+  // the live points are one per display cell: sized from the point distance alone (finer) they left gaps between
+  // them, and neither the colours nor the shape shading could show a surface
+  const spacing = Math.max(s?.point_distance_mm ?? 0, s?.display_voxel_mm ?? 0);
+  if (spacing) live.spacing = spacing;
   const lut = darkStage() ? (densityLuts.dark ??= lutTexture(DENSITY_STYLE)) : (densityLuts.light ??= lutTexture(DENSITY_STYLE_LIGHT));
   live.style(mode === 'color' && !s?.has_colors ? 'solid' : mode, mode === 'density' ? lut : undefined);
   v.invalidate();
@@ -249,7 +256,8 @@ export function openStream() {
     if (msg.type === 'status') {
       const prev = useCapture.getState().status;
       useCapture.setState({ status: msg });
-      if (msg.point_distance_mm && msg.point_distance_mm !== prev?.point_distance_mm) applyLiveStyle();
+      if ((msg.point_distance_mm && msg.point_distance_mm !== prev?.point_distance_mm) ||
+          (msg.display_voxel_mm && msg.display_voxel_mm !== prev?.display_voxel_mm)) applyLiveStyle();
     } else if (msg.type === 'guidance') {
       const c = msg.coverage?.completeness;
       useCapture.setState(s => ({

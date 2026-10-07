@@ -8,7 +8,7 @@ import { pickFiles } from '../../lib/importing';
 import { programRunning, turntable, useTurntable } from '../../lib/turntable';
 import { useStore } from '../../store';
 import { getViewer } from '../../viewer/instance';
-import { scalarColor } from '../../viewer/colormaps';
+import { heightGradientCss, scalarColor } from '../../viewer/colormaps';
 import { CleanGlyph } from '../../ui/icons';
 import { Button, Field, Metric, Segmented, Switch, TextInput } from '../../ui/primitives';
 import { AssessmentView } from '../Assessment';
@@ -529,6 +529,7 @@ function densityRamp() {
 
 function LiveViewBlock() {
   useStore(s => s.theme); // the key follows the stage colours
+  const shade = useStore(s => s.display.shade);
   const follow = useCapture(s => s.follow);
   const colorBy = useCapture(s => s.colorBy);
   const status = useCapture(s => s.status)!;
@@ -551,7 +552,7 @@ function LiveViewBlock() {
             useCapture.setState({ colorBy: v });
             applyLiveStyle();
           }}
-          options={[{ value: 'density', label: 'Density' }, { value: 'color', label: 'Texture' }, { value: 'solid', label: 'Plain' }]}
+          options={[{ value: 'density', label: 'Density' }, { value: 'height', label: 'Height' }, { value: 'color', label: 'Texture' }, { value: 'solid', label: 'Plain' }]}
         />
       </Field>
       {colorBy === 'density' && (
@@ -563,6 +564,18 @@ function LiveViewBlock() {
           </div>
         </div>
       )}
+      {colorBy === 'height' && (
+        <div className="cap-density-key">
+          <span className="cap-density-ramp" style={{ background: heightGradientCss(document.documentElement.dataset.theme === 'carbon') }} aria-hidden />
+          <div className="row spread caption">
+            <span>bottom (the table)</span>
+            <span>top</span>
+          </div>
+        </div>
+      )}
+      <Field label="Shade the points (show the shape)" help="Darkens edges and slopes so you can see the shape while you scan. Only the picture changes, not the scan.">
+        <Switch checked={shade} onChange={on => useStore.getState().setDisplay({ shade: on })} label="Shade the points (show the shape)" />
+      </Field>
     </Block>
   );
 }
