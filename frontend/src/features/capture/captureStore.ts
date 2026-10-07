@@ -7,6 +7,9 @@ import { useStore } from '../../store';
 import { lutTexture } from '../../viewer/colormaps';
 import { getViewer } from '../../viewer/instance';
 
+/** Driver settings the camera view (cameraStore.ts) owns: never shown in Fine-tune; the newest values win at connect. */
+export const CAMERA_KEYS = ['camera_mode', 'laser_level', 'exposure_us', 'gain', 'fill_light', 'camera_surface'];
+
 export interface SettingSchema {
   key: string;
   label: string;
@@ -28,7 +31,7 @@ export interface DriverInfo {
   available: boolean;
   reason?: string | null;
   settings: SettingSchema[];
-  capabilities?: { range_mm?: [number, number] | null; optimal_mm?: number | null; streaming?: boolean; provides_pose?: boolean; detected?: boolean; sweeps?: boolean };
+  capabilities?: { range_mm?: [number, number] | null; optimal_mm?: number | null; streaming?: boolean; provides_pose?: boolean; detected?: boolean; sweeps?: boolean; camera?: boolean };
   /** metroy_usb: what was found on the USB bus */
   devices?: { hardware_id: string; product: string; serial?: string; bus?: string; video_nodes: string[]; kernel_drivers?: string[] }[];
 }
@@ -328,7 +331,11 @@ export async function captureAction(action: string, body: unknown = {}) {
 
 /** Open a capture session: the live view starts empty and the stored models step aside. */
 export async function connectCapture(driver: string, settings: Record<string, unknown>) {
-  await captureAction('connect', { driver, settings });
+  // the camera view owns these: the newest values (changed live, after the chooser was filled in) win
+  const st = useCapture.getState().status;
+  const fresh = st?.active && st.driver === driver ? { ...rememberedSettings(driver), ...(st.settings ?? {}) } : rememberedSettings(driver);
+  const camera = Object.fromEntries(CAMERA_KEYS.filter(k => k in fresh).map(k => [k, fresh[k]]));
+  await captureAction('connect', { driver, settings: { ...settings, ...camera } });
   getViewer()?.liveCloud().reset();
   getViewer()?.setLiveFrame(null);
   useCapture.setState({ timeline: [], guidance: null });

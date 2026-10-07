@@ -10,7 +10,10 @@ import glob
 import os
 import select
 import struct
+import threading
 import time
+
+from .exposure import PRESETS
 
 MAGIC = b"\x5a\x5a\x5a\x5a"
 REPORT = 1024
@@ -30,13 +33,12 @@ PATTERN_CROSS, PATTERN_SINGLE, PATTERN_PARALLEL = 7, 9, 11
 
 # Revo Metro's cross-line presets for the MetroY Ultra (model 0L8, docs/revo-metro-internals.md 2.2): exposure in
 # microseconds, analogue gain, fill-light brightness. At these short exposures a diffuse surface stays dark under the
-# fill light while the laser lines and the retro-reflective markers shine.
-SURFACE_PRESETS = {
-    "general": {"exposure_us": 200, "gain": 1, "fill_light": 30},
-    "dark": {"exposure_us": 1000, "gain": 2, "fill_light": 3},
-    "reflective": {"exposure_us": 800, "gain": 1, "fill_light": 6},
-}
+# fill light while the laser lines and the retro-reflective markers shine. The full presets (with the laser level that
+# sets the laser pulse 0xb08) are exposure.PRESETS; this is the older three-value view of them.
+SURFACE_PRESETS = {k: {"exposure_us": p.exposure_us, "gain": p.gain, "fill_light": p.marker_light}
+                   for k, p in PRESETS.items()}
 FRAME_TIME_US = 8000
+MIN_GAP_S = 0.15                   # between two shell commands: chained writes made the scanner drop off the bus
 
 
 def find_hidraw(vid: str = "2207", pid: str = "110C") -> str:
@@ -48,6 +50,9 @@ def find_hidraw(vid: str = "2207", pid: str = "110C") -> str:
 
 class MetroyHid:
     def __init__(self, path: str | None = None):
+        self._lock = threading.RLock()      # register writes come from the camera writer and the lifecycle
+        self._last_shell = 0.0
+        self.min_gap_s = MIN_GAP_S
         self.path = path or find_hidraw()
         try:
             self.fd = os.open(self.path, os.O_RDWR)
@@ -74,7 +79,8 @@ class MetroyHid:
         for offset, data in (args or {}).items():
             buf[offset:offset + len(data)] = data
         # hidraw: the first byte written is the report id, 0 for a device without numbered reports
-        os.write(self.fd, b"\x00" + bytes(buf))
+        with self._lock:
+            os.write(self.fd, b"\x00" + bytes(buf))
 
     def recv(self, timeout: float = 2.0) -> bytes:
         if not select.select([self.fd], [], [], timeout)[0]:
@@ -108,9 +114,17 @@ class MetroyHid:
         raise FileNotFoundError(f"{remote}: the scanner answered 'not found / not ready' {retries} times")
 
     def shell(self, command: str) -> None:
-        """`01 01` - run a shell command on the scanner. No reply is sent."""
+        """`01 01` - run a shell command on the scanner. No reply is sent. Never two within `min_gap_s`, from any
+        thread: the scanner drops off the bus when register writes come too close together."""
         data = command.encode()
-        self.send(0x01, 0x01, {7: bytes([0x10]), 40: struct.pack("<I", len(data) + 1), 44: data + bytes(1)})
+        with self._lock:
+            wait = self._last_shell + self.min_gap_s - time.perf_counter()
+            if wait > 0:
+                time.sleep(wait)
+            try:
+                self.send(0x01, 0x01, {7: bytes([0x10]), 40: struct.pack("<I", len(data) + 1), 44: data + bytes(1)})
+            finally:
+                self._last_shell = time.perf_counter()
 
     def preisp(self, register: int, *values) -> None:
         """Write a register of the scanner's Rockchip pre-ISP, exactly as Revo Metro does.

@@ -32,6 +32,7 @@ import { driverMeta, fmtArea, fmtClock, HOLE_WORD, STATE_WORD } from '../../feat
 import { ScannerChooser, ScannerSummary, useScannerSetup, type ScannerSetup } from './ScannerBlock';
 import { TurntableBlock } from './TurntableBlock';
 import { PhotosBlock } from './PhotosBlock';
+import { CameraBlock } from './CameraBlock';
 import { ActionError, ConfirmDialog, RecDot, runAction, useCaptureAction } from './parts';
 
 const LIVE = new Set(['running', 'paused']);
@@ -47,6 +48,7 @@ export function CaptureStep() {
   const points = status?.points ?? 0;
   // once scanning stops, keeping the scan is the next thing to do
   const saveFirst = points > 0 && state !== 'running' && (!!status?.unsaved || !!status?.saved_asset_id);
+  const hasCamera = useCapture(s => !!s.drivers.find(d => d.id === s.status?.driver)?.capabilities?.camera);
 
   // fresh scanner availability and waiting scans each time the step opens (the viewport HUD keeps the live stream,
   // the Z-up view and the turntable status going while the Scan step is shown)
@@ -82,6 +84,7 @@ export function CaptureStep() {
           {hasPending && <PendingBlock />}
           <GuidanceBlock />
           {points > 0 && !saveFirst && <SaveBlock onDiscard={() => setDiscarding(true)} />}
+          {hasCamera && <CameraBlock />}
           <LiveViewBlock />
           <div className="divider" />
           <TurntableBlock />
@@ -602,7 +605,7 @@ function FilesBlock({ compact }: { compact?: boolean }) {
     }
   };
   const bridge = (
-    <details className="disclosure">
+    <details className="disclosure cap-bridge">
       <summary>
         <Wifi size={16} aria-hidden /> Optional: scans made in Revo Metro on another PC
         <ChevronDown size={16} className="chev" aria-hidden />
