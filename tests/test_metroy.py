@@ -219,6 +219,61 @@ def test_driver_explains_why_it_cannot_capture_here():
     assert {"matching", "point_distance", "tracking"} <= set(keys)
 
 
+def _plate_view(pitch_deg=28.5, spin_deg=0.0, rng=None):
+    """Markers in a ring on a turntable plate (world z = 0, turning about Z), as a scanner 300 mm away pitched down
+    by pitch_deg sees them: (sensor->world pose, markers in sensor coordinates)."""
+    a = np.radians(np.arange(0, 360, 30) + spin_deg)
+    world = np.c_[75 * np.cos(a), 75 * np.sin(a), np.zeros(len(a))]
+    p = np.radians(pitch_deg)
+    fwd = np.array([0.0, np.cos(p), -np.sin(p)])               # looking along +Y and down onto the plate
+    right = np.array([1.0, 0.0, 0.0])
+    down = np.cross(fwd, right)                                 # sensor y points down the image
+    T = np.eye(4)
+    T[:3, :3] = np.c_[right, down, fwd]
+    T[:3, 3] = -300 * fwd
+    local = (world - T[:3, 3]) @ T[:3, :3]
+    if rng is not None:
+        local = local + rng.normal(0, 0.03, local.shape)
+    return T, local
+
+
+def test_scan_stands_on_the_turntable_plate_from_the_first_marker_frame():
+    """The user's first native turntable scan came out lying on its side: the map started on a frame that had
+    markers but no laser points yet, so the scan stayed in sensor coordinates. The markers on the plate fix the
+    level: Z along the plate's normal, the plate at z = 0, whatever the scanner's pitch."""
+    from cloudclean.capture.drivers.metroy_usb import _initial_pose
+    rng = np.random.default_rng(3)
+    for pitch in (15.0, 28.5, 60.0):
+        T_true, local = _plate_view(pitch, rng=rng)
+        T = _initial_pose(np.zeros((0, 3)), local)
+        M = T @ np.linalg.inv(T_true)                            # true world -> CloudClean's world
+        assert np.degrees(np.arccos(np.clip(M[2, 2], -1, 1))) < 0.1, "the plate's normal is Z"
+        assert abs(M[2, 3]) < 0.05, "the plate is at z = 0"
+        part_top = markers.apply(M, np.array([[0.0, 0.0, 40.0]]))
+        assert abs(part_top[0, 2] - 40.0) < 0.1                  # a part on the plate stands above it
+    # the tracker builds its map in that frame, so every later pose (the table turned) is level too
+    T_true, local = _plate_view()
+    tracker = markers.MarkerTracker()
+    tracker.initial = _initial_pose(np.zeros((0, 3)), local)
+    assert tracker.track(local).state == "init"
+    assert np.abs(tracker.world[:, 2]).max() < 1e-6
+
+
+def test_markers_off_one_table_keep_the_sensor_up_frame():
+    from cloudclean.capture.drivers.metroy_usb import _initial_pose
+    sensor_up = np.array([[1.0, 0, 0], [0, 0, 1.0], [0, -1.0, 0]])
+    _, local = _plate_view()
+    on_part = local.copy()
+    on_part[0] += np.array([0.0, -10.0, 0.0])                    # one marker stuck on the part, 10 mm up
+    T = _initial_pose(np.zeros((0, 3)), on_part)
+    assert np.allclose(T[:3, :3], sensor_up)
+    assert np.allclose(markers.apply(T, on_part).mean(axis=0), 0, atol=1e-9)   # not left 300 mm away
+    board = np.c_[np.linspace(-60, 60, 6), np.tile([-30.0, 30.0], 3), np.full(6, 300.0)]   # a wall facing the scanner
+    assert np.allclose(_initial_pose(np.zeros((0, 3)), board)[:3, :3], sensor_up)
+    pts = np.array([[0.0, 0.0, 250.0], [10.0, 0.0, 250.0]])
+    assert np.allclose(markers.apply(_initial_pose(pts, None), pts).mean(axis=0), 0)   # untracked: as before
+
+
 def test_regular_marker_grid_never_gives_a_wrong_pose():
     """Four markers of a regular grid fit in many places: recovering the pose from them alone must refuse (a wrong
     pose is what fuses a surface a second time at an offset), and a larger, unambiguous view must be accepted."""

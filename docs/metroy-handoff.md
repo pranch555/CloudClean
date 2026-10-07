@@ -28,6 +28,7 @@ The `metroy_usb` driver is a real streaming driver, live in the CloudClean servi
 | Throughput | ~150-200 ms CPU per frame over 12 worker processes: ~45 frames/s triangulated (a busy pool skips older frames and always takes the newest), ~6-14k points each |
 | Markers | detection, stereo, 3D and a marker-map tracker (Kabsch + triangle-signature relocalization), tested on synthetic data to < 0.15 mm pose error. **Not yet seen a real marker** - see below |
 | Session | markers mode (default, Revo's laser-mode behaviour): the driver supplies the pose; frames the markers cannot place are reported lost with the reason, never guessed. Geometry mode: CloudClean's ICP |
+| World frame | markers on one flat table seen from above (the turntable plate): the scan stands on it - Z along the plate's normal, plate at z = 0, so a turntable turns about Z (`metroy_usb._table_frame`; the user's plate fits a plane to 0.19 mm, 12 markers). Otherwise Z = sensor up at the first marker frame. Before 2026-10-07 a map started on a frame with markers but no laser points yet stayed in sensor coordinates: such scans lie on their side (Clean -> Sit flat on the floor, or re-scan) |
 | Tests | `tests/test_metroy.py` (synthetic step scene through the real rectification, markers, tracker, laser file). Suites: 105 passed on Windows and on the Spark |
 
 ## What is missing, in order
