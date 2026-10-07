@@ -233,6 +233,16 @@ FEATURES: list[Feature] = [
     Feature("capture.guidance", "Guidance", "Scan → Guidance (while scanning), plus the gauges on the 3D view",
             "Live coverage, distance, speed, tracking and density, and which areas still need scanning.",
             "coverage holes missing distance speed tracking live help", _s("capture")),
+    Feature("capture.camera", "Camera view", "Scan → Camera view (once the scanner is connected; \"Show over the 3D "
+            "view\" puts it top right of the 3D view)",
+            "What the scanner's two cameras see, live, before and while scanning (the laser comes on, nothing is "
+            "recorded until Start scanning). The laser lines CloudClean finds show green, washed-out spots red, "
+            "markers ringed blue; 'Laser lines' says in plain words whether they are bright enough. Choose what the "
+            "part is like (Normal, Dark for black parts, Shiny for polished metal) and keep Exposure on Auto, or "
+            "switch to Manual and set Laser brightness, Exposure, Gain and Marker light yourself.",
+            "camera live view preview picture image what the scanner sees exposure gain laser brightness power "
+            "auto manual dark black shiny reflective metal marker light too dim too bright washed out cannot see",
+            _s("capture")),
     Feature("capture.save", "Save this scan", "Scan → Save this scan (after scanning)",
             "Saves the scan into the project, optionally processing it automatically.", "save keep finish scan",
             _s("capture")),

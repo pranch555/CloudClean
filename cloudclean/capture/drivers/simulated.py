@@ -212,21 +212,24 @@ class SimulatedDriver(ScannerDriver):
         if self.running:
             return
         self._lease.renew()
+        self._cam.streaming = self._cam.preview = True
         if self._preview_thread is None or not self._preview_thread.is_alive():
-            self._cam.streaming = self._cam.preview = True
             self._preview_thread = threading.Thread(target=self._preview_loop, name="sim-camera-preview", daemon=True)
             self._preview_thread.start()
 
     def _preview_loop(self) -> None:
-        """Frames for the camera view while not scanning: shown and measured, never handed to the session."""
+        """Frames for the camera view while not scanning: shown and measured, never handed to the session. One thread
+        for the whole connection: it idles while nobody looks or while the scan itself renders the frames."""
         t0 = time.monotonic()
-        while self._lease.active and not self.running and self._cam is not None:
-            with self._render_lock:
-                frame = self.render(time.monotonic() - t0)
-            self._cam.observe(frame)
+        while self.connected and self._cam is not None:
+            cam = self._cam
+            if not self.running and self._lease.active:
+                with self._render_lock:
+                    frame = self.render(time.monotonic() - t0)
+                cam.observe(frame)
+            elif not self.running and cam.preview:
+                cam.streaming = cam.preview = False
             time.sleep(0.1)
-        if self._cam is not None and self._cam.preview:     # not taken over by a scan in the meantime
-            self._cam.streaming = self._cam.preview = False
 
     def camera_view(self, cams: str = "both", overlay: bool = True, width: int = 960) -> bytes | None:
         if self._cam is None:

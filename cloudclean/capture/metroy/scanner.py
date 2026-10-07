@@ -235,6 +235,10 @@ class MetroyScanner:
         self.hid.laser(True)
         self.control.start()
         self.running = True
+        with self._cam_lock:
+            latest = self.camera.registers()
+        if latest != registers:                   # changed while the start-up ran: write it now
+            self.control.request(latest)
         self._grab = threading.Thread(target=self._grab_loop, name="metroy-grab", daemon=True)
         self._grab.start()
         self._feeder = threading.Thread(target=self._feed_loop, name="metroy-feed", daemon=True)

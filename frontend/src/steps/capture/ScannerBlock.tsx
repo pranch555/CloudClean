@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Box, CheckCircle2, ChevronDown, CircleSlash, Gem, Moon, RefreshCw, TriangleAlert, Unplug } from 'lucide-react';
 import { fmtLen } from '../../lib/format';
 import { Button, Field, NumberInput, Select, Switch, TextInput } from '../../ui/primitives';
-import { connectCapture, loadDrivers, rememberedSettings, useCapture, type DriverInfo, type SettingSchema } from '../../features/capture/captureStore';
+import { CAMERA_KEYS, connectCapture, loadDrivers, rememberedSettings, useCapture, type DriverInfo, type SettingSchema } from '../../features/capture/captureStore';
 import { availability, driverMeta, PRIMARY_DRIVERS, reasonShort, sortDrivers } from '../../features/capture/vocabulary';
 import { Block, ChoiceCards } from '../StepFrame';
 import { ActionError, Callout, runAction, useCaptureAction } from './parts';
@@ -51,6 +51,12 @@ export function useScannerSetup(): ScannerSetup {
   useEffect(() => {
     setValuesState(initial());
   }, [driver?.id, schemaKey]);
+
+  // a session that ends may have changed settings live (Scan → Camera view): start from what is remembered now
+  const sessionActive = useCapture(s => !!s.status?.active && s.status.state !== 'closed');
+  useEffect(() => {
+    if (!sessionActive && driver) setValuesState(initial());
+  }, [sessionActive]);
 
   return {
     drivers: sorted,
@@ -126,7 +132,7 @@ export function ScannerChooser({ setup }: { setup: ScannerSetup }) {
         </Block>
       )}
 
-      {ready && schema.some(s => s !== surface) && <FineTune setup={setup} exclude={surface?.key} />}
+      {ready && schema.some(s => s !== surface) && <FineTune setup={setup} exclude={[...(surface ? [surface.key] : []), ...CAMERA_KEYS]} />}
     </>
   );
 }
@@ -174,10 +180,12 @@ function DriverCard({ d, selected, onSelect }: { d: DriverInfo; selected: boolea
   );
 }
 
-function FineTune({ setup, exclude }: { setup: ScannerSetup; exclude?: string }) {
+/** The rest of the scanner's settings. `exclude`: keys with a place of their own (the surface cards; the camera
+ * settings, which Scan → Camera view sets live after connecting). */
+function FineTune({ setup, exclude = [] }: { setup: ScannerSetup; exclude?: string[] }) {
   const { driver, schema, values, setValues, resetValues } = setup;
   const sessionKeys = new Set(useCapture(s => s.sessionSettings).map(s => s.key));
-  const own = schema.filter(s => s.key !== exclude && !sessionKeys.has(s.key));
+  const own = schema.filter(s => !exclude.includes(s.key) && !sessionKeys.has(s.key));
   const session = schema.filter(s => sessionKeys.has(s.key));
   const sub = own.slice(0, 3).map(s => s.label.toLowerCase().replace(/ \/ .*/, '')).join(', ');
   return (
@@ -261,6 +269,10 @@ export function ScannerSummary({ setup, onDisconnect }: { setup: ScannerSetup; o
   useEffect(() => {
     if (!editing) return;
     if (status.driver && setup.driverId !== status.driver) setup.setDriverId(status.driver);
+    // the camera view may have changed these since connecting: show what the scanner uses now
+    const now = status.settings ?? {};
+    const live = Object.fromEntries(['surface', ...CAMERA_KEYS].filter(k => k in now).map(k => [k, now[k]]));
+    setup.setValues(v => ({ ...v, ...live }));
   }, [editing]);
 
   if (editing) {

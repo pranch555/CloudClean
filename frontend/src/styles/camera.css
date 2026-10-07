@@ -1,0 +1,594 @@
+/*
+ * The scanner's camera view: steps/capture/CameraBlock.tsx (Scan → Camera view), features/capture/CameraPicture.tsx
+ * (the viewfinder) and features/capture/CameraFloat.tsx (over the 3D view). v3 tokens only (styles/tokens.css).
+ *
+ * The viewfinder is a dark monitor in both themes: the pictures are infrared grey, and the colours CloudClean paints on
+ * them (green: laser lines found, red: washed out, blue rings: markers) read best on black.
+ */
+
+.cam-finder {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 12px;
+  background: radial-gradient(130% 150% at 50% -10%, #222327 0%, #0c0c0d 62%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), var(--shadow-1);
+  user-select: none;
+}
+
+.cam-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  -webkit-user-drag: none;
+}
+
+.cam-crop {
+  position: absolute;
+  z-index: 2;
+  width: 13px;
+  height: 13px;
+  border: 0 solid rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.cam-crop.tl {
+  top: 7px;
+  left: 7px;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.cam-crop.tr {
+  top: 7px;
+  right: 7px;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+.cam-crop.bl {
+  bottom: 7px;
+  left: 7px;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.cam-crop.br {
+  bottom: 7px;
+  right: 7px;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+.cam-split {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cam-tag,
+.cam-live {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px 3px;
+  border-radius: 5px;
+  background: rgba(10, 10, 11, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font: 600 10.5px/1 var(--font-mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cam-tag {
+  margin-left: 18px;
+}
+
+/* bottom right: the top corners name the cameras */
+.cam-live {
+  top: auto;
+  bottom: 9px;
+  right: 9px;
+  pointer-events: auto;
+}
+
+.cam-live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4cc38a;
+  box-shadow: 0 0 0 3px rgba(76, 195, 138, 0.22);
+}
+
+.cam-live.is-rec i {
+  background: #ff6a3d;
+  box-shadow: none;
+  animation: tally 1.6s var(--ease) infinite;
+}
+
+/* the overlay's key, under the picture */
+.cam-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: -6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.cam-legend.is-idle {
+  opacity: 0.55;
+}
+
+.cam-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: -0.5px;
+}
+
+.cam-legend .k-line::before {
+  background: rgb(76, 214, 120);
+}
+
+.cam-legend .k-sat::before {
+  background: rgb(255, 64, 64);
+}
+
+.cam-legend .k-mk::before {
+  border: 1.5px solid rgb(90, 160, 255);
+  border-radius: 50%;
+}
+
+.cam-wait {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 5px;
+  padding: 16px;
+  overflow: hidden;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.cam-wait > svg {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cam-wait b {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cam-wait > span:not(.cam-sweep) {
+  max-width: 34ch;
+}
+
+/* waiting for pictures: a laser line combs down the finder */
+.cam-sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -45%;
+  height: 45%;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 106, 61, 0.08) 75%, rgba(255, 106, 61, 0.5) 99%, rgba(255, 190, 160, 0.9) 100%);
+  animation: cam-sweep 2.2s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes cam-sweep {
+  to {
+    top: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cam-sweep {
+    display: none;
+  }
+}
+
+.cam-wait-btn {
+  margin-top: 8px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  color: #17161a;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--dur-1) var(--ease);
+}
+
+.cam-wait-btn:hover {
+  background: #fff;
+}
+
+.cam-finder.is-compact {
+  border-radius: 9px;
+}
+
+.cam-finder.is-compact .cam-tag,
+.cam-finder.is-compact .cam-live {
+  font-size: 9.5px;
+  padding: 3px 6px 2px;
+}
+
+.cam-finder.is-compact .cam-tag {
+  top: 7px;
+}
+
+.cam-finder.is-compact .cam-live {
+  bottom: 7px;
+  right: 7px;
+}
+
+.cam-finder.is-compact .cam-crop {
+  width: 10px;
+  height: 10px;
+}
+
+/* ---- picture controls */
+.cam-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.cam-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.cam-off,
+.cam-popout,
+.cam-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cam-off {
+  margin-left: auto;
+}
+
+.cam-reset {
+  justify-self: start;
+}
+
+.cam-elsewhere {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---- the light meter: grey levels from black to washed out, the band CloudClean aims for, where the lines are */
+.cam-meter {
+  display: grid;
+  gap: 7px;
+  padding: 12px 14px 10px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+}
+
+.cam-meter-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cam-meter-icon {
+  flex: none;
+  align-self: center;
+  color: var(--ink-4);
+}
+
+.cam-meter.tone-ok .cam-meter-icon {
+  color: var(--ok);
+}
+
+.cam-meter.tone-warn .cam-meter-icon {
+  color: var(--warn-glyph);
+}
+
+.cam-meter.tone-danger .cam-meter-icon {
+  color: var(--danger);
+}
+
+.cam-meter-label {
+  font-size: 13px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.cam-meter-word {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.cam-meter.tone-ok .cam-meter-word {
+  color: var(--ok);
+}
+
+.cam-meter.tone-warn .cam-meter-word {
+  color: var(--warn);
+}
+
+.cam-meter.tone-danger .cam-meter-word {
+  color: var(--danger);
+}
+
+.cam-meter-pts {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.cam-scale {
+  position: relative;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, #0e0e0f 0%, #3a3936 30%, #8a877f 62%, #e9e6df 94%, #fff 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.cam-scale-band {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border-radius: 5px;
+  border: 1.5px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 16%, transparent);
+}
+
+.cam-scale-clip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border-radius: 0 var(--r-pill) var(--r-pill) 0;
+  background: repeating-linear-gradient(135deg, var(--danger) 0 2.5px, transparent 2.5px 5px);
+}
+
+.cam-scale-needle {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--ink-1);
+  box-shadow: 0 0 0 2px var(--surface-sunken);
+  transition: left var(--dur-3) var(--ease);
+}
+
+.cam-meter.tone-danger .cam-scale-needle {
+  background: var(--danger);
+}
+
+.cam-scale-words {
+  display: grid;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.cam-scale-words span:nth-child(2) {
+  text-align: center;
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.cam-scale-words span:nth-child(3) {
+  text-align: right;
+}
+
+.cam-meter-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+}
+
+.cam-meter-foot .mono {
+  flex: none;
+}
+
+/* ---- what the part is like */
+.cam-surfaces {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cam-surface {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  min-width: 0;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  transition: background-color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
+}
+
+.cam-surface:hover:not(.is-on) {
+  background: var(--surface-hover);
+  color: var(--ink-1);
+}
+
+.cam-surface.is-on {
+  border-color: var(--ink-1);
+  box-shadow: inset 0 0 0 1px var(--ink-1);
+  color: var(--ink-1);
+}
+
+/* ---- auto */
+.cam-auto {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.cam-auto > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--info);
+}
+
+.cam-auto.is-limit {
+  color: var(--warn);
+}
+
+.cam-auto.is-limit > svg {
+  color: var(--warn-glyph);
+}
+
+.cam-auto-busy {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.cam-values .cap-readout-value {
+  font-size: 16px;
+}
+
+.cam-values .cap-readout-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- floating over the 3D view, top right beside the view controls */
+.cam-float {
+  top: 132px;
+  right: 76px;
+  width: min(392px, calc(100% - 76px - 84px));
+  display: grid;
+  gap: 8px;
+  padding: 9px 10px 10px;
+  animation: rise var(--dur-2) var(--ease);
+}
+
+.cam-float-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.cam-float-icon {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.cam-float-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink-1);
+}
+
+.cam-pill {
+  min-width: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cam-pill.tone-ok {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.cam-pill.tone-warn {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.cam-pill.tone-danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.cam-pill.tone-off {
+  color: var(--ink-3);
+  background: var(--surface-sunken);
+}
+
+.cam-float-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.cam-float-foot .mono {
+  flex: none;
+}
+
+@container stage (max-width: 720px) {
+  .cam-float {
+    top: 120px;
+    right: 64px;
+    width: calc(100% - 64px - 62px);
+  }
+  .cam-float .segmented {
+    display: none;
+  }
+}
