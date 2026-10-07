@@ -93,6 +93,10 @@ The preview streams with the laser on only while a camera view is open (the brow
 itself when nobody looks, and Start scanning turns it into the scan without a restart. In preview only ~12 frames a
 second are triangulated (the scan uses the full pool).
 
+**Gate (2026-10-07):** until this check passes, `exposure.LONG_PULSES_VALIDATED = False` holds every 0xb08 write at
+`VERIFIED_PULSE_MAX` = 245 (the longest pulse the scanner has run with). Dark / Shiny and auto exposure then get their
+extra light from exposure and gain only, and auto reports "limit" sooner. Set it to True once the check below passes.
+
 ### Hardware check before trusting Dark (one register at a time; Revo Metro closed)
 
 1. Connect native, tracking = Markers, surface **General**, Camera view open, **Manual**. A flat matte black target
