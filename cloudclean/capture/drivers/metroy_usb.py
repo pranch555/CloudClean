@@ -154,13 +154,57 @@ WORKING_RANGE_MM = (200.0, 430.0)     # the calibrated range of the laser lines 
 OPTIMAL_MM = 300.0
 
 
-def _initial_pose(pts: np.ndarray) -> np.ndarray:
-    """The world frame CloudClean uses for a scanner that tracks itself: Z up = sensor up, origin at the first
-    frame's centroid (the same convention the capture session applies to untracked devices)."""
-    R = np.array([[1.0, 0, 0], [0, 0, 1.0], [0, -1.0, 0]])  # sensor x->X, y(down)->-Z, z(forward)->Y
+TABLE_MIN_MARKERS = 4        # the marker map starts with 4 (MarkerTracker.min_inliers_reloc)
+TABLE_MAX_RMS_MM = 0.5       # markers on one flat table: the user's turntable plate fits a plane to 0.19 mm
+TABLE_MAX_OFF_MM = 1.5       # any marker further off the plane is on the part, not the table
+TABLE_MIN_SPREAD_MM = 20.0   # a row of markers fixes no plane
+TABLE_MAX_TILT_DEG = 75.0    # a table is seen from above; a board facing the scanner is a wall, not a floor
+
+
+def _table_frame(markers: np.ndarray) -> np.ndarray | None:
+    """World frame standing on the flat table the markers lie on (the turntable plate, a marker mat), or None.
+
+    Z up along the table's normal (towards the scanner), Y the scanner's forward direction laid flat, X the
+    scanner's right; origin on the table under the markers' middle. A turntable turns about its plate's normal, so
+    the part then stands on the grid and turns about Z. None unless every marker lies on one plane seen from above."""
+    m = np.asarray(markers, np.float64).reshape(-1, 3)
+    if len(m) < TABLE_MIN_MARKERS:
+        return None
+    c = m.mean(axis=0)
+    _, _, vt = np.linalg.svd(m - c)
+    n = vt[2]
+    off = (m - c) @ n
+    if np.sqrt(np.mean(off ** 2)) > TABLE_MAX_RMS_MM or np.abs(off).max() > TABLE_MAX_OFF_MM:
+        return None
+    if np.ptp((m - c) @ vt[1]) < TABLE_MIN_SPREAD_MM:
+        return None
+    if n @ -c < 0:                                   # the scanner (sensor origin) is above the table
+        n = -n
+    if n @ np.array([0.0, -1.0, 0.0]) < np.cos(np.radians(TABLE_MAX_TILT_DEG)):
+        return None
+    forward = np.array([0.0, 0.0, 1.0])
+    y = forward - (forward @ n) * n
+    y /= np.linalg.norm(y)
+    R = np.vstack([np.cross(y, n), y, n])            # rows: world X, Y, Z in sensor coordinates
     T = np.eye(4)
     T[:3, :3] = R
-    T[:3, 3] = -R @ pts.astype(np.float64).mean(axis=0)
+    T[:3, 3] = -R @ c
+    return T
+
+
+def _initial_pose(pts: np.ndarray, markers: np.ndarray | None = None) -> np.ndarray:
+    """The world frame CloudClean uses for a scanner that tracks itself. Markers on a flat table: standing on that
+    table (see _table_frame). Otherwise Z up = sensor up, origin at the first frame's centroid - of its points, or
+    of its markers when the laser has not come up yet (the same convention the capture session applies to
+    untracked devices)."""
+    if markers is not None and (T := _table_frame(markers)) is not None:
+        return T
+    R = np.array([[1.0, 0, 0], [0, 0, 1.0], [0, -1.0, 0]])  # sensor x->X, y(down)->-Z, z(forward)->Y
+    centre = pts if len(pts) else markers
+    T = np.eye(4)
+    T[:3, :3] = R
+    if centre is not None and len(centre):
+        T[:3, 3] = -R @ np.asarray(centre, np.float64).reshape(-1, 3).mean(axis=0)
     return T
 
 
@@ -287,8 +331,10 @@ class MetroyUsbDriver(ScannerDriver):
                 **{k: v for k, v in f.info.items() if k in ("family", "assigned", "tracks", "paired")}}
         pose = None
         if self._tracker is not None:
-            if len(self._tracker.world) == 0 and len(pts):
-                self._tracker.initial = _initial_pose(pts)
+            # the map starts on the first frame with enough markers, often before the laser lines come up: without
+            # a pose from that frame's markers the whole scan stayed in sensor coordinates (lying on its side)
+            if len(self._tracker.world) == 0:
+                self._tracker.initial = _initial_pose(pts, f.markers)
             with self._track_lock:
                 res = self._tracker.track(f.markers)
                 world = self._tracker.world.copy()
