@@ -959,6 +959,10 @@ def _fit_plane(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return vt[2], c
 
 
+_NO_FLOOR = (" - a scan's underside is often missing: use the Floor button on the right of the 3D view and "
+             "click a flat part of the model")
+
+
 def _floor_plane_cloud(pcd: o3d.geometry.PointCloud, log: Log):
     pts = np.asarray(pcd.points)
     n_all = len(pts)
@@ -987,7 +991,7 @@ def _floor_plane_cloud(pcd: o3d.geometry.PointCloud, log: Log):
             log(f"  support plane with {int(near.sum()):,} points (attempt {attempt + 1})")
             return up, point, int(near.sum())
         remaining = remaining.select_by_index(inliers, invert=True)
-    raise ValueError("align_floor: no plane with the whole object on one side of it was found")
+    raise ValueError("align_floor: no plane with the whole object on one side of it was found" + _NO_FLOOR)
 
 
 def _fibonacci_sphere(n: int) -> np.ndarray:
@@ -1039,7 +1043,7 @@ def _floor_plane_mesh(mesh: o3d.geometry.TriangleMesh, log: Log):
         if outside <= 0.002 * len(v):
             best = (-normal, point, face_area)
     if best is None:
-        raise ValueError("align_floor: no flat face with the whole object on one side of it was found")
+        raise ValueError("align_floor: no flat face with the whole object on one side of it was found" + _NO_FLOOR)
     log(f"  floor face area {best[2]:.5g}")
     return best
 

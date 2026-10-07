@@ -12,6 +12,7 @@ import { userTookTheView } from '../features/capture/captureStore';
 import { GuidanceHud } from '../features/capture/GuidanceHud';
 import { PhotoOverlay } from '../features/colour/ColourSection';
 import { ToolRail, ViewRail } from './Rails';
+import { FloorPanel } from './FloorPanel';
 import { SizeTag } from './SizeTag';
 import { Legend } from './Legend';
 import { Labels } from './Labels';
@@ -145,6 +146,7 @@ export function Viewport({ theme }: { theme: ResolvedTheme }) {
           <SizeTag />
           <ToolRail />
           <ViewRail />
+          <FloorPanel />
           <Legend />
           <GuidanceHud />
           <Banners />

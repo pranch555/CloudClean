@@ -198,6 +198,13 @@ FEATURES: list[Feature] = [
             "Colours (scan colours, plain, per model, surface direction, deviation / data), point size, wireframe, "
             "box, floor grid, up axis, turning mode, units shown.", "colour color point size wireframe grid display "
             "options heatmap", {"screen": "workspace"}),
+    Feature("view.floor", "Floor (stand a model on it)", "the arrow-to-a-line button on the right of the 3D view, "
+            "under the grid button", "Shows a floor under the model; click a flat part of the model (its bottom, the "
+            "top of its base, a flat side) and it turns so that part is level, or tip it by 90/15/5/1 degrees; Save "
+            "makes a new model standing on the floor (sizes never change). Click the button again to hide the floor. "
+            "Use it when a scan lies tilted or on its side, or when Sit flat on the floor finds no flat bottom.",
+            "floor level upright straight tilted lying on its side stand flat align to floor ground plane lay on "
+            "face orient rotate the model", {"screen": "workspace"}),
     Feature("view.fullscreen", "Full screen 3D view", "the expand button on the right of the 3D view",
             "Shows only the 3D view (Esc to leave).", "fullscreen maximize big", {"screen": "workspace"}),
     Feature("view.picture", "Save a picture of the view", "the camera button on the right of the 3D view",

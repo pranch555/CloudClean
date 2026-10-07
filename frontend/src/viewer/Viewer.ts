@@ -61,6 +61,8 @@ interface Item {
   focused?: boolean;
   /** the highlight's shader uniforms, kept on the item so a rebuilt material picks up where the old one was */
   fx: FocusFx;
+  /** setPlacement(): the exact box of the model as it is shown turned (a turned bounding box overshoots the floor) */
+  placedBox?: THREE.Box3;
 }
 
 /**
@@ -135,6 +137,7 @@ export class Viewer {
   upAxis: 'y' | 'z' = 'y';
   activeId: string | null = null;
   toolActive = false;
+  floorOn = false;
   radius = 50;
 
   onLoading?: (names: string[] | null) => void;
@@ -351,6 +354,7 @@ export class Viewer {
     for (const it of this.items.values()) {
       it.object.matrixAutoUpdate = true;
       it.object.matrix.identity();
+      it.placedBox = undefined;
     }
     this.invalidate();
   }
@@ -451,7 +455,8 @@ export class Viewer {
     const box = new THREE.Box3();
     for (const [id, it] of this.items) {
       if (ids ? !ids.includes(id) : !it.object.visible) continue;
-      box.expandByObject(it.object);
+      if (it.placedBox) box.union(it.placedBox);
+      else box.expandByObject(it.object);
     }
     if (this.liveFrame && this.liveFrame.visible && this.liveFrame.geometry.boundingBox) {
       box.union(this.liveFrame.geometry.boundingBox);
@@ -828,7 +833,7 @@ export class Viewer {
   setSettings(patch: Partial<DisplaySettings>) {
     Object.assign(this.settings, patch);
     if (patch.scalar !== undefined && this.settings.scalar) this.lut = lutTexture(this.settings.scalar.style);
-    if (patch.showGrid !== undefined) this.grid.visible = this.settings.showGrid;
+    if (patch.showGrid !== undefined) this.placeGrid();
     const needsScalars = patch.scalar !== undefined || patch.colorMode !== undefined;
     const apply = () => {
       for (const it of this.items.values()) this.applyMaterial(it);
@@ -887,7 +892,7 @@ export class Viewer {
     }
     const it = this.activeId ? this.items.get(this.activeId) : undefined;
     if (!this.settings.showBox || !it || !it.object.visible || !it.geometry.boundingBox) return;
-    this.boxHelper = new THREE.Box3Helper(it.geometry.boundingBox.clone().applyMatrix4(it.object.matrixWorld), new THREE.Color(this.theme.dark ? '#f3f1ec' : '#17161a'));
+    this.boxHelper = new THREE.Box3Helper(it.placedBox?.clone() ?? it.geometry.boundingBox.clone().applyMatrix4(it.object.matrixWorld), new THREE.Color(this.theme.dark ? '#f3f1ec' : '#17161a'));
     (this.boxHelper.material as THREE.LineBasicMaterial).transparent = true;
     (this.boxHelper.material as THREE.LineBasicMaterial).opacity = 0.35;
     this.helpers.add(this.boxHelper);
@@ -916,7 +921,7 @@ export class Viewer {
       g.visible = false;
       return;
     }
-    g.visible = this.settings.showGrid;
+    g.visible = this.settings.showGrid || this.floorOn;
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const extent = Math.max(size.x, size.y, size.z);
@@ -926,7 +931,48 @@ export class Viewer {
     g.scale.setScalar(extent * 6);
     mat.uniforms.uStep.value = step;
     mat.uniforms.uFade.value = extent * 2.2;
+    mat.uniforms.uFloorR.value = extent * 0.85;
     mat.uniforms.uCenter.value.copy(g.position);
+  }
+
+  // ------------------------------------------------------------------ floor
+  /** The Floor: a solid floor under the models (with the grid), to stand a model on. Independent of the grid switch. */
+  setFloor(on: boolean) {
+    this.floorOn = on;
+    (this.grid.material as THREE.ShaderMaterial).uniforms.uFill.value = on ? (this.theme.dark ? 0.26 : 0.16) : 0;
+    this.placeGrid();
+    this.invalidate();
+  }
+
+  /**
+   * Show a model turned / moved (matrix: model -> world) without changing its data, e.g. the Floor tool's preview;
+   * null shows it as stored. The floor and the box follow the model as shown.
+   */
+  setPlacement(id: string, m: THREE.Matrix4 | null) {
+    const it = this.items.get(id);
+    if (!it) return;
+    if (m) {
+      it.object.matrixAutoUpdate = false;
+      it.object.matrix.copy(m);
+      const pos = it.geometry.getAttribute('position');
+      const p = new THREE.Vector3();
+      const box = new THREE.Box3();
+      for (let i = 0; i < pos.count; i++) box.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m));
+      it.placedBox = box;
+    } else {
+      it.object.matrixAutoUpdate = true;
+      it.object.updateMatrix();
+      it.placedBox = undefined;
+    }
+    it.object.updateMatrixWorld(true);
+    this.placeGrid();
+    this.refreshBox();
+    this.invalidate();
+  }
+
+  /** True while setPlacement() shows this model moved. */
+  isPlaced(id: string) {
+    return !!this.items.get(id)?.placedBox;
   }
 
   // ------------------------------------------------------------------ section plane
@@ -1384,6 +1430,7 @@ export class Viewer {
     const gridU = (this.grid.material as THREE.ShaderMaterial).uniforms;
     gridU.uColor.value.setRGB(...this.theme.grid);
     gridU.uStrength.value = this.theme.dark ? 0.8 : 1.15;
+    if (this.floorOn) gridU.uFill.value = this.theme.dark ? 0.26 : 0.16;
     (this.pivotMarker.material as THREE.MeshBasicMaterial).color.set(this.theme.highlight);
     this.scene.environmentIntensity = this.theme.dark ? 0.32 : 0.5;
     this.viewCube.setTheme(this.theme.dark);
@@ -2087,7 +2134,7 @@ function makeGrid(): THREE.Mesh {
     transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
-    uniforms: { uStep: { value: 10 }, uFade: { value: 200 }, uCenter: { value: new THREE.Vector3() }, uUpZ: { value: 0 }, uColor: { value: new THREE.Color(0.2, 0.18, 0.15) }, uStrength: { value: 1 } },
+    uniforms: { uStep: { value: 10 }, uFade: { value: 200 }, uCenter: { value: new THREE.Vector3() }, uUpZ: { value: 0 }, uColor: { value: new THREE.Color(0.2, 0.18, 0.15) }, uStrength: { value: 1 }, uFill: { value: 0 }, uFloorR: { value: 100 } },
     vertexShader: /* glsl */ `
       varying vec3 vWorld;
       void main() {
@@ -2102,6 +2149,8 @@ function makeGrid(): THREE.Mesh {
       uniform float uUpZ;
       uniform vec3 uColor;
       uniform float uStrength;
+      uniform float uFill;        // the Floor: a solid disc under the model (0 = grid only)
+      uniform float uFloorR;      // its radius
       varying vec3 vWorld;
       float lines(vec2 p, float step) {
         vec2 g = abs(fract(p / step - 0.5) - 0.5) / fwidth(p / step);
@@ -2114,6 +2163,9 @@ function makeGrid(): THREE.Mesh {
         float major = lines(p, uStep * 10.0);
         float fade = 1.0 - smoothstep(uFade * 0.25, uFade, length(d));
         float a = max(minor * 0.10, major * 0.26) * fade * uStrength;
+        float r = length(d);
+        float rim = 1.0 - smoothstep(0.0, 1.5 * fwidth(r), abs(r - uFloorR));
+        a = max(a, uFill * max(1.0 - smoothstep(uFloorR * 0.985, uFloorR, r), rim * 3.0));
         if (a < 0.003) discard;
         gl_FragColor = vec4(uColor, a);
       }`,
