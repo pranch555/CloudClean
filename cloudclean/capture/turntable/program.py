@@ -7,7 +7,8 @@ sync_scan, dwell_s, settle_s, level_at_end, capture_timeout_s}``.
 ``interval_deg`` and let the scanner capture ``frames_per_stop`` frames, until the rotation adds up to 360 deg.
 When 360 is not a multiple of the interval the last move of a rotation is shorter, so every rotation ends exactly
 where it started (reported in ``moves``). ``mode="continuous"`` sweeps each rotation in one 360 deg move while
-capturing ("Turntable Sync" style).
+capturing ("Turntable Sync" style). A laser-line scanner (driver capability ``sweeps``, the MetroY) always runs
+continuous: at a stop it sees the same few lines, so stop-and-go gives lines, never a surface (manager.py).
 
 With ``sync_scan`` the runner drives the live capture session the way Revo Metro does [verified from its code and
 logs]: capture is **paused while the platter moves** and resumed at each stop until ``frames_per_stop`` new frames
@@ -330,7 +331,15 @@ class ProgramRunner:
                 if plan["mode"] == "continuous":
                     self._set(stop=1, phase="rotating")
                     capturing = self._run_capture()
-                    res = drv.rotate(sign * 360)
+                    cm = self._cm() if capturing else None
+                    start = int(self._capture_state(cm).get("frames") or 0) if cm else 0
+                    try:
+                        res = drv.rotate(sign * 360)
+                    finally:
+                        if cm is not None:
+                            with self._lock:
+                                self.info["capture"]["frames"] += max(
+                                    0, int(self._capture_state(cm).get("frames") or 0) - start)
                     if res.get("stopped"):
                         raise _Stopped()
                     if capturing:

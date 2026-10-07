@@ -293,7 +293,7 @@ class MetroyUsbDriver(ScannerDriver):
     def capabilities(self) -> dict:
         return {"range_mm": list(WORKING_RANGE_MM), "optimal_mm": OPTIMAL_MM, "streaming": True,
                 "provides_pose": self.settings.get("tracking", "markers") == "markers",
-                "detected": bool(self.devices)}
+                "detected": bool(self.devices), "sweeps": True}   # cross laser lines: a few lines per frame
 
     # -- lifecycle
     def _connect(self) -> None:

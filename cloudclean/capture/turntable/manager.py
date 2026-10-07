@@ -91,6 +91,14 @@ class TurntableManager:
         from ...web.routes_capture import manager_for
         return manager_for(self.root)
 
+    def _capture_sweeps(self) -> bool:
+        """The connected scanner sees only a few laser lines per frame (the MetroY): it needs the part turning."""
+        try:
+            session = getattr(self._capture_manager(), "session", None)
+            return bool(session is not None and session.driver.capabilities().get("sweeps"))
+        except Exception:
+            return False
+
     def _require_driver(self) -> TurntableDriver:
         drv = self.driver
         if drv is None or not drv.connected:
@@ -426,13 +434,25 @@ class TurntableManager:
         (see program.py)."""
         with self._op_lock:
             drv = self._require_idle()
+            program = dict(program or {})
+            # stopping at each stop gives a laser-line scanner a few lines per stop, never a surface (the user's
+            # first turntable scans: 756 points); it records while the table turns all the way round instead
+            swept = (program.get("sync_scan", True) is not False and program.get("mode") != "continuous"
+                     and self._capture_sweeps())
+            if swept:
+                program["mode"] = "continuous"
             plan = validate_program(program, drv.capabilities())
+            if swept:
+                plan["notes"].append("The scanner records laser lines, so the table turns all the way round while "
+                                     "it scans (stopping would record only a few lines at each stop).")
             self.direction = plan["direction"]
             runner = ProgramRunner(drv, plan, capture=self._capture_manager, log=lambda m: self.log(f"Program: {m}"))
             self.program = runner
-            self.log(f"Program: {len(plan['rotations'])} rotation(s), {plan['stops_per_rotation']} stop(s) of "
-                     f"{plan['interval_deg']} deg, {plan['frames_per_stop']} frame(s) per stop, "
-                     f"{plan['direction']}, sync_scan={plan['sync_scan']}")
+            each = ("one continuous sweep" if plan["mode"] == "continuous" else
+                    f"{plan['stops_per_rotation']} stop(s) of {plan['interval_deg']} deg, "
+                    f"{plan['frames_per_stop']} frame(s) per stop")
+            self.log(f"Program: {len(plan['rotations'])} rotation(s), {each}, {plan['direction']}, "
+                     f"sync_scan={plan['sync_scan']}")
             runner.start()
             return self.status()
 

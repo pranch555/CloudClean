@@ -28,7 +28,7 @@ export interface DriverInfo {
   available: boolean;
   reason?: string | null;
   settings: SettingSchema[];
-  capabilities?: { range_mm?: [number, number] | null; optimal_mm?: number | null; streaming?: boolean; provides_pose?: boolean; detected?: boolean };
+  capabilities?: { range_mm?: [number, number] | null; optimal_mm?: number | null; streaming?: boolean; provides_pose?: boolean; detected?: boolean; sweeps?: boolean };
   /** metroy_usb: what was found on the USB bus */
   devices?: { hardware_id: string; product: string; serial?: string; bus?: string; video_nodes: string[]; kernel_drivers?: string[] }[];
 }
@@ -256,6 +256,11 @@ export function openStream() {
     if (msg.type === 'status') {
       const prev = useCapture.getState().status;
       useCapture.setState({ status: msg });
+      // the marker squares belong to a scan in progress: gone once it is stopped, saved or closed
+      if (msg.state !== 'running' && msg.state !== 'paused') {
+        getViewer()?.setLiveMarkers([]);
+        getViewer()?.setMapMarkers([]);
+      }
       if ((msg.point_distance_mm && msg.point_distance_mm !== prev?.point_distance_mm) ||
           (msg.display_voxel_mm && msg.display_voxel_mm !== prev?.display_voxel_mm)) applyLiveStyle();
     } else if (msg.type === 'guidance') {
