@@ -260,7 +260,9 @@ function TurntableControls({ status }: { status: TurntableStatus }) {
       )}
       {status.last_move?.note && !moving && <p className="caption">{status.last_move.note}</p>}
 
-      <ProgramSection status={status} caps={caps} speed={speed} locked={locked} />
+      {caps.continuous && <SpinSection status={status} speed={speed} />}
+
+      <ProgramSection status={status} caps={caps} speed={speed} locked={locked || !!status.spin} />
 
       <details className="disclosure tt-manual" open={local.get('ttManualOpen', false)} onToggle={e => local.set('ttManualOpen', (e.target as HTMLDetailsElement).open)}>
         <summary>
@@ -354,6 +356,36 @@ function ManualControls({ status, caps, locked, rotate, tilt, speed, setSpeed }:
         <Slider value={speed} min={speedLo} max={speedHi} step={1} label="Turning speed" format={v => `${v} s/turn`} onChange={v => setSpeed(Math.round(v))} />
       </Field>
     </>
+  );
+}
+
+/** Turn while scanning: the table keeps turning until stopped, holding while the scan is paused (the user's way to
+ *  scan with the MetroY's laser lines, which only build a surface while the part moves through them). */
+function SpinSection({ status, speed }: { status: TurntableStatus; speed: number }) {
+  const busy = useTurntable(s => s.busy);
+  const spin = status.spin;
+  const program = programRunning(status);
+  const scanState = useCapture(s => s.status?.state);
+  const now = !spin ? null : spin.turning ? 'Turning' : spin.held_by_scan ? `Holding while the scan is ${scanState === 'paused' ? 'paused' : 'stopped'}` : 'Holding';
+  return (
+    <section className={`tt-program tt-spin ${spin ? 'is-running' : ''}`} aria-label="Turn while scanning" data-guide="capture.turntable-spin">
+      <div className="tt-program-head">
+        <h4>{spin && <span className={`dot ${spin.turning ? 'live' : ''}`} aria-hidden />} Turn while scanning</h4>
+        <span className="caption">The table keeps turning until you stop it. It holds when the scan is paused or stopped and turns again when the scan runs.</span>
+      </div>
+      {spin ? (
+        <>
+          <p className="tt-spin-now" aria-live="polite">{now} · {Math.round(status.speed_s_per_rev ?? speed)} s per turn</p>
+          <Button variant="danger" block icon={<Square size={14} />} loading={busy === 'spin-stop'} onClick={() => turntable.spin(false)}>
+            Stop turning
+          </Button>
+        </>
+      ) : (
+        <Button variant="primary" block icon={<Play size={16} />} disabled={program || status.moving || !!busy} loading={busy === 'spin'} onClick={() => turntable.spin(true, speed)}>
+          Start turning
+        </Button>
+      )}
+    </section>
   );
 }
 

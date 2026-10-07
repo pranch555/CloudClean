@@ -858,6 +858,12 @@
   border: 1px solid var(--line);
 }
 
+.tt-spin-now {
+  margin: 0;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
 .tt-program.is-running {
   border-color: var(--signal-line);
   box-shadow: 0 0 0 3px var(--signal-soft);

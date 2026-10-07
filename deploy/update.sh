@@ -110,8 +110,10 @@ cap, jobs, chat, table = (json.loads(a) for a in sys.argv[1:])
 why = []
 if table.get("moving") or (table.get("program") or {}).get("state") in ("running", "paused"):
     why.append("the turntable is moving or running a program")
-if cap.get("active"):
-    why.append(f"a capture session is open ({cap.get('state')})")
+# a scan in progress or anything not saved holds the update; a scanner that is only connected (the user never
+# disconnects it) does not, or no update would ever arrive - the restart just drops the connection
+if cap.get("active") and (cap.get("state") in ("running", "paused") or cap.get("unsaved")):
+    why.append(f"a capture session is {cap.get('state')}" + (" with an unsaved scan" if cap.get("unsaved") else ""))
 n = sum(1 for j in jobs if j.get("status") in ("queued", "running"))
 if n:
     why.append(f"{n} job(s) queued or running")
