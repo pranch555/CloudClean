@@ -8,10 +8,14 @@ light than any diffuse surface, so they show as bright, filled ellipses.
 Detection (per rectified view)
     threshold well above the background, open with a disk that is wider than a laser stripe (so stripes vanish and
     marker blobs stay), keep components that fill their bounding ellipse and are not too elongated, and locate each
-    centre as the intensity-weighted centroid over the blob.
+    centre by an ellipse fitted to the marker's sub-pixel rim, leaving out the rim pieces a laser stripe touches
+    (_rim_fit; the laser lines cross the markers, and an intensity-weighted centroid follows their light).
 Stereo
     a marker's partner sits on the same rectified row (within `epipolar_px`) with a similar size, at a disparity that
-    means a depth in range; only pairs that are unique both ways are kept, then triangulated through Q.
+    means a depth in range, and both blobs are marker-sized at that depth; only pairs that are unique both ways are
+    kept, then triangulated through Q. A blob that runs off the image and whose rim could not be fitted is never
+    paired (Blob.partial). plausible()/masks() tell which blobs may be markers, so that only those need be kept out
+    of the laser line search.
 Tracking (MarkerTracker)
     a global marker map in world coordinates. Each frame is registered to it by nearest-marker association from the
     motion-predicted pose and a least-squares rigid fit (Kabsch); when that fails, by matching triangles of
@@ -49,57 +53,294 @@ class MarkerParams:
     min_diameter_mm: float = 2.5  # a paired blob's size in mm (area-equivalent, at its triangulated depth). The
                                   # MetroY takes 6 mm markers only; seen at an angle they measure 3.3-5.5 mm
                                   # (p1-p99, the user's plate, 2026-10-09), laser spots on a white part ~1.4 mm
-                                  # (median): 2.5 keeps every plate marker and drops 92 % of the spots
+                                  # (median): 2.5 keeps every plate marker and drops 92 % of the spots. Measured at
+                                  # the 200 us "General" exposure only: a longer exposure (Dark) or more fill light
+                                  # grows both a marker's and a spot's thresholded blob, and is not checked
     z_min: float = 150.0
     z_max: float = 500.0
+    centre: str = "rim"           # how a marker's centre is located (detect()): "rim" fits an ellipse to its sub-pixel
+                                  # rim, leaving out the rim pieces a laser stripe touches; "centroid" is the former
+                                  # intensity-weighted centroid, kept for comparison. The stripes cross the markers
+                                  # and move between the two line families, so the centroid landed in two places
+                                  # 2.5 px apart (0.34 mm in 3D) while within one family it held to 0.012 px. Static
+                                  # plate, 344 + 279 frames (2026-10-09), centroid -> rim, median per marker: centre
+                                  # std 0.89/0.75 -> 0.025/0.019 px, 3D std 0.17/0.15 -> 0.007 mm, inter-marker
+                                  # distance std 0.108/0.092 -> 0.007 mm; pose jitter 220 mm out 0.074/0.064 ->
+                                  # 0.013/0.007 mm (tools/metroy/marker_precision.py)
+    rim_step_px: float = 1.0      # one rim profile per this much rim length
+    rim_reach_px: float = 5.0     # a profile runs this far inside and outside the rim (less on thin blobs)
 
 
 @dataclass
 class Blob:
     x: float
     y: float
-    radius: float                 # equivalent radius, px
+    radius: float                 # equivalent radius, px (of the thresholded, opened blob: min_diameter_mm uses it)
     axis_ratio: float
+    rim_rms: float = float("nan")  # px, RMS distance of the rim points from the fitted ellipse; NaN = the rim could
+                                   # not be fitted and the centre is a centroid (stripe pixels clipped)
+    partial: bool = False          # runs off the image and its rim could not be fitted: the centre is the centroid
+                                   # of the part in view, pixels off (1.6 px with a quarter cut off). Masked out of
+                                   # the laser line search like any marker, but never paired
 
 
 def detect(img: np.ndarray, p: MarkerParams | None = None) -> list[Blob]:
     p = p or MarkerParams()
+    if p.centre not in ("rim", "centroid"):
+        raise ValueError(f"marker centre must be 'rim' or 'centroid', not {p.centre!r}")
     threshold = max(p.threshold_min, float(np.median(img[::8, ::8])) + p.threshold_above)
-    bright = (img >= threshold).astype(np.uint8)
+    if img.dtype == np.uint8:          # img >= threshold, 6x faster than numpy's compare + astype
+        bright = cv2.threshold(img, int(np.ceil(threshold)) - 1, 1, cv2.THRESH_BINARY)[1]
+    else:
+        bright = (img >= threshold).astype(np.uint8)
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (p.stripe_width_px, p.stripe_width_px))
     core = cv2.morphologyEx(bright, cv2.MORPH_OPEN, k)
-    n, lab, st, _ = cv2.connectedComponentsWithStats(core, connectivity=8)
-    out = []
-    img_f = img.astype(np.float32)
-    for i in range(1, n):
-        x0, y0, w, h, area = st[i]
-        if not (p.min_area_px <= area <= p.max_area_px):
+    # each 8-connected component by its outer contour: the same components as labelling the image, 6x faster
+    # (labelling all 1.9 M pixels was most of detect()'s time). Two-level: outer contours (no parent) are the blobs,
+    # including any blob that sits inside another one's hole; the second level are the holes
+    cnts, hier = cv2.findContours(core, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    H, W = img.shape
+    cand = []                          # (blob, ellipse, x0, y0, component mask)
+    for c, (_, _, child, parent) in zip(cnts, hier[0] if hier is not None else ()):
+        if parent >= 0:
             continue
-        mask = (lab[y0:y0 + h, x0:x0 + w] == i).astype(np.uint8)
-        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        if not cnts or len(cnts[0]) < 6:
+        x0, y0, w, h = cv2.boundingRect(c)
+        if w * h < p.min_area_px:
             continue
-        (_, _), (a, b), _ = cv2.fitEllipse(cnts[0])
+        mask = np.zeros((h, w), np.uint8)
+        cv2.drawContours(mask, [c], -1, 1, -1, offset=(-x0, -y0))
+        mask &= core[y0:y0 + h, x0:x0 + w]                    # holes are not part of the blob
+        if child >= 0:                                        # ... nor a blob inside a hole
+            _, lab = cv2.connectedComponents(mask, connectivity=8)
+            mask = (lab == lab[c[0, 0, 1] - y0, c[0, 0, 0] - x0]).astype(np.uint8)
+        area = cv2.countNonZero(mask)
+        if not (p.min_area_px <= area <= p.max_area_px) or len(c) < 6:
+            continue
+        ell = cv2.fitEllipse(c)
+        (_, _), (a, b), _ = ell
         major, minor = max(a, b), min(a, b)
         if major <= 0 or minor / major < p.min_axis_ratio:
             continue
         if area / (np.pi * a * b / 4.0) < p.min_fill:
             continue
-        # intensity-weighted centroid over the blob grown by a pixel (captures the soft edge symmetrically)
-        grown = cv2.dilate(mask, np.ones((3, 3), np.uint8))
-        pad = 1
-        ya, yb = max(0, y0 - pad), min(img.shape[0], y0 + h + pad)
-        xa, xb = max(0, x0 - pad), min(img.shape[1], x0 + w + pad)
-        m = np.zeros((yb - ya, xb - xa), np.float32)
-        m[y0 - ya:y0 - ya + h, x0 - xa:x0 - xa + w] = grown[:, :]
-        wts = np.clip(img_f[ya:yb, xa:xb] - threshold * 0.5, 0, None) * m
-        s = wts.sum()
-        if s <= 0:
-            continue
-        yy, xx = np.mgrid[ya:yb, xa:xb]
-        out.append(Blob(float((wts * xx).sum() / s), float((wts * yy).sum() / s),
-                        float(np.sqrt(area / np.pi)), float(minor / major)))
+        cand.append((Blob(0.0, 0.0, float(np.sqrt(area / np.pi)), float(minor / major)), ell, x0, y0, mask))
+    if p.centre == "rim" and cand:
+        fit = _rim_fit(img, [e for _, e, *_ in cand], p)
+    else:
+        fit = [None] * len(cand)
+    out = []
+    for (blob, ell, x0, y0, mask), f in zip(cand, fit):
+        if f is not None:
+            blob.x, blob.y, blob.rim_rms = f
+        else:
+            c = _centroid(img, x0, y0, mask, threshold, clip=p.centre == "rim")
+            if c is None:
+                continue
+            blob.x, blob.y = c
+            h, w = mask.shape
+            blob.partial = p.centre == "rim" and (x0 == 0 or y0 == 0 or x0 + w == W or y0 + h == H)
+        out.append(blob)
     return out
+
+
+def _centroid(img: np.ndarray, x0: int, y0: int, mask: np.ndarray, threshold: float, clip: bool):
+    """Intensity-weighted centroid over the blob grown by a pixel (captures the soft edge symmetrically). With
+    `clip`, pixels brighter than the marker's own level (a laser stripe across it) count only with that level."""
+    h, w = mask.shape
+    grown = cv2.dilate(mask, np.ones((3, 3), np.uint8))
+    pad = 1
+    ya, yb = max(0, y0 - pad), min(img.shape[0], y0 + h + pad)
+    xa, xb = max(0, x0 - pad), min(img.shape[1], x0 + w + pad)
+    m = np.zeros((yb - ya, xb - xa), np.float32)
+    m[y0 - ya:y0 - ya + h, x0 - xa:x0 - xa + w] = grown[:, :]
+    roi = img[ya:yb, xa:xb].astype(np.float32)
+    if clip:                           # the marker's level: a low quantile of its pixels, as in _rim_pass
+        level = float(np.quantile(img[y0:y0 + h, x0:x0 + w][mask > 0], MARKER_LEVEL_Q))
+        roi = np.minimum(roi, level + max(10.0, 0.3 * (level - threshold * 0.5)))
+    wts = np.clip(roi - threshold * 0.5, 0, None) * m
+    s = wts.sum()
+    if s <= 0:
+        return None
+    yy, xx = np.mgrid[ya:yb, xa:xb]
+    return float((wts * xx).sum() / s), float((wts * yy).sum() / s)
+
+
+def _bilinear(img: np.ndarray, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """img sampled at (x, y) by bilinear interpolation; NaN outside the image."""
+    H, W = img.shape
+    ok = (x >= 0) & (y >= 0) & (x <= W - 1) & (y <= H - 1)
+    xc, yc = np.where(ok, x, 0).astype(np.float32), np.where(ok, y, 0).astype(np.float32)
+    # the cell's corner, at most one short of the last row/column (x = W - 1 then interpolates with weight 1 on it;
+    # float32 rounds 1598.99999 up to 1599)
+    xi, yi = np.minimum(xc.astype(np.int32), W - 2), np.minimum(yc.astype(np.int32), H - 2)
+    fx, fy = xc - xi, yc - yi
+    flat = np.ascontiguousarray(img).reshape(-1)
+    i = yi * W + xi
+    a, b, c, d = (flat[i + o].astype(np.float32) for o in (0, 1, W, W + 1))
+    top, bot = a + (b - a) * fx, c + (d - c) * fx
+    return np.where(ok, top + (bot - top) * fy, np.float32(np.nan))
+
+
+MARKER_LEVEL_Q = 0.25
+
+
+def _rim_fit(img: np.ndarray, ells: list, p: MarkerParams, debug: dict | None = None) -> list:
+    """Marker centres from an ellipse fitted to the sub-pixel rim, for all blobs of an image at once.
+
+    The rim is where a marker's own light falls to the background: a laser stripe through the marker's middle never
+    touches it, which is why the rim and not the blob's mass locates the centre (Luhmann 2014: a contour ellipse fit
+    can drop disturbed edge pieces, a centroid cannot). Short profiles run across the rim along the normals of an
+    ellipse; on each, the rim point is where the intensity crosses halfway between the marker's level just inside
+    and the background just outside (an iso-contour point: it does not depend on the profile's direction, and
+    symmetric blur or a saturated marker moves every rim point alike, not the centre). A profile is left out when
+    anything brighter than the marker lies on its inside part or anything brighter than the background on its
+    outside part (a stripe crossing the rim, a neighbour, the part's edge), and so are its two neighbours each side,
+    which the stripe's soft flank still lifts. An ellipse is fitted to the rim points, trimming those that sit off it
+    (3 robust sigma), twice.
+
+    Two passes: the first runs the profiles along the blob's coarse ellipse (its thresholded outline), the second
+    along the ellipse the first one found. The outline lies inside the rim - the threshold sits well up a dim
+    marker's edge (83 % of a 17 -> 46 edge on the plate's far side), and the 9 px opening shortens the tips of thin
+    ellipses - and profiles centred off the rim see the edge's tail on their outside part and are left out: on the
+    user's plate a dim far marker kept 29 of 84 profiles in the first pass.
+
+    Returns per blob (x, y, rim RMS px), or None when too little clean rim is left to trust the fit."""
+    C0 = np.array([e[0] for e in ells], np.float64)                      # (n, 2)
+    A = np.array([0.5 * e[1][0] for e in ells])                          # semi-axis along the angle's direction
+    B = np.array([0.5 * e[1][1] for e in ells])
+    th = np.radians([e[2] for e in ells])
+    C = C0.copy()
+    for pas in range(2):
+        # (a cheaper first pass - half the profiles, or 11 samples - placed the second worse on dim thin markers)
+        theta, used, rms, K, aux = _rim_pass(img, C, A, B, th, p)
+        geo = _ellipse(theta, C, A, B, th)
+        centre, ok = geo[0], geo[-1]
+        ok &= used >= 12
+        ok &= np.hypot(*(centre - C0).T) <= np.maximum(1.5, 0.15 * np.minimum(A, B))   # still the blob's own rim
+        if pas == 0:                       # re-anchor where the first pass found a sane ellipse
+            C = np.where(ok[:, None], centre, C)
+            A, B, th = (np.where(ok, v, w) for v, w in zip(geo[1:4], (A, B, th)))
+    if debug is not None:
+        debug.update(aux)
+    ok &= used >= np.maximum(12, 0.35 * K)
+    return [(float(centre[i, 0]), float(centre[i, 1]), float(rms[i])) if ok[i] else None for i in range(len(ells))]
+
+
+def _ellipse(theta: np.ndarray, C: np.ndarray, A: np.ndarray, B: np.ndarray, th: np.ndarray):
+    """Conics a u^2 + b uv + c v^2 + d u + e v = 1 in the frame where the ellipse (C, A, B, th) is the unit circle,
+    back in pixels: (centre (n, 2), semi-axis A, semi-axis B, angle, valid)."""
+    a, b, c, d, e = theta.T
+    det = 4 * a * c - b * b
+    ok = det > 1e-12
+    det = np.where(ok, det, 1.0)
+    u0, v0 = (-2 * c * d + b * e) / det, (b * d - 2 * a * e) / det
+    eu = np.c_[np.cos(th), np.sin(th)]
+    ev = np.c_[-np.sin(th), np.cos(th)]
+    centre = C + (A * u0)[:, None] * eu + (B * v0)[:, None] * ev
+    Mq = np.stack([np.stack([a, b / 2], -1), np.stack([b / 2, c], -1)], -2)          # (n, 2, 2)
+    k = 1 + a * u0 * u0 + b * u0 * v0 + c * v0 * v0
+    ok &= k > 0
+    J = np.stack([eu / A[:, None], ev / B[:, None]], 1)                               # q = J (p - C)
+    Mp = np.einsum("nki,nkl,nlj->nij", J, Mq, J) / np.where(ok, k, 1.0)[:, None, None]
+    lam, vec = np.linalg.eigh(Mp)
+    ok &= lam[:, 0] > 0
+    lam = np.where(ok[:, None], lam, 1.0)
+    return centre, 1 / np.sqrt(lam[:, 0]), 1 / np.sqrt(lam[:, 1]), np.arctan2(vec[:, 1, 0], vec[:, 0, 0]), ok
+
+
+def _rim_pass(img: np.ndarray, C: np.ndarray, A: np.ndarray, B: np.ndarray, th: np.ndarray, p: MarkerParams):
+    """One pass of _rim_fit with the profiles along the ellipses (C, A, B, th): (conic per blob (n, 5) in the frame
+    where that ellipse is the unit circle, rim points used, their RMS distance px, profiles per blob, details)."""
+    n = len(C)
+    eu = np.c_[np.cos(th), np.sin(th)]
+    ev = np.c_[-np.sin(th), np.cos(th)]
+    perim = np.pi * (3 * (A + B) - np.sqrt((3 * A + B) * (A + 3 * B)))
+    K = np.clip(np.round(perim / p.rim_step_px), 24, 256).astype(int)
+    # all blobs' profiles in one flat list: blob g[i], number j[i] of K[g[i]] around its rim
+    start = np.r_[0, np.cumsum(K)[:-1]]
+    g = np.repeat(np.arange(n), K)
+    j = np.arange(len(g)) - start[g]
+    t = 2 * np.pi * j / K[g]
+    ct, st = np.cos(t), np.sin(t)
+    anchor = C[g] + (A[g] * ct)[:, None] * eu[g] + (B[g] * st)[:, None] * ev[g]
+    nrm = (ct / A[g])[:, None] * eu[g] + (st / B[g])[:, None] * ev[g]
+    nrm /= np.linalg.norm(nrm, axis=1, keepdims=True)
+    reach = np.clip(0.6 * np.minimum(A, B), 2.5, p.rim_reach_px)
+    M = 17
+    u = np.linspace(-1.0, 1.0, M)
+    s = reach[g][:, None] * u[None, :]                                    # (P, M) offsets along the normal, px
+    S = _bilinear(img, anchor[:, :1] + nrm[:, :1] * s, anchor[:, 1:] + nrm[:, 1:] * s)
+    inside = np.isfinite(S).all(1)
+    S = np.where(inside[:, None], S, 0.0)
+    inner, outer = np.sort(S[:, u <= -0.4], 1), np.sort(S[:, u >= 0.4], 1)          # 5 samples each
+    hi, lo = inner[:, inner.shape[1] // 2], outer[:, outer.shape[1] // 2]  # medians (odd counts)
+    # the marker's own level: a low quantile, not the median - a stripe only ever adds light, and one running along a
+    # small marker lit most of its profiles, which then all passed for clean (0.3-0.5 px off, rendered markers)
+    hi_b = _group_median(np.where(inside, hi, np.nan), g, n, MARKER_LEVEL_Q)[g]
+    lo_b = _group_median(np.where(inside, lo, np.nan), g, n)[g]
+    con = hi_b - lo_b
+    level = 0.5 * (hi + lo)
+    above = S >= level[:, None]
+    good = inside & (con > 5)
+    # a stripe (or anything else bright) on the inside or outside part of the profile
+    good &= inner[:, -1] <= hi_b + np.maximum(10.0, 0.3 * con)
+    good &= outer[:, -1] <= lo_b + np.maximum(8.0, 0.2 * con)
+    good &= (hi - lo) >= 0.5 * con
+    # exactly one crossing, from the marker's level outward to the background's
+    good &= above[:, 0] & ~above[:, -1] & (np.count_nonzero(above[:, 1:] != above[:, :-1], axis=1) == 1)
+    # the stripe's soft flank lifts its neighbours too: drop two profiles each side of a rejected one
+    bad = ~good
+    near = bad.copy()
+    for sh in (1, 2, -1, -2):
+        near |= bad[start[g] + (j + sh) % K[g]]
+    good &= ~near
+    k = np.clip(np.argmin(above, axis=1), 1, M - 1)                       # first sample below the level
+    r_ = np.arange(len(g))
+    S0, S1 = S[r_, k - 1], S[r_, k]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        off = s[r_, k - 1] + (S0 - level) / (S0 - S1) * (s[:, 1] - s[:, 0])
+    good &= np.isfinite(off)
+    P = anchor + nrm * np.where(good, off, 0.0)[:, None]                 # (P, 2) rim points, px
+    # robust ellipse fit, in the frame where the anchor ellipse is the unit circle (well conditioned):
+    # a u^2 + b uv + c v^2 + d u + e v = 1, solved per blob by weighted least squares
+    d = P - C[g]
+    Uq, Vq = (d * eu[g]).sum(1) / A[g], (d * ev[g]).sum(1) / B[g]
+    D = np.c_[Uq * Uq, Uq * Vq, Vq * Vq, Uq, Vq]                          # (P, 5)
+    DD = D[:, :, None] * D[:, None, :]
+    w = good.astype(np.float64)
+    for it in range(3):
+        G = np.add.reduceat(DD * w[:, None, None], start, 0) + 1e-12 * np.eye(5)
+        theta = np.linalg.solve(G, np.add.reduceat(D * w[:, None], start, 0)[..., None])[..., 0]   # (n, 5)
+        T = theta[g]
+        F = (D * T).sum(1) - 1.0
+        gu = 2 * T[:, 0] * Uq + T[:, 1] * Vq + T[:, 3]
+        gv = T[:, 1] * Uq + 2 * T[:, 2] * Vq + T[:, 4]
+        gp = (gu / A[g])[:, None] * eu[g] + (gv / B[g])[:, None] * ev[g]
+        r = F / np.maximum(np.linalg.norm(gp, axis=1), 1e-9)              # Sampson distance, px
+        if it == 2:
+            break
+        sig = 1.4826 * np.nan_to_num(_group_median(np.where(good, np.abs(r), np.nan), g, n), nan=0.0)
+        w = (good & (np.abs(r) < np.maximum(3.0 * sig, 0.06)[g])).astype(np.float64)
+    used = np.add.reduceat(w, start)
+    rms = np.sqrt(np.add.reduceat(w * r * r, start) / np.maximum(used, 1))
+    return theta, used, rms, K, {"points": P, "clean": good, "used": w > 0, "blob": g, "residual": r}
+
+
+def _group_median(v: np.ndarray, g: np.ndarray, n: int, q: float = 0.5) -> np.ndarray:
+    """Median (or the q quantile) of v within each group g (g sorted ascending, every group non-empty); NaN values are
+    left out, a group with none left gives NaN."""
+    fin = np.isfinite(v)
+    # one sort of group-offset keys (by group, then value; missing values last): 4x faster than a lexsort
+    vs = np.sort(g * 1e7 + np.where(fin, np.clip(v, -1e6, 1e6), 2e6)) - g * 1e7
+    size = np.bincount(g, minlength=n)
+    cnt = np.bincount(g, weights=fin, minlength=n).astype(int)
+    first = np.r_[0, np.cumsum(size)[:-1]]
+    pos = q * np.maximum(cnt - 1, 0)
+    lo_i = np.floor(pos).astype(int)
+    frac = pos - lo_i
+    hi_i = np.minimum(lo_i + 1, np.maximum(cnt - 1, 0))
+    val = vs[first + lo_i] * (1 - frac) + vs[first + hi_i] * frac
+    return np.where(cnt > 0, val, np.nan)
 
 
 def mask(shape, blobs: list[Blob], grow: float = 1.8, pad_px: float = 4.0) -> np.ndarray:
@@ -123,8 +364,30 @@ def stereo_pairs(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerPa
     none = np.zeros(0, int)
     if not left or not right:
         return np.zeros((0, 3)), none, none
-    L = np.array([(b.x, b.y, b.radius) for b in left])
-    R = np.array([(b.x, b.y, b.radius) for b in right])
+    ok, _, big_l, big_r = _candidates(left, right, Q, p)
+    # a marker has a known physical size: bright laser spots on a light part pair across the cameras too (they are
+    # real surface points), but they are a millimetre or so across, and a marker map that takes them in follows the
+    # laser instead of the part. The size test comes BEFORE uniqueness, and holds for both blobs of a candidate: a
+    # spot in either view that happens to sit on a marker's row at a plausible depth used to make the marker's pair
+    # ambiguous and vetoed a real marker (only the left blob's size was tested, and only after)
+    ok &= big_l & big_r
+    pairs = [(i, int(np.flatnonzero(ok[i])[0])) for i in range(len(left))
+             if ok[i].sum() == 1 and ok[:, np.flatnonzero(ok[i])[0]].sum() == 1]
+    if not pairs:
+        return np.zeros((0, 3)), none, none
+    i, j = np.array(pairs).T
+    L = np.array([(b.x, b.y) for b in left])
+    R = np.array([(b.x, b.y) for b in right])
+    y = 0.5 * (L[i, 1] + R[j, 1])
+    h = np.c_[L[i, 0], y, L[i, 0] - R[j, 0], np.ones(len(i))] @ Q.T
+    return h[:, :3] / h[:, 3:4], i, j
+
+
+def _candidates(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams):
+    """Which left/right blobs could be one marker (same row, similar size, depth in range): (ok (nl, nr), z (nl, nr),
+    left blob marker-sized at that depth, right blob marker-sized at that depth)."""
+    L = np.array([(b.x, b.y, b.radius) for b in left]).reshape(-1, 3)
+    R = np.array([(b.x, b.y, b.radius) for b in right]).reshape(-1, 3)
     dy = np.abs(L[:, None, 1] - R[None, :, 1])
     ratio = np.maximum(L[:, None, 2], R[None, :, 2]) / np.maximum(1e-6, np.minimum(L[:, None, 2], R[None, :, 2]))
     d = L[:, None, 0] - R[None, :, 0]
@@ -132,19 +395,35 @@ def stereo_pairs(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerPa
     with np.errstate(divide="ignore", invalid="ignore"):
         z = np.where(w != 0, Q[2, 3] / w, 0.0)
     ok = (dy < p.epipolar_px) & (ratio < p.size_ratio) & (z > p.z_min) & (z < p.z_max)
-    pairs = [(i, int(np.flatnonzero(ok[i])[0])) for i in range(len(L))
-             if ok[i].sum() == 1 and ok[:, np.flatnonzero(ok[i])[0]].sum() == 1]
-    if not pairs:
-        return np.zeros((0, 3)), none, none
-    i, j = np.array(pairs).T
-    y = 0.5 * (L[i, 1] + R[j, 1])
-    h = np.c_[L[i, 0], y, L[i, 0] - R[j, 0], np.ones(len(i))] @ Q.T
-    P = h[:, :3] / h[:, 3:4]
-    # a marker has a known physical size: bright laser spots on a light part pair across the cameras too (they are
-    # real surface points), but they are a millimetre or so across, and a marker map that takes them in follows the
-    # laser instead of the part
-    big = 2.0 * L[i, 2] * P[:, 2] / Q[2, 3] >= p.min_diameter_mm      # Q[2, 3] = f
-    return P[big], i[big], j[big]
+    ok &= ~np.array([b.partial for b in left], bool).reshape(-1, 1) & ~np.array([b.partial for b in right], bool)
+    f = Q[2, 3]
+    return ok, z, 2.0 * L[:, None, 2] * z / f >= p.min_diameter_mm, 2.0 * R[None, :, 2] * z / f >= p.min_diameter_mm
+
+
+def plausible(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams | None = None):
+    """Which blobs of each view may be markers: (left (nl,) bool, right (nr,) bool). A blob with a partner in the
+    other view is one when it is marker-sized at that partner's depth (min_diameter_mm); a blob without any partner
+    when it could be a marker somewhere in the depth range (radius at least that of a min_diameter_mm marker at
+    z_max). Laser spots on a light part pair across the views at ~1.4 mm and are left out."""
+    p = p or MarkerParams()
+    f = Q[2, 3]
+    r_far = 0.5 * p.min_diameter_mm * f / p.z_max
+    rl = np.array([b.radius for b in left])
+    rr = np.array([b.radius for b in right])
+    if not left or not right:
+        return rl >= r_far, rr >= r_far
+    ok, _, big_l, big_r = _candidates(left, right, Q, p)
+    keep_l = np.where(ok.any(1), (ok & big_l).any(1), rl >= r_far)
+    keep_r = np.where(ok.any(0), (ok & big_r).any(0), rr >= r_far)
+    return keep_l, keep_r
+
+
+def masks(shape, left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams | None = None):
+    """mask() of the left and right view over the blobs that may be markers (plausible()). Masking every blob, as
+    before, also cut a hole into the laser line at every bright spot on the part: the spot IS laser line."""
+    keep_l, keep_r = plausible(left, right, Q, p)
+    return (mask(shape, [b for b, k in zip(left, keep_l) if k]),
+            mask(shape, [b for b, k in zip(right, keep_r) if k]))
 
 
 # -- tracking ----------------------------------------------------------------------------------------------------
