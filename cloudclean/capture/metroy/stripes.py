@@ -18,8 +18,8 @@ row's profile lumpy, and the parabola is biased whenever the profile is not a pa
    is a ~40 mm error that still looks like a surface. The scanner's own laser calibration maps each line from the
    left view to the right one (laserfile); the line the right view confirms along a whole track fixes the pairing.
    The measured centre pair is then triangulated through the factory Q, and a neighbourhood agreement filter
-   (depth against a robust local plane) removes what is left of mismatches. (Order-preserving matching per row
-   remains as the fallback without the laser calibration.)
+   (each stripe's depth followed along it, then compared across stripes) removes what is left of mismatches.
+   (Order-preserving matching per row remains as the fallback without the laser calibration.)
 
 Where the centres of a frame get lost, stage by stage: Triangulator.trace and tools/metroy/stripe_coverage.py.
 
@@ -91,13 +91,14 @@ class Params:
                                   # accurate as the rest (0.05 mm median, 1.8 % > 0.3 mm; all points 0.04 mm, 4.4 %),
                                   # right end rows as partners are not (0.07 mm, 12 % > 0.3 mm). Dropping left ends
                                   # had cost 10 % of the stripe centres on the part. A track cut by a marker mask has
-                                  # no end there: the mask already reaches 4 px + 0.8 radius past the blob
+                                  # no end there, in either view (it decides and partners as any row): the mask
+                                  # already reaches 4 px + 0.8 radius past the blob
     line_tol_coarse: float = 6.0  # px in the right view, before the maps' offset is known (lines are ~180 px apart)
     line_tol: float = 2.5         # px, once it is removed
     line_min_support: float = 0.5  # fraction of a track the right view must confirm for its line
     line_margin: float = 0.35     # ... by this much more than any other line (regular stripe spacing makes a wrong
                                   # line meet *some* right stripe on part of a track; the true one meets it throughout)
-    agree_mm: float = 1.5         # neighbourhood depth agreement (against a robust plane through the cell)
+    agree_mm: float = 1.5         # neighbourhood depth agreement (see agreement())
     agree_cell: int = 24          # px
 
 
@@ -152,20 +153,23 @@ class Triangulator:
             raise ValueError("line matching needs the laser calibration (metroExtra.bin)")
         cl = stripe_centres(rl, self.p)
         cr = stripe_centres(rr, self.p)
-        tr = self.traced = {"left_raw": cl, "right_raw": cr} if self.trace else {}
+        self.traced = tr = {"left_raw": cl, "right_raw": cr} if self.trace else {}
         if masks is not None:
             cl, cr = _unmasked(cl, masks[0]), _unmasked(cr, masks[1])
-            tr.update(left_unmasked=cl, right_unmasked=cr)
+            if self.trace:
+                tr.update(left_unmasked=cl, right_unmasked=cr)
         if track or matching == "lines":
             cl = smooth_tracks(cl, self.p, None if masks is None else masks[0], keep_ends=matching == "lines")
             cr = smooth_tracks(cr, self.p, None if masks is None else masks[1])
-            tr.update(left=cl, right=cr)
+            if self.trace:
+                tr.update(left=cl, right=cr)
+        tracks = None
         if matching == "lines":
-            pts, xs, ys = self.triangulate_by_lines(cl, cr)
+            pts, xs, ys, tracks = self.triangulate_by_lines(cl, cr, with_tracks=True)
         else:
             self.last = {}
             pts, xs, ys = self.triangulate(cl, cr)
-        keep = agreement(pts, xs, ys, self.p.agree_mm, self.p.agree_cell)
+        keep = agreement(pts, xs, ys, self.p.agree_mm, self.p.agree_cell, tracks)
         if self.trace and "why" in tr:
             idx = tr.pop("out")
             tr["why"][idx] = np.where(keep, ACCEPTED, AGREEMENT)
@@ -192,7 +196,7 @@ class Triangulator:
         pts = (h[:, :3] / h[:, 3:4]).astype(np.float32)
         return pts, xl, y
 
-    def triangulate_by_lines(self, cl: "Centres", cr: "Centres"):
+    def triangulate_by_lines(self, cl: "Centres", cr: "Centres", with_tracks: bool = False):
         """Pair left and right stripes by laser line identity, then triangulate by stereo.
 
         The factory laser calibration maps, for every laser line, a left pixel to the right-view x on the same row
@@ -202,10 +206,13 @@ class Triangulator:
         MEASURED centres is then triangulated through the stereo calibration - the maps choose, they do not measure.
 
         A track's end rows (cl.end, see Params.trim_ends) take no part in choosing its line, so a track is judged on
-        exactly the rows it always was; once its line is fixed they are paired like the rest.
+        the same rows as when ends were dropped (except rows beside a marker mask: those are no longer ends, and a
+        fragment beside a marker now counts with them - still at least min_track rows); once its line is fixed the
+        end rows are paired like the rest, but lose any right centre an inner row also claims. with_tracks: also
+        return each point's left track id.
         """
         p = self.p
-        empty = (np.zeros((0, 3), np.float32), np.zeros(0), np.zeros(0))
+        empty = (np.zeros((0, 3), np.float32), np.zeros(0), np.zeros(0)) + ((np.zeros(0, int),) if with_tracks else ())
         self.last = {"family": None, "tracks": 0, "assigned": 0, "paired": 0.0}
         why = np.full(len(cl.x), SHORT_AFTER_TRIM, np.int8)       # per left centre, for Triangulator.trace
         if self.trace:
@@ -287,8 +294,8 @@ class Triangulator:
         keep = np.abs(rev - rev_bias) < p.line_tol
         why[idx[~keep]] = REVERSE
         idx, k, d, right = idx[keep], k[keep], d[keep], right[keep]
-        # a right stripe centre pairs with one left centre only: keep the closest claim
-        o = np.lexsort((np.abs(d), right))
+        # a right stripe centre pairs with one left centre only: keep the closest claim, an inner row before an end
+        o = np.lexsort((np.abs(d), cl.end[idx] if cl.end is not None else np.zeros(len(idx), bool), right))
         first = np.r_[True, np.diff(right[o]) != 0]
         why[idx[o][~first]] = CLAIMED
         idx, k, right = idx[o][first], k[o][first], right[o][first]
@@ -304,7 +311,7 @@ class Triangulator:
         self.last = {"family": family, "bias_px": bias, "reverse_bias_px": rev_bias, "tracks": len(tracks),
                      "assigned": int(len(np.unique(cl.track[idx]))), "lines": sorted(set(k.tolist())),
                      "paired": float(len(idx) / len(cl.x))}
-        return pts, xl, y
+        return (pts, xl, y, cl.track[idx]) if with_tracks else (pts, xl, y)
 
 
 def _unmasked(c: "Centres", mask: np.ndarray) -> "Centres":
@@ -482,7 +489,8 @@ def smooth_tracks(c: Centres, p: Params, mask: np.ndarray | None = None, keep_en
         src.append(t[keep])
         ends.append(end[keep])
     if not xs:
-        return Centres(np.zeros(0), np.zeros(0), np.zeros(0), np.zeros(0, int), np.zeros(0, int), np.zeros(0, bool))
+        return Centres(np.zeros(0), np.zeros(0), np.zeros(0), np.zeros(0, int), np.zeros(0, int),
+                       np.zeros(0, bool) if keep_ends else None)
     return Centres(np.concatenate(xs), np.concatenate(ys), np.concatenate(ss), np.concatenate(ids),
                    np.concatenate(src), np.concatenate(ends) if keep_ends else None)
 
@@ -528,66 +536,86 @@ def match_row(pl: list[float], pr: list[float], f: float, B: float, off: float) 
     return pairs[::-1]
 
 
-def agreement(pts: np.ndarray, xs: np.ndarray, ys: np.ndarray, agree_mm: float, cell: int) -> np.ndarray:
-    """A mis-paired stripe lands at a depth nothing around it has (11-44 mm off); keep points within agree_mm of a
-    robust plane through their cell's depths (a cell of < 4 points: through the 3 x 3 cells around it).
+def agreement(pts: np.ndarray, xs: np.ndarray, ys: np.ndarray, agree_mm: float, cell: int,
+              track: np.ndarray | None = None) -> np.ndarray:
+    """A mis-paired stripe lands at a depth nothing around it has (11-44 mm off): keep points whose depth agrees with
+    their 24 px cell (a cell of < 4 points: with the 3 x 3 cells around it).
 
-    Until 2026-10-09 this compared depth with the cell's median and dropped cells of < 4 points. On a steep surface a
-    stripe's depth changes by several mm across one 24 px cell, so the median test cut the ends off every such
+    With the points' left track ids (line matching) each track's depth is first followed along the stripe: a robust
+    line in the row through the track's points in the cell, read off at the cell's middle row. Those levels are then
+    compared across tracks with the cell's median, as before - with no tilt ACROSS stripes, because two parallel
+    stripes always lie on one tilted plane, and such a plane would explain a one-line mispair (a constant 11-44 mm)
+    as a slope. Without track ids (stereo order matching) each point's depth is compared with the cell's median.
+
+    Until 2026-10-09 the line path also compared raw depth with the cell's median and dropped cells of < 4 points.
+    On a steep surface a stripe's depth changes by several mm along one cell, so that cut the ends off every such
     segment: on the turntable bust recording it dropped 3.5 % of the points on the part, all of them good (against
-    frames from other table angles 0.04 mm median, 3.5 % > 0.3 mm, like the points it kept) and none a mismatch.
-    The plane keeps everything the median kept (none lost of 718,000) and those."""
+    frames from other table angles 0.04 mm median, 3.5 % > 0.3 mm, like the points it kept), none a mismatch."""
     if not len(pts):
         return np.zeros(0, bool)
     z = pts[:, 2].astype(np.float64)
+    if track is None:
+        keep = np.zeros(len(pts), bool)
+        keys = (ys // cell).astype(np.int64) * 10_000 + (xs // cell).astype(np.int64)
+        order = np.argsort(keys, kind="stable")
+        ks, zo = keys[order], z[order]
+        cuts = np.flatnonzero(np.diff(ks)) + 1
+        for a, b in zip(np.r_[0, cuts], np.r_[cuts, len(ks)]):
+            if b - a >= 4:
+                keep[order[a:b]] = np.abs(zo[a:b] - np.median(zo[a:b])) < agree_mm
+        return keep
+    track = np.asarray(track, np.int64)
     cy, cx = (ys // cell).astype(np.int64), (xs // cell).astype(np.int64)
     key = cy * 100_000 + cx
-    res, cnt = _plane_residual(xs, ys, z, key, cell, agree_mm)
+    dev, cnt = _level_deviation(ys, z, key, track, (cy + 0.5) * cell, cell, agree_mm)
     sparse = cnt < 4
     if sparse.any():
         # each sparse cell is judged with the points of the 3 x 3 cells around it
         lonely = np.unique(key[sparse])
-        idx, block = [], []
+        idx, block, row = [], [], []
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
                 around = (cy + dy) * 100_000 + (cx + dx)
                 sel = np.flatnonzero(np.isin(around, lonely))
                 idx.append(sel)
                 block.append(around[sel])
-        idx, block = np.concatenate(idx), np.concatenate(block)
-        r, n = _plane_residual(xs[idx], ys[idx], z[idx], block, cell, agree_mm)
+                row.append(cy[sel] + dy)                  # the block's middle cell row
+        idx, block, row = np.concatenate(idx), np.concatenate(block), np.concatenate(row)
+        d2, n2 = _level_deviation(ys[idx], z[idx], block, track[idx], (row + 0.5) * cell, cell, agree_mm)
         own = block == key[idx]                           # a point's entry in the block centred on its own cell
-        res[idx[own]] = np.where(n[own] >= 4, r[own], np.nan)
+        dev[idx[own]] = np.where(n2[own] >= 4, d2[own], np.nan)
     with np.errstate(invalid="ignore"):
-        return np.abs(res) < agree_mm
+        return np.abs(dev) < agree_mm
 
 
-def _plane_residual(xs: np.ndarray, ys: np.ndarray, z: np.ndarray, key: np.ndarray, scale: float, tol: float,
-                    iters: int = 3) -> tuple[np.ndarray, np.ndarray]:
-    """(each point's depth minus a robust plane z = a + b x + c y through the points of its key, their number).
+def _level_deviation(y: np.ndarray, z: np.ndarray, key: np.ndarray, track: np.ndarray, mid_row: np.ndarray,
+                     scale: float, tol: float, iters: int = 3) -> tuple[np.ndarray, np.ndarray]:
+    """(each point's depth carried along its track to its key's middle row, minus the key's median of those; the
+    number of points with its key).
 
-    Starts from the key's median depth and refits on the points within 2 tol of the current plane, so a stripe on a
-    steep surface keeps its slope while a stripe 11-44 mm off (a wrong pairing) never enters the fit. Vectorised over
-    all keys (normal equations by bincount)."""
-    uk, inv, cnt = np.unique(key, return_inverse=True, return_counts=True)
-    inv = inv.ravel()
-    m = len(uk)
-    u = (xs - np.bincount(inv, xs, m)[inv] / cnt[inv]) / scale      # centred coordinates, in cells
-    v = (ys - np.bincount(inv, ys, m)[inv] / cnt[inv]) / scale
-    order = np.lexsort((z, inv))
-    start = np.r_[0, np.cumsum(cnt)[:-1]]
-    coef = np.zeros((m, 3))
-    coef[:, 0] = 0.5 * (z[order][start + (cnt - 1) // 2] + z[order][start + cnt // 2])     # the median
+    Per (key, track) a line z = a + b (y - mid_row): started from the median depth with no slope, refitted on the
+    points within 2 tol of it, so a steep stripe keeps its slope and a stray point never sets it. Fewer than 3 points
+    of a track: no slope. Vectorised over all groups (sums by bincount)."""
+    _, g, gcnt = np.unique(key * 1_000_000 + track, return_inverse=True, return_counts=True)
+    g = g.ravel()
+    m = len(gcnt)
+    v = (y - mid_row) / scale
+    order = np.lexsort((z, g))
+    start = np.r_[0, np.cumsum(gcnt)[:-1]]
+    a = 0.5 * (z[order][start + (gcnt - 1) // 2] + z[order][start + gcnt // 2])             # the median
+    b = np.zeros(m)
     for _ in range(iters):
-        r = z - (coef[inv, 0] + coef[inv, 1] * u + coef[inv, 2] * v)
-        w = (np.abs(r) < 2 * tol).astype(np.float64)
-        s = lambda a: np.bincount(inv, w * a, m)                    # noqa: E731
-        s1, su, sv, suu, suv, svv = s(1.0), s(u), s(v), s(u * u), s(u * v), s(v * v)
-        A = np.stack([np.stack([s1, su, sv], -1), np.stack([su, suu, suv], -1), np.stack([sv, suv, svv], -1)], 1)
-        A[:, 1, 1] += 1e-4 * s1 + 1e-9                              # a single stripe is a line: no tilt across it
-        A[:, 2, 2] += 1e-4 * s1 + 1e-9
-        b = np.stack([s(z), s(u * z), s(v * z)], -1)
-        ok = s1 >= 3
-        if ok.any():
-            coef[ok] = np.linalg.solve(A[ok], b[ok][..., None])[..., 0]
-    return z - (coef[inv, 0] + coef[inv, 1] * u + coef[inv, 2] * v), cnt[inv]
+        w = (np.abs(z - a[g] - b[g] * v) < 2 * tol).astype(np.float64)
+        s1, sv, svv = np.bincount(g, w, m), np.bincount(g, w * v, m), np.bincount(g, w * v * v, m)
+        sz, svz = np.bincount(g, w * z, m), np.bincount(g, w * v * z, m)
+        det = s1 * svv - sv * sv
+        ok = (s1 >= 3) & (det > 1e-9 * np.maximum(s1, 1) ** 2)
+        a = np.where(ok, (sz * svv - sv * svz) / np.where(ok, det, 1), a)
+        b = np.where(ok, (s1 * svz - sv * sz) / np.where(ok, det, 1), b)
+    level = z - b[g] * v
+    _, k, kcnt = np.unique(key, return_inverse=True, return_counts=True)
+    k = k.ravel()
+    order = np.lexsort((level, k))
+    start = np.r_[0, np.cumsum(kcnt)[:-1]]
+    med = 0.5 * (level[order][start + (kcnt - 1) // 2] + level[order][start + kcnt // 2])
+    return level - med[k], kcnt[k]
