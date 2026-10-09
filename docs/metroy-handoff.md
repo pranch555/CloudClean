@@ -31,6 +31,30 @@ The `metroy_usb` driver is a real streaming driver, live in the CloudClean servi
 | World frame | markers on one flat table seen from above (the turntable plate): the scan stands on it - Z along the plate's normal, plate at z = 0, so a turntable turns about Z (`metroy_usb._table_frame`; the user's plate fits a plane to 0.19 mm, 12 markers). Otherwise Z = sensor up at the first marker frame. Before 2026-10-07 a map started on a frame with markers but no laser points yet stayed in sensor coordinates: such scans lie on their side (Clean -> Sit flat on the floor, or re-scan) |
 | Tests | `tests/test_metroy.py` (synthetic step scene through the real rectification, markers, tracker, laser file). Suites: 105 passed on Windows and on the Spark |
 
+## Turntable + markers on the user's plate (2026-10-09)
+
+The user's live turntable scan (bust on the plate, table turning) said "No markers in view" / "Markers not recognised"
+while the camera view showed markers; 5,137 of 5,143 frames were lost and nothing was fused (the live frame is still
+drawn at the last pose, so stripes piled up in one spot). Found on their own data (session `a703de4717`, the camera
+view, and the 10-06 recording `~/.cache/cloudclean/metroy/recordings/20261006-164326`, same plate and bust):
+
+| cause | evidence | fix |
+|---|---|---|
+| **Tracker deadlock.** "Map the markers first" reset the map; it started on a frame with 4 paired markers. A frame had to register half of *its* markers (5 of ~10) to a 4-marker map - impossible - and only registered frames may add markers | session map stuck at 4; replaying the 10-06 markers with a 4-marker start: 310/310 lost (10, 6 or 5: all tracked) | `MarkerTracker._accept`: only a marker within the gate of a map marker without matching it counts against a pose. 4-marker start now 310/310 tracked; the real run's poses reproduced exactly (max diff 0.0) |
+| **Far plate markers never detected.** Seen at a low angle they return little light (~60-110 grey vs 165-255 near) and are flat ellipses | camera view measurements; 10-06 frames | `MarkerParams` 40 -> 25 above background, axis ratio 0.4 -> 0.25: 10.2 -> 17.8 paired per frame, map 13 -> 23, pose jitter at the surface 0.141 -> 0.058 mm RMS, extras on the plate plane (p95 0.22 mm). 20 starts taking laser spots on the bust (32 of 700 off the plate) - do not go lower without a better stripe/marker test |
+| **Same-row ambiguity.** Seen from the side, plate markers at one distance share an image row; the disparity window for 150-500 mm is 1,087 px, so `stereo()` finds several partners and drops all | 10-06 frame: 6 markers per camera unmatched, all on two rows | open: resolve with the map (associate each candidate 3D point to the map, keep the one that lands on a map marker; never let an ambiguous pair *create* a map marker) |
+| Laser spots on the part taken for markers | small rings on the bust's stripes in the live camera view | partly: new far markers no longer count against a pose. Open: reject blobs that sit on a detected stripe |
+| The banner said "No markers in view" next to a picture full of markers | user report | banner: "Only N markers found in both cameras - tracking needs 4"; camera view rings matched markers blue and unmatched spots amber |
+
+Pose jitter at the surface on a static scene: 0.066 mm RMS over the recorded run (markers 0.16 mm RMS each). Laser
+lines crossing markers (red inside the rings) bias the intensity centroid - an ellipse fit to the marker edge,
+ignoring stripe pixels, is the next step for accuracy.
+
+What the rest of the industry does, and the ranked list of what to change next: docs/laser-scanning-research.md.
+
+**Next:** a recording of the current setup (Record for diagnosis on, reconnect, ~30 s turning, stop, disconnect) to
+check the new detector at the user's low viewing angle and to build the ambiguity resolution on real frames.
+
 ## What is missing, in order
 
 1. **Real markers.** Stick retro-reflective markers (Revo Metro's 3 mm / 6 mm dots) on and around a part, connect

@@ -298,6 +298,38 @@ def test_regular_marker_grid_never_gives_a_wrong_pose():
     assert res2.pose is not None and np.abs(res2.pose[:3, 3] - T_true[:3, 3]).max() < 0.2
 
 
+def test_a_map_started_on_few_markers_grows_while_the_plate_turns():
+    """2026-10-09, the user's turntable scan: "Map the markers first" started the map on a frame that paired only 4
+    markers, and every later frame saw ~10. A frame then had to register half of ITS markers to the map - 5 of 10 -
+    which a 4-marker map can never give, and only registered frames may add markers: the map stayed at 4 and all
+    5,137 frames were lost. Markers far from every map marker are new, not evidence against the pose."""
+    rng = np.random.default_rng(11)
+    a = rng.uniform(0, 2 * np.pi, 14)
+    r = rng.uniform(30, 90, 14)
+    plate = np.c_[r * np.cos(a), r * np.sin(a), np.zeros(14)]              # random layout, as on the user's plate
+    part = np.array([[0.0, 0.0, 40.0], [20.0, -10.0, 25.0], [-15.0, 12.0, 55.0]])   # on a part standing on the plate
+    from cloudclean.capture.drivers.metroy_usb import _initial_pose
+    tracker = markers.MarkerTracker()
+    states, landed = [], []
+    for i in range(200):
+        spin = _pose(0.0, 0.0, np.radians(0.15 * i), [0.0, 0.0, 0.0])        # the plate turns, the scanner stands
+        T_true, _ = _plate_view(28.5)
+        to_sensor = np.linalg.inv(np.linalg.inv(spin) @ T_true)                # plate frame -> sensor
+        local = markers.apply(to_sensor, plate) + rng.normal(0, 0.05, plate.shape)
+        seen = local[:4] if i == 0 else local                                  # the first frame pairs only 4
+        if len(tracker.world) == 0:
+            tracker.initial = _initial_pose(np.zeros((0, 3)), seen)
+        res = tracker.track(seen)
+        states.append(res.state)
+        if res.pose is not None and i >= 20:   # where each frame puts the same points of the part
+            landed.append(markers.apply(res.pose, markers.apply(to_sensor, part)))
+    assert states.count("lost") == 0, states[:10]
+    assert len(tracker.world) == 14
+    landed = np.array(landed)
+    spread = np.linalg.norm(landed - landed.mean(axis=0), axis=2).max()
+    assert spread < 0.12, f"the same point lands up to {spread:.3f} mm apart"   # 0.079 from a 14-marker start too
+
+
 def test_marker_map_first_then_frozen():
     rng = np.random.default_rng(7)
     world = np.c_[rng.uniform(-150, 150, 40), rng.uniform(-100, 100, 40), rng.uniform(-3, 3, 40)]

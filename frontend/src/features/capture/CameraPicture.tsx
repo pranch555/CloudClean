@@ -77,7 +77,8 @@ export function CameraPicture({ on, scanning, compact, onTurnOn }: { on: boolean
       <div className={`cam-legend ${live ? '' : 'is-idle'}`} aria-label="What the colours on the picture mean">
         <span className="k-line">laser lines CloudClean found</span>
         <span className="k-sat">too bright</span>
-        <span className="k-mk">markers</span>
+        <span className="k-mk">markers in both cameras</span>
+        <span className="k-mk-one">not matched</span>
       </div>
     )}
     </>
