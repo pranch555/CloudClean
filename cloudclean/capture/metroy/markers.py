@@ -199,6 +199,7 @@ class MarkerTracker:
     side_tol_mm: float = 0.6      # triangle side lengths must agree this well to be a candidate match
     min_side_mm: float = 8.0      # triangles with shorter sides pin nothing down
     confirm: int = 3              # sightings before a new marker joins the map
+    forget_after: int = 10        # lost frames in a row after which the motion prediction is no longer trusted
     frozen: bool = False          # a finished marker map: registered markers no longer move it, none are added
     initial: np.ndarray | None = None
     world: np.ndarray = field(default_factory=lambda: np.zeros((0, 3)))
@@ -208,6 +209,7 @@ class MarkerTracker:
     _obs: list = field(default_factory=list)        # (frame markers, frame->map index) for refine()
     _T1: np.ndarray | None = None
     _T2: np.ndarray | None = None
+    _lost_run: int = 0
     _tri_cache: tuple | None = None
 
     def reset(self) -> None:
@@ -215,6 +217,7 @@ class MarkerTracker:
         self.seen = np.zeros(0)
         self._candidates, self._obs = [], []
         self._T1 = self._T2 = None
+        self._lost_run = 0
         self._tri_cache = None
         self.frozen = False
         self.version += 1
@@ -245,7 +248,11 @@ class MarkerTracker:
             if T is not None:
                 T, idx = self._refine(markers, T, self.min_inliers_reloc)
         if T is None:
+            self._lost_run += 1
+            if self._lost_run >= self.forget_after:
+                self._T1 = self._T2 = None           # the motion since is unknown: recover from the markers alone
             return TrackResult(None, "lost", m, 0, None)
+        self._lost_run = 0
         good = idx >= 0
         W = apply(T, markers)
         rmse = float(np.sqrt(np.mean(np.sum((W[good] - self.world[idx[good]]) ** 2, 1))))
@@ -318,12 +325,24 @@ class MarkerTracker:
         deadlocked a map started on a frame with few markers: a 4-marker map could never register half of a
         10-marker frame, and only registered frames may add markers (the user's turntable scan, 2026-10-09)."""
         good = idx >= 0
-        if good.sum() < need or _degenerate(markers[good]):
+        n = int(good.sum())
+        if n < need or _degenerate(markers[good]):
             return False
+        if self.frozen or n >= self.min_agree * len(markers):
+            # a finished map holds every marker there is: whatever does not register counts against the pose
+            return n >= self.min_agree * len(markers)
         rest = apply(T, markers[~good])
         against = int((np.linalg.norm(rest[:, None] - self.world[None], axis=2).min(1) < self.gate_mm).sum()) \
             if len(rest) else 0
-        return good.sum() >= self.min_agree * (good.sum() + against)
+        if n < self.min_agree * (n + against) or n < self.min_inliers_reloc:
+            return False
+        # most of the frame is not explained (new markers coming into view of a small map): take the pose only if
+        # the layout pins it down. On a grid or a ring a pose one spacing off registers as many markers and puts the
+        # rest in empty map space (review 2026-10-09: 30 mm and 131-228 mm wrong poses accepted from a stale
+        # prediction); the triangle search finds the pose that explains most, and refuses when two different ones
+        # do equally well
+        alt = self._relocalize(markers, use_prediction=False)   # the pose under test came from the prediction
+        return alt is not None and _pose_distance(alt, T) < (2.0, 1.0)
 
     def _refine(self, markers: np.ndarray, T: np.ndarray, need: int):
         radius = self.gate_mm
@@ -341,14 +360,27 @@ class MarkerTracker:
         return kabsch(markers[good], self.world[idx[good]]), idx
 
     def _map_triangles(self, max_side: float):
+        """The map's triangles, sorted by their shortest side (a frame triangle's partners are a binary search
+        away instead of a scan of every map triangle)."""
         key = (self.version, len(self.world), round(max_side))
         if self._tri_cache is None or self._tri_cache[0] != key:
-            self._tri_cache = (key, _triangles(self.world, self.min_side_mm, max_side=max_side))
+            keys, tris = _triangles(self.world, self.min_side_mm, max_side=max_side)
+            o = np.argsort(keys[:, 0], kind="stable")
+            self._tri_cache = (key, (keys[o], [tris[i] for i in o]))
         return self._tri_cache[1]
 
-    def _relocalize(self, markers: np.ndarray) -> np.ndarray | None:
+    RELOC_TRIANGLES = 200   # frame triangles tried, the largest first: a few already find a random layout's pose,
+                            # and on a symmetric one (ring, grid) any of them meets every rotated / shifted copy
+
+    def _relocalize(self, markers: np.ndarray, use_prediction: bool = True) -> np.ndarray | None:
         """Pose from triangles of inter-marker distances (which the pose does not change), accepted only when it
-        is clearly better than any other pose - on a regular marker grid several poses fit a few markers."""
+        is clearly better than any other pose - on a regular marker grid several poses fit a few markers.
+
+        Every triangle match used to be fitted and associated, so a 25-marker frame against a 38-marker map took
+        1.5 s - on the capture thread, for every lost frame. Now the map's triangles are looked up in a sorted
+        list, only the largest frame triangles are tried, and a triangle pose that repeats a pose already found
+        (within 10 mm / 3 deg - the copies a symmetric layout produces differ by a marker spacing or a turn) is
+        not fitted again."""
         if len(self.world) < 3 or len(markers) < self.min_inliers_reloc:
             return None
         extent = float(np.max(np.linalg.norm(markers[:, None] - markers[None], axis=2)))
@@ -356,11 +388,19 @@ class MarkerTracker:
         if not len(keys_map):
             return None
         ft_keys, ft = _triangles(markers, self.min_side_mm)
+        if not len(ft_keys):
+            return None
+        order = np.argsort(-ft_keys[:, 0], kind="stable")[:self.RELOC_TRIANGLES]
+        first = keys_map[:, 0]
         cands = []
-        for key, tri in zip(ft_keys, ft):
-            close = np.flatnonzero(np.all(np.abs(keys_map - key) < self.side_tol_mm, axis=1))
+        for key, tri in zip(ft_keys[order], [ft[i] for i in order]):
+            lo = np.searchsorted(first, key[0] - self.side_tol_mm, "left")
+            hi = np.searchsorted(first, key[0] + self.side_tol_mm, "right")
+            close = lo + np.flatnonzero(np.all(np.abs(keys_map[lo:hi] - key) < self.side_tol_mm, axis=1))
             for c in close[:60]:
                 T = kabsch(markers[list(tri)], self.world[list(tri_map[c])])
+                if any(_pose_distance(T, Tc) < (10.0, 3.0) for _, Tc in cands):
+                    continue
                 idx = self._associate(apply(T, markers), self.inlier_mm * 2)
                 n = int((idx >= 0).sum())
                 if n >= self.min_inliers_reloc:
@@ -375,7 +415,7 @@ class MarkerTracker:
             return None
         cands.sort(key=lambda c: -c[0])
         best_n, best = cands[0]
-        prediction = self._T1
+        prediction = self._T1 if use_prediction else None
         full = best_n == len(markers)             # explains every marker in view
         for n, T in cands[1:]:
             if n < best_n - (0 if full else 1):     # a full explanation beats any that leaves a marker out
@@ -441,15 +481,19 @@ def _degenerate(P: np.ndarray) -> bool:
 
 
 def _triangles(P: np.ndarray, min_side: float, limit: int = 40000, max_side: float = np.inf):
-    keys, tris = [], []
-    for tri in combinations(range(len(P)), 3):
-        a, b, c = P[list(tri)]
-        sides = np.array([np.linalg.norm(b - c), np.linalg.norm(a - c), np.linalg.norm(a - b)])
-        if sides.min() < min_side or sides.max() > max_side:
-            continue
-        o = np.argsort(sides)                    # canonical order: vertices opposite the sorted sides
-        keys.append(sides[o])
-        tris.append(tuple(np.array(tri)[o]))
-        if len(keys) >= limit:
-            break
-    return np.array(keys).reshape(-1, 3), tris
+    """Every triangle of markers with sides in [min_side, max_side]: its sides sorted (the pose-free key) and its
+    vertices opposite those sides, in combination order, at most `limit`. Vectorised: the loop it replaces spent
+    ~60 ms on 25 markers, most of a relocalization."""
+    n = len(P)
+    if n < 3:
+        return np.zeros((0, 3)), []
+    D = np.linalg.norm(P[:, None] - P[None], axis=2)
+    abc = np.fromiter(combinations(range(n), 3), dtype=np.dtype((np.int64, 3)))
+    a, b, c = abc.T
+    sides = np.c_[D[b, c], D[a, c], D[a, b]]                     # side k is opposite vertex k
+    ok = (sides.min(1) >= min_side) & (sides.max(1) <= max_side)
+    sides, abc = sides[ok][:limit], abc[ok][:limit]
+    o = np.argsort(sides, axis=1, kind="stable")                  # canonical order: vertices opposite sorted sides
+    keys = np.take_along_axis(sides, o, axis=1)
+    verts = np.take_along_axis(abc, o, axis=1)
+    return keys.reshape(-1, 3), [tuple(v) for v in verts.tolist()]
