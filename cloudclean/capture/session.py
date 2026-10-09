@@ -29,6 +29,7 @@ import traceback
 import struct
 import uuid
 from collections import deque
+from typing import Callable
 
 import numpy as np
 import open3d as o3d
@@ -98,6 +99,9 @@ class CaptureSession:
         self._guidance_lock = threading.Lock()
         self.state = "created"      # created connected running paused stopped finished error closed
         self.error: str | None = None
+        # warnings from outside the scanner, asked with the capture's state at every guidance update: the capture
+        # manager plugs in the turntable's ("the table is not turning - the scan sees the same side over and over")
+        self.extra_warnings: Callable[[str], str | None] | None = None
         self.created = time.time()
         self.started_at: float | None = None
         self.running_time = 0.0
@@ -880,6 +884,14 @@ class CaptureSession:
                 else:
                     text = "Tracking lost - move back to an area you already scanned and hold the scanner steady"
                 self._msg(msgs, "tracking_lost", "error", text)
+            if self.extra_warnings is not None:
+                try:
+                    extra = self.extra_warnings(self.state)
+                except Exception as exc:  # guidance must never kill the capture
+                    extra = None
+                    self.log(f"turntable check failed: {exc}")
+                if extra:
+                    self._msg(msgs, "turntable", "warning", extra)
             if tick["fast"]:
                 self._msg(msgs, "too_fast", "warning",
                           f"Moving too fast ({tick['max_speed']:.0f} mm/s, limit {self.options['speed_limit']:.0f}) "

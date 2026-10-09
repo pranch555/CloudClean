@@ -128,7 +128,14 @@ class CaptureManager:
             session.connect()
         except (ValueError, RuntimeError, OSError) as exc:
             raise CaptureError(str(exc))
+        session.extra_warnings = self._turntable_warning
         return session
+
+    def _turntable_warning(self, scan_state: str) -> str | None:
+        """The turntable's warning while this scan runs and the table that should turn it does not (not connected
+        after a restart, or standing still) - the scan then sees one side over and over and barely grows."""
+        from .turntable.manager import get_turntable_manager
+        return get_turntable_manager(self.ws).scan_warning(scan_state)
 
     def connect(self, driver_id: str, settings: dict | None = None) -> dict:
         with self.lock:
