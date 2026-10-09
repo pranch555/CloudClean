@@ -329,3 +329,32 @@ def test_a_part_too_close_says_so_even_when_the_view_is_in_range():
                                     meta={"distance_mm": 285.0, "near_mm": 192.0}))
     msgs = {m["code"]: m["message"] for m in session.update_guidance()["messages"]}
     assert msgs["too_close"].startswith("Too close - the nearest part is 192 mm away, at the scanner's limit")
+
+
+def test_a_turntable_that_should_turn_but_does_not_shows_in_the_scan_banner(tmp_path):
+    """After a service restart the table was gone and the scan ran on, seeing one side over and over: the
+    turntable's warning reaches the capture guidance while the scan runs, and a failing check never kills it."""
+    from cloudclean.capture.turntable.manager import get_turntable_manager
+    ws_root = tmp_path / "ws"
+    with TestClient(create_app(ws_root)) as client:
+        client.post("/api/capture/connect", json={"driver": "simulated", "settings": {"realtime": False}})
+        manager = manager_for(ws_root)
+        table = get_turntable_manager(manager.ws)
+        asked = []
+        table.scan_warning = lambda state: (asked.append(state) or
+                                            ("The turntable is not connected" if state == "running" else None))
+        session = manager.session
+        session.state = "running"
+        session._tick["frames"] = 1
+        msgs = {m["code"]: m for m in session.update_guidance()["messages"]}
+        assert msgs["turntable"]["message"] == "The turntable is not connected" and asked[-1] == "running"
+        session.state = "paused"
+        assert "turntable" not in {m["code"] for m in session.update_guidance()["messages"]}
+
+        def broken(state):
+            raise RuntimeError("bluetooth went away")
+        table.scan_warning = broken
+        session.state = "running"
+        assert "turntable" not in {m["code"] for m in session.update_guidance()["messages"]}
+        session.state = "stopped"
+        client.post("/api/capture/discard")
