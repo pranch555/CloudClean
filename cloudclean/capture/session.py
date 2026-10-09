@@ -5,7 +5,12 @@ Data kept per session (all numpy, bounded):
 
 * **full resolution** – accepted points in per-frame float32 chunks (+ uint8 colours). At most
   `max_points_per_cell` points are kept per point-distance cell, so rescanning an area does not grow memory
-  without bound, and points are never moved or averaged.
+  without bound. They are stored as measured.
+* **surface field** (`fusion` = "average", the default) – every fused point of every frame, also where the cells
+  above are full, summed into per-cell surface moments (fusion.SurfaceField). At save time the kept points move along
+  the normal onto the surface those moments average out (fusion.project); edges, corners and anything that is not
+  one clean surface keep the measured points. On the user's bust this took the surface thickness from 0.24 to
+  0.075 mm with the same points (fusion.py has the numbers).
 * **display map** – the first point in every `display_voxel` cell, append-only so clients can stream it
   incrementally; each has a density ratio (1.0 = target density reached).
 * **density grid** – ~2.5 mm surface cells with point counts and summed view directions (guidance).
@@ -37,12 +42,19 @@ from scipy.spatial import cKDTree
 from ..io import estimate_spacing
 from ..register import MergeParams, assess_pair, scan_reasons
 from .drivers.base import Frame, ScannerDriver, option, resolve_settings, setting
+from .fusion import FUSION_CELL_MM, SurfaceField, project
 from .grid import VoxelCounter, neighbor_keys, voxel_keys
 from .guidance import DENSE_RATIO, analyze, smoothed_density
 
 reg = o3d.pipelines.registration
 
 SESSION_SETTINGS = [
+    setting("fusion", "Fusion", "select", "average",
+            options=[option("average", "Average every frame (thin, accurate surface)"),
+                     option("raw", "Keep the raw points (every frame's noise stays)")],
+            help="Average: every frame is averaged into the surface and the saved points lie on that average - the "
+                 "scanner's noise and the tracking jitter cancel out, edges and corners stay as measured. Raw: the "
+                 "first points measured in each cell are saved as they are."),
     setting("max_points_per_cell", "Max points per point-distance cell", "number", 3, min=1, max=100, step=1,
             help="Bounds memory on long sessions: extra passes over an area stop adding points once reached."),
     setting("max_points", "Point budget", "number", 0, min=0, max=100_000_000, step=100_000,
@@ -142,6 +154,8 @@ class CaptureSession:
         with self.lock:
             self.point_distance: float | None = None
             self.fine = VoxelCounter()
+            self.field: SurfaceField | None = None        # created with the first frame (needs the point distance)
+            self.fusion_stats: dict | None = None
             self.density = VoxelCounter(vectors=True)
             self.free = VoxelCounter()
             self.display = VoxelCounter()
@@ -687,6 +701,10 @@ class CaptureSession:
                     diag = float(np.linalg.norm(np.percentile(world, 99, axis=0) - np.percentile(world, 1, axis=0)))
                     v = max(0.5, self.point_distance * 2, diag / 1500.0)
                 self.display_voxel = v
+            if self.field is None and self.options["fusion"] == "average":
+                self.field = SurfaceField(max(FUSION_CELL_MM, self.point_distance))
+            if self.field is not None:       # every point, also those the cell cap below turns away: the averaging
+                self.field.add(world)
             cap = int(self.options["max_points_per_cell"])
             accepted = self.fine.add(voxel_keys(world, self.point_distance), cap=cap)[0]
             if not accepted.any():
@@ -778,6 +796,12 @@ class CaptureSession:
             cells, inverse = np.unique(voxel_keys(pts, self.cell), return_inverse=True)
             density = smoothed_density(self.density.get, cells, self.cell)[inverse.reshape(-1)]
             has_colors = self.has_colors
+            field = self.field.copy() if self.field is not None else None
+        if field is not None:
+            pts, stats = project(field, pts)
+            self.fusion_stats = stats
+            self.log(f"Averaged {stats['moved_pct']:.1f}% of the points onto the surface of {field.points:,} measured "
+                     f"points (median move {stats['median_move_mm']:.3f} mm); the rest stay as measured")
         pcd = _cloud(pts)
         if has_colors:
             rgb = np.concatenate([c[1] if c[1] is not None else np.full((len(c[0]), 3), 128, np.uint8)
@@ -1022,6 +1046,10 @@ class CaptureSession:
                                                        "missing_area_mm2", "estimated_area_mm2", "method")},
                 "holes": heavy.get("holes", []),
                 "guidance": {"history": self.history, "coverage_timeline": self.coverage_timeline[-200:]},
+                "fusion": {"method": self.options["fusion"],
+                           "cell_mm": self.field.cell if self.field is not None else None,
+                           "measured_points": self.field.points if self.field is not None else self.n_points,
+                           **(self.fusion_stats or {})},
                 "settings": {**self.driver_settings, **self.options}}
 
     def stream(self, cursor: dict, max_points: int = 250_000, chunk: int = 100_000) -> list:
