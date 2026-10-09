@@ -29,15 +29,21 @@ import numpy as np
 
 @dataclass
 class MarkerParams:
-    threshold_above: float = 40.0  # a marker is this much brighter than the image's median (the background). At
-                                   # Revo Metro's 200 us exposure lit markers read ~100-130 over a background of 16;
-                                   # a fixed level misses them when exposure changes
-    threshold_min: float = 45.0
+    threshold_above: float = 25.0  # a marker is this much brighter than the image's median (the background). At
+                                   # Revo Metro's 200 us exposure near markers read ~100-250 over a background of 16,
+                                   # but markers further away and seen at a low angle (the far side of a turntable
+                                   # plate) return far less light (retro-reflection falls off with the angle) and
+                                   # read ~60-110. On the user's plate + bust recording (2026-10-06): 40 paired 10.2
+                                   # markers a frame, 25 paired 17.8 (map 13 -> 23, pose jitter at the surface
+                                   # 0.141 -> 0.058 mm RMS, all on the plate within 0.22 mm, p95); 20 began to take
+                                   # laser-lit spots on the bust (32 of 700 off the plate)
+    threshold_min: float = 40.0
     stripe_width_px: int = 9      # laser stripes are 5-8 px wide: an opening this wide removes them
     min_area_px: int = 40
     max_area_px: int = 6000
     min_fill: float = 0.6         # blob area / area of its fitted ellipse (Revo: saturation)
-    min_axis_ratio: float = 0.4   # minor / major axis (Revo: ellipse_ab / minAb)
+    min_axis_ratio: float = 0.25  # minor / major axis (Revo: ellipse_ab / minAb). A round marker seen 75 deg off its
+                                  # normal is 0.26: the far markers of a plate viewed from the side are that flat
     epipolar_px: float = 1.5      # rectified row difference of a stereo pair (Revo: 1.0..1.5)
     size_ratio: float = 1.6       # left/right blob size may differ by this factor at most
     z_min: float = 150.0
@@ -103,9 +109,16 @@ def mask(shape, blobs: list[Blob], grow: float = 1.8, pad_px: float = 4.0) -> np
 
 def stereo(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams | None = None) -> np.ndarray:
     """(n, 3) marker positions in mm (rectified left camera frame) from unique left/right pairs."""
+    return stereo_pairs(left, right, Q, p)[0]
+
+
+def stereo_pairs(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams | None = None):
+    """stereo(), plus which blobs made the pairs: (points (n, 3), left indices (n,), right indices (n,)). A blob in
+    neither list was found in one picture but not matched in the other - the camera view shows it apart."""
     p = p or MarkerParams()
+    none = np.zeros(0, int)
     if not left or not right:
-        return np.zeros((0, 3))
+        return np.zeros((0, 3)), none, none
     L = np.array([(b.x, b.y, b.radius) for b in left])
     R = np.array([(b.x, b.y, b.radius) for b in right])
     dy = np.abs(L[:, None, 1] - R[None, :, 1])
@@ -118,11 +131,11 @@ def stereo(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerParams |
     pairs = [(i, int(np.flatnonzero(ok[i])[0])) for i in range(len(L))
              if ok[i].sum() == 1 and ok[:, np.flatnonzero(ok[i])[0]].sum() == 1]
     if not pairs:
-        return np.zeros((0, 3))
+        return np.zeros((0, 3)), none, none
     i, j = np.array(pairs).T
     y = 0.5 * (L[i, 1] + R[j, 1])
     h = np.c_[L[i, 0], y, L[i, 0] - R[j, 0], np.ones(len(i))] @ Q.T
-    return h[:, :3] / h[:, 3:4]
+    return h[:, :3] / h[:, 3:4], i, j
 
 
 # -- tracking ----------------------------------------------------------------------------------------------------
@@ -287,9 +300,21 @@ class MarkerTracker:
                 idx[claim[claim != keep]] = -1
         return idx
 
-    def _accept(self, markers: np.ndarray, idx: np.ndarray, need: int) -> bool:
+    def _accept(self, markers: np.ndarray, idx: np.ndarray, need: int, T: np.ndarray) -> bool:
+        """Enough markers register, they pin the pose down, and most markers that could have registered did.
+
+        A frame marker far from every map marker is simply not mapped yet: it is no evidence against the pose. Only
+        one that lands within the association gate of a map marker without matching it contradicts the pose (two
+        real markers never sit 0.5-5 mm apart). Counting every unregistered marker against the pose, as before,
+        deadlocked a map started on a frame with few markers: a 4-marker map could never register half of a
+        10-marker frame, and only registered frames may add markers (the user's turntable scan, 2026-10-09)."""
         good = idx >= 0
-        return good.sum() >= need and good.sum() >= self.min_agree * len(markers) and not _degenerate(markers[good])
+        if good.sum() < need or _degenerate(markers[good]):
+            return False
+        rest = apply(T, markers[~good])
+        against = int((np.linalg.norm(rest[:, None] - self.world[None], axis=2).min(1) < self.gate_mm).sum()) \
+            if len(rest) else 0
+        return good.sum() >= self.min_agree * (good.sum() + against)
 
     def _refine(self, markers: np.ndarray, T: np.ndarray, need: int):
         radius = self.gate_mm
@@ -301,7 +326,7 @@ class MarkerTracker:
             T = kabsch(markers[good], self.world[idx[good]])
             radius = max(self.inlier_mm * 2, radius * 0.5)
         idx = self._associate(apply(T, markers), self.inlier_mm)
-        if not self._accept(markers, idx, need):
+        if not self._accept(markers, idx, need, T):
             return None, idx
         good = idx >= 0
         return kabsch(markers[good], self.world[idx[good]]), idx

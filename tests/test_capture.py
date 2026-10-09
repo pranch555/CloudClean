@@ -295,3 +295,21 @@ def test_status_survives_infinite_numbers(tmp_path):
         assert r.json()["device"] == {"distance_mm": None} and r.json()["guidance"]["tracking"]["rmse_mm"] is None
         assert client.post("/api/capture/stop").status_code == 200
         client.post("/api/capture/discard")
+
+
+def test_marker_loss_says_how_many_markers_both_cameras_found():
+    """2026-10-09: the camera showed plenty of markers while the banner said "No markers in view" - only 3 were found
+    in BOTH cameras, which is what tracking needs. The banner says so, and still says "no markers" when there are none."""
+    from cloudclean.capture.drivers.base import Frame
+    session = CaptureSession(create_driver("simulated"), {"realtime": False})
+    pts = np.c_[np.linspace(-20, 20, 200), np.zeros(200), np.full(200, 280.0)]
+
+    def banner(markers_seen):
+        for i in range(4):
+            session.process_frame(Frame(points=pts, timestamp=i * 0.02, coordinates="sensor",
+                                        meta={"device_tracking": "no_markers", "markers": markers_seen}))
+        return [m["message"] for m in session.update_guidance()["messages"] if m["code"] == "tracking_lost"]
+
+    assert banner(3)[0].startswith("Only 3 markers found in both cameras - tracking needs 4")
+    assert banner(1)[0].startswith("Only 1 marker found in both cameras")
+    assert banner(0)[0].startswith("No markers in view")

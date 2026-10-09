@@ -135,7 +135,8 @@ class CaptureSession:
             self._log_fn(msg)
 
     def _new_tick(self) -> dict:
-        return {"frames": 0, "fast": 0, "max_speed": 0.0, "lost": 0, "empty": 0, "last": None, "device_reason": None}
+        return {"frames": 0, "fast": 0, "max_speed": 0.0, "lost": 0, "empty": 0, "last": None, "device_reason": None,
+                "device_markers": None}
 
     def _reset_map(self, display_voxel: float | None = None) -> None:
         with self.lock:
@@ -335,6 +336,7 @@ class CaptureSession:
             T = self._T_prev if self._T_prev is not None else self._initial_pose(pts)
             state = "lost"
             tick["device_reason"] = frame.meta["device_tracking"]
+            tick["device_markers"] = frame.meta.get("markers")
         else:
             T, state, fitness, rmse = self._track(pts, frame.timestamp)
         self._publish_live(pts, T, frame.meta.get("marker_points"), state, frame.meta.get("map_points"))
@@ -852,7 +854,14 @@ class CaptureSession:
         if live and tick["frames"]:
             if tick["lost"] and tick["lost"] >= tick["frames"] / 2:
                 reason = tick.get("device_reason")
-                if reason == "no_markers":
+                seen = tick.get("device_markers")
+                if reason == "no_markers" and seen:
+                    # markers the operator can see in the camera are not necessarily usable: each must be found in
+                    # BOTH cameras. "No markers in view" next to a picture full of markers read as a contradiction
+                    text = (f"Only {seen} marker{'s' if seen != 1 else ''} found in both cameras - tracking needs 4. "
+                            "Camera view rings the usable ones blue: look down onto the markers more steeply, or "
+                            "come closer")
+                elif reason == "no_markers":
                     text = ("No markers in view - the scanner tracks by markers in laser mode: keep at least 4 in "
                             "view (or switch the driver to geometry tracking)")
                 elif reason == "lost":

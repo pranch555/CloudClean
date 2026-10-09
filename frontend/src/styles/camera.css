@@ -158,6 +158,11 @@
   border-radius: 50%;
 }
 
+.cam-legend .k-mk-one::before {
+  border: 1px solid rgb(255, 176, 32);
+  border-radius: 50%;
+}
+
 .cam-wait {
   position: absolute;
   inset: 0;

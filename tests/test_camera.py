@@ -558,3 +558,18 @@ def test_camera_api_round_trip_with_the_simulated_scanner(tmp_path):
         assert client.post("/api/capture/camera", json={"gain": 2}).status_code == 400
         assert client.post("/api/capture/camera/preview", json={"on": True}).status_code == 400
         client.post("/api/capture/discard")
+
+
+def test_view_rings_unmatched_markers_apart():
+    """The camera view rings markers found in both cameras (usable for tracking) blue and spots found in one picture
+    only amber: markers you can see are not necessarily markers the scanner can use."""
+    pytest.importorskip("cv2")
+    from cloudclean.capture.metroy.camera import MARKER_RGB, UNMATCHED_RGB, make_view
+    from cloudclean.capture.metroy.markers import Blob
+    img = np.full((360, 480), 16, np.uint8)
+    blobs = [Blob(100.0, 100.0, 20.0, 1.0), Blob(300.0, 200.0, 20.0, 1.0)]
+    view = make_view(img, img, 0.5, markers_l=blobs, markers_r=blobs[:1], matched=([0], [0]))
+    assert view["markers_left"][:, 3].tolist() == [1.0, 0.0] and view["markers_right"][:, 3].tolist() == [1.0]
+    pic = compose_view(view, "left", True, width=240)
+    ring = lambda x, y, r: {tuple(pic[int(y), int(x + dx)]) for dx in range(int(r) - 2, int(r) + 3)}   # noqa: E731
+    assert MARKER_RGB in ring(50, 50, 14) and UNMATCHED_RGB in ring(150, 100, 14)

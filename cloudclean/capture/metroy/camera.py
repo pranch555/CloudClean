@@ -23,10 +23,12 @@ import numpy as np
 
 from .exposure import FRAME_TIME_US, AutoState, CameraSettings, limits, write_plan
 
-# overlay colours (RGB): found laser lines, washed-out pixels, markers
+# overlay colours (RGB): found laser lines, washed-out pixels, markers found in both cameras (the ones tracking can
+# use), and bright spots found in one camera that were not matched in the other
 LINE_RGB = (76, 214, 120)
 SATURATED_RGB = (255, 64, 64)
 MARKER_RGB = (90, 160, 255)
+UNMATCHED_RGB = (255, 176, 32)
 
 
 class CameraControl:
@@ -187,8 +189,11 @@ class PreviewLease:
 
 # ----------------------------------------------------------------------------------------------- the picture
 def make_view(rl: np.ndarray, rr: np.ndarray, scale: float, centres_l=None, centres_r=None, markers_l=(),
-              markers_r=(), saturated: int = 250) -> dict:
-    """A small copy of a rectified pair and what was found in it, for compose_view(). Runs in a worker (OpenCV)."""
+              markers_r=(), saturated: int = 250, matched=None) -> dict:
+    """A small copy of a rectified pair and what was found in it, for compose_view(). Runs in a worker (OpenCV).
+
+    matched: (left indices, right indices) of the markers paired across the cameras (markers.stereo_pairs); the
+    others were seen in one picture only. None: draw every marker as matched."""
     import cv2
     h, w = rl.shape[:2]
     size = (max(1, int(round(w * scale))), max(1, int(round(h * scale))))
@@ -207,17 +212,21 @@ def make_view(rl: np.ndarray, rr: np.ndarray, scale: float, centres_l=None, cent
         c = c[np.isfinite(c).all(axis=1)] * scale
         return np.unique(np.rint(c).astype(np.int16), axis=0) if len(c) else np.zeros((0, 2), np.int16)
 
-    def mk(blobs):
-        return np.asarray([(b.x * scale, b.y * scale, b.radius * scale) for b in blobs], np.float32).reshape(-1, 3)
+    def mk(blobs, used):
+        used = set(range(len(blobs))) if used is None else {int(k) for k in used}
+        return np.asarray([(b.x * scale, b.y * scale, b.radius * scale, float(k in used)) for k, b in enumerate(blobs)],
+                          np.float32).reshape(-1, 4)
 
+    used_l, used_r = matched if matched is not None else (None, None)
     return {"left": left, "right": right, "sat_left": sat_l, "sat_right": sat_r, "shape": left.shape,
             "centres_left": pts(centres_l), "centres_right": pts(centres_r),
-            "markers_left": mk(markers_l), "markers_right": mk(markers_r)}
+            "markers_left": mk(markers_l, used_l), "markers_right": mk(markers_r, used_r)}
 
 
 def compose_view(view: dict, cams: str = "both", overlay: bool = True, width: int = 960) -> np.ndarray:
     """One RGB picture: the left camera, the right one, or both side by side; the overlay paints found laser lines
-    green, washed-out (saturated) pixels red and rings the markers blue."""
+    green, washed-out (saturated) pixels red, rings the markers found in both cameras blue and the spots matched in
+    neither amber (marker rows: x, y, radius[, matched])."""
     from PIL import Image, ImageDraw
     h, w = view["shape"][:2]
     sides = {"left": ["left"], "right": ["right"]}.get(cams, ["left", "right"])
@@ -236,13 +245,16 @@ def compose_view(view: dict, cams: str = "both", overlay: bool = True, width: in
                 xs = np.clip(np.rint(c[:, 0]).astype(int), 0, w - 1)
                 ys = np.clip(np.rint(c[:, 1]).astype(int), 0, h - 1)
                 tile[ys, xs] = LINE_RGB
-            rings += [(x0 + float(x), float(y), max(3.0, float(r) * 1.4)) for x, y, r in view[f"markers_{side}"]]
+            for row in view[f"markers_{side}"]:
+                used = len(row) < 4 or row[3] > 0.5
+                rings.append((x0 + float(row[0]), float(row[1]), max(3.0, float(row[2]) * 1.4), used))
         canvas[:, x0:x0 + w] = tile
     img = Image.fromarray(canvas)
     if rings:
         draw = ImageDraw.Draw(img)
-        for x, y, r in rings:
-            draw.ellipse((x - r, y - r, x + r, y + r), outline=MARKER_RGB, width=2)
+        for x, y, r, used in rings:
+            draw.ellipse((x - r, y - r, x + r, y + r), outline=MARKER_RGB if used else UNMATCHED_RGB,
+                         width=2 if used else 1)
     width = int(max(16, min(1600 * len(sides), width)))
     if img.width != width:
         img = img.resize((width, max(1, round(img.height * width / img.width))), Image.BILINEAR)

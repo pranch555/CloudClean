@@ -72,14 +72,16 @@ def _triangulate(image: np.ndarray, matching: str, find_markers: bool, view_scal
     bl, br = markers.detect(rl), markers.detect(rr)
     pts, xs, ys = tri.points_rectified(rl, rr, matching=matching, with_pixels=True,
                                        masks=(markers.mask(rl.shape, bl), markers.mask(rr.shape, br)))
-    mk = markers.stereo(bl, br, tri.Q) if find_markers else np.zeros((0, 3))
+    mk, il, ir = markers.stereo_pairs(bl, br, tri.Q) if find_markers or view_scale else (np.zeros((0, 3)), (), ())
+    if not find_markers:
+        mk = np.zeros((0, 3))
     light = measure_light(rl, xs, ys, pts)
     view = None
     if view_scale:
         from .camera import make_view
         with np.errstate(divide="ignore", invalid="ignore"):
             xr = xs - tri.off - tri.f * tri.B / pts[:, 2].astype(np.float64)    # the same centres in the right view
-        view = make_view(rl, rr, view_scale, np.c_[xs, ys], np.c_[xr, ys], bl, br)
+        view = make_view(rl, rr, view_scale, np.c_[xs, ys], np.c_[xr, ys], bl, br, matched=(il, ir))
     return pts, mk, dict(tri.last), time.perf_counter() - t0, light, view
 
 
