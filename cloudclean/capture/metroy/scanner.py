@@ -71,7 +71,7 @@ def _triangulate(image: np.ndarray, matching: str, find_markers: bool, view_scal
     # stripe detection
     bl, br = markers.detect(rl), markers.detect(rr)
     pts, xs, ys = tri.points_rectified(rl, rr, matching=matching, with_pixels=True,
-                                       masks=(markers.mask(rl.shape, bl), markers.mask(rr.shape, br)))
+                                       masks=markers.masks(rl.shape, bl, br, tri.Q))   # laser spots are line
     mk, il, ir = markers.stereo_pairs(bl, br, tri.Q) if find_markers or view_scale else (np.zeros((0, 3)), (), ())
     if not find_markers:
         mk = np.zeros((0, 3))
