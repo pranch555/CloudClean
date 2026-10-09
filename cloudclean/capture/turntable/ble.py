@@ -258,21 +258,28 @@ class RevopointBleTurntable(TurntableDriver):
         except Exception as exc:
             raise TurntableError(f"Could not connect to {self.name} ({self.address}): {_describe_error(exc)}. "
                                  f"{BUSY_HINT}") from None
-        char = None
-        gatt = []
-        for service in client.services:
-            chars = []
-            for c in service.characteristics:
-                chars.append({"uuid": c.uuid, "properties": list(c.properties)})
-                if char is None and P.is_data_characteristic(c.uuid):
-                    char = c
-            gatt.append({"uuid": service.uuid, "characteristics": chars})
-        self.gatt = gatt
-        if char is None:
-            await client.disconnect()
-            raise TurntableError(f"{self.name} has no 0xFFE1 characteristic; is this a Revopoint turntable?")
+        try:
+            char = None
+            gatt = []
+            for service in client.services:
+                chars = []
+                for c in service.characteristics:
+                    chars.append({"uuid": c.uuid, "properties": list(c.properties)})
+                    if char is None and P.is_data_characteristic(c.uuid):
+                        char = c
+                gatt.append({"uuid": service.uuid, "characteristics": chars})
+            self.gatt = gatt
+            if char is None:
+                raise TurntableError(f"{self.name} has no 0xFFE1 characteristic; is this a Revopoint turntable?")
+            await client.start_notify(char, self._on_notify)
+        except (Exception, asyncio.CancelledError):  # CancelledError: the connect timed out in _BleLoop.call
+            # a link left open stops the table advertising: the next try (or Revo Metro) would not find it
+            try:
+                await client.disconnect()
+            except Exception:
+                pass
+            raise
         self._client, self._char = client, char
-        await client.start_notify(char, self._on_notify)
 
     def connect(self) -> None:
         _require_bleak()

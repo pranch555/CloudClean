@@ -1,15 +1,17 @@
 """Turntable (Contract 4): protocol encoder/decoder, simulated driver, Bluetooth driver against a fake peripheral,
 manager, step-and-scan programs linked to capture, routes, and the simulated scanner following the platter."""
 import asyncio
+import json
 import math
 import threading
 import time
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from cloudclean.capture.turntable import ble, program as prog, protocol as P
+from cloudclean.capture.turntable import ble, manager as mgr, program as prog, protocol as P
 from cloudclean.capture.turntable import simulated as simtt
 from cloudclean.capture.turntable.base import TurntableDriver, TurntableError
 from cloudclean.capture.turntable.manager import TurntableManager, get_turntable_manager
@@ -373,6 +375,49 @@ def test_ble_driver_split_reply_and_old_firmware(fake_ble):
     old.disconnect()
 
 
+def test_ble_connect_failure_releases_the_link(monkeypatch):
+    """A failure after the link is up must disconnect: a table left connected does not advertise, so the reconnect
+    tries after a restart (and Revo Metro) would not find it. A fake bleak module, no Bluetooth."""
+    import sys
+
+    events = []
+
+    def client_class(services, notify_error=None):
+        class Client:
+            def __init__(self, device, disconnected_callback=None):
+                self.services, self.is_connected, self.mtu_size = services, False, 247
+
+            async def connect(self, timeout=None):
+                self.is_connected = True
+                events.append("connect")
+
+            async def start_notify(self, char, cb):
+                if notify_error:
+                    raise RuntimeError(notify_error)
+
+            async def disconnect(self):
+                self.is_connected = False
+                events.append("disconnect")
+        return Client
+
+    class Scanner:
+        @staticmethod
+        async def find_device_by_address(address, timeout=None):
+            return SimpleNamespace(address=address)
+
+    ffe1 = [SimpleNamespace(uuid=P.DATA_SERVICE_UUID, characteristics=[SimpleNamespace(uuid=P.DATA_CHAR_UUID,
+                                                                                         properties=["notify"])])]
+    monkeypatch.setattr(ble, "_bleak_state", (True, ""))
+    for services, notify_error, msg in ((ffe1, "notify refused", "notify refused"), ([], None, "no 0xFFE1")):
+        events.clear()
+        monkeypatch.setitem(sys.modules, "bleak", SimpleNamespace(BleakClient=client_class(services, notify_error),
+                                                                  BleakScanner=Scanner))
+        drv = ble.RevopointBleTurntable(ADDR, "REVO_DUAL_AXIS_TABLE", "dual_axis")
+        with pytest.raises(TurntableError, match=msg):
+            drv.connect()
+        assert events == ["connect", "disconnect"] and not drv.connected and drv._client is None
+
+
 def test_ble_scan_requires_bleak(monkeypatch):
     monkeypatch.setattr(ble, "_bleak_state", (False, ble.INSTALL_HINT))
     with pytest.raises(TurntableError, match="cloudclean\\[turntable\\]"):
@@ -680,6 +725,281 @@ def test_program_error_is_reported(tmp_path):
     m.shutdown()
 
 
+# --------------------------------------------------------------------------- service restarts
+ADDR = "E4:8F:80:46:12:43"
+
+
+@pytest.fixture
+def ble_table():
+    """The manager's Bluetooth driver without Bluetooth: a simulated table under the user's table's address.
+    `fail` = how many connects fail first (the table is off, or Revo Metro on the laptop holds it)."""
+    class Table(SimulatedTurntable):
+        fail = 0
+        made: list = []
+
+        def __init__(self, address, name, kind):
+            super().__init__(time_scale=FAST)
+            self.id, self.name, self.kind = address, name or "REVO_DUAL_AXIS_TABLE", kind
+            Table.made.append(self)
+
+        def capabilities(self):
+            return TurntableDriver.capabilities(self)
+
+        def connect(self):
+            if Table.fail > 0:
+                Table.fail -= 1
+                raise TurntableError(f"The turntable {self.name} ({self.id}) was not found. {ble.BUSY_HINT}")
+            super().connect()
+
+    return Table
+
+
+def never(*_args):
+    raise AssertionError("nothing was remembered: Bluetooth must not be touched")
+
+
+def service(root, table, delays=(0.01, 0.01, 0.01)):
+    """The manager a (re)started service makes: a new one on the same workspace, nothing in memory."""
+    m = TurntableManager(root)
+    m.ble_factory = table
+    m.scan_fn = lambda s: [{"id": ADDR, "address": ADDR, "name": "REVO_DUAL_AXIS_TABLE", "kind": "dual_axis",
+                            "rssi": -50}]
+    m.reconnect_delays_s = delays
+    m.capture_provider = lambda: None
+    return m
+
+
+def test_restart_reconnects_the_table_and_turns_it_again(tmp_path, ble_table):
+    """Every restart (the Spark restarts itself after each update) dropped the Bluetooth link and the turning: the next
+    turntable scan ran with the table standing still and came out as a few lines. The new service connects the table
+    again in the background and picks up Turn while scanning - holding until the scan runs."""
+    m1 = service(tmp_path, ble_table)
+    m1.connect("REVO_DUAL_AXIS_TABLE")
+    st = m1.spin(True, speed_s_per_rev=40, direction="ccw")
+    assert st["spin"]["turning"]
+    assert st["remembered_spin"] == {"on": True, "follow_scan": True, "speed_s_per_rev": 40, "direction": "ccw"}
+    m1.shutdown()                                                   # the service stops for an update
+    assert not ble_table.made[0].connected
+
+    m2 = service(tmp_path, ble_table)
+    holder = SimpleNamespace(state=lambda: m2.driver.state() if m2.driver else {"rotating": False})
+    cap = FakeCapture(holder)                                       # a scanner connected, not scanning yet
+    m2.capture_provider = lambda: cap
+    try:
+        t0 = time.monotonic()
+        st = m2.start_auto_reconnect()
+        assert time.monotonic() - t0 < 0.5 and st["state"] == "waiting", "startup must never wait on Bluetooth"
+        assert wait_for(lambda: m2.status()["auto_reconnect"]["state"] == "connected", 5)
+        st = m2.status()
+        assert st["connected"] and st["device"] == ADDR and st["kind"] == "dual_axis" and st["error"] is None
+        assert st["auto_reconnect"]["state"] == "connected" and st["auto_reconnect"]["attempt"] == 1
+        assert st["spin"]["restored"] and st["spin"]["held_by_scan"] and not st["spin"]["turning"]
+        drv = m2.driver
+        assert "+CT,TURNSPEED=40;" in drv.commands
+        assert not any("TURNCONTINUE" in c for c in drv.commands), "a restart must not set the table turning by itself"
+        cap.start()
+        assert wait_for(lambda: drv.state()["continuous"], 3), "the restored setting turns the table when scanning"
+        assert "+CT,TURNCONTINUE=-1;" in drv.commands                # still counterclockwise
+        assert m2.status()["scan_warning"] is None
+        assert any("Reconnected" in line for line in m2.status()["log"])
+    finally:
+        cap.close()
+        m2.shutdown()
+
+
+def test_restart_retries_quietly_then_gives_up(tmp_path, ble_table, monkeypatch):
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    m.shutdown()
+
+    ble_table.fail = 99                                             # off, or held by Revo Metro on the laptop
+    m = service(tmp_path, ble_table, delays=(0.01, 0.02, 0.03))
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["auto_reconnect"]["state"] == "gave_up", 5)
+    st = m.status()
+    assert st["auto_reconnect"]["attempt"] == 3 and "was not found" in st["auto_reconnect"]["error"]
+    assert "Scan → Turntable" in st["auto_reconnect"]["message"]
+    assert not st["connected"] and st["error"] is None, "quiet: a missing table is no error banner"
+    assert sum("Reconnect try" in line for line in st["log"]) == 3 and "Gave up" in st["log"][-1]
+    m.shutdown()
+
+    ble_table.fail = 2                                              # switched on while the service tried
+    m = service(tmp_path, ble_table)
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["connected"], 5)
+    assert m.status()["auto_reconnect"]["attempt"] == 3
+    m.shutdown()
+
+    # Bluetooth not installed: waiting does not help, one try only (the real driver; it fails before any Bluetooth)
+    monkeypatch.setattr(ble, "_bleak_state", (False, ble.INSTALL_HINT))
+    m = service(tmp_path, ble.RevopointBleTurntable)
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["auto_reconnect"]["state"] == "gave_up", 5)
+    auto = m.status()["auto_reconnect"]
+    assert auto["attempt"] == 1 and "cloudclean[turntable]" in auto["error"]
+    m.shutdown()
+
+
+def test_restart_connects_only_the_remembered_table(tmp_path, ble_table):
+    # nothing remembered: no thread, no Bluetooth
+    (tmp_path / "fresh").mkdir()
+    m = service(tmp_path / "fresh", never)
+    assert m.start_auto_reconnect() is None and m.status()["auto_reconnect"] is None
+    m.shutdown()
+
+    # the practice table comes back only when it was the one connected - and then not the real one
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    m.connect("simulated", options={"time_scale": FAST})
+    m.shutdown()
+    m = service(tmp_path, never)
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["connected"], 5)
+    assert m.status()["kind"] == "simulated" and m.status()["remembered_device"]["id"] == ADDR
+    m.disconnect()                                                  # on purpose: not connected at the next start
+    m.shutdown()
+    m = service(tmp_path, never)
+    assert m.start_auto_reconnect() is None
+    time.sleep(0.05)
+    assert not m.status()["connected"]
+    m.shutdown()
+
+    # settings saved before this was kept name the last real table only: that one comes back
+    (tmp_path / "old").mkdir()
+    (tmp_path / "old" / "settings.json").write_text(json.dumps(
+        {"turntable": {"last_device": {"id": ADDR, "name": "REVO_DUAL_AXIS_TABLE", "kind": "dual_axis"}}}))
+    m = service(tmp_path / "old", ble_table)
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["connected"], 5) and m.status()["device"] == ADDR
+    m.shutdown()
+
+
+def test_connecting_by_hand_stops_the_reconnect(tmp_path, ble_table):
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    m.shutdown()
+    made = len(ble_table.made)
+    m = service(tmp_path, ble_table, delays=(30.0,))
+    assert m.start_auto_reconnect()["state"] == "waiting"
+    t0 = time.monotonic()
+    st = m.connect("simulated", options={"time_scale": FAST})
+    assert time.monotonic() - t0 < 2 and st["kind"] == "simulated" and st["auto_reconnect"] is None
+    assert wait_for(lambda: not m._auto_thread.is_alive(), 2) and len(ble_table.made) == made
+    assert any("Stopped reconnecting" in line for line in m.status()["log"])
+    m.shutdown()
+
+
+def test_turning_off_on_purpose_stays_off(tmp_path, ble_table):
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    m.spin(True, speed_s_per_rev=40)
+    st = m.spin(False)
+    assert st["spin"] is None and st["remembered_spin"]["on"] is False
+    m.shutdown()
+    m = service(tmp_path, ble_table)
+    m.start_auto_reconnect()
+    assert wait_for(lambda: m.status()["auto_reconnect"]["state"] == "connected", 5)
+    assert m.status()["spin"] is None and not m.driver.state()["moving"]
+
+    m.spin(True, follow_scan=False)                                 # Stop is "off" too, also for a reconnect by hand
+    m.stop()
+    m.disconnect()
+    assert m.connect("REVO_DUAL_AXIS_TABLE")["spin"] is None
+
+    m.spin(True, follow_scan=False)                                 # a link that drops comes back...
+    m.driver.disconnect()                                           # lost, not disconnected through the manager
+    st = m.connect("REVO_DUAL_AXIS_TABLE")
+    assert st["spin"]["held_by_scan"] and not m.driver.state()["moving"], "...never turning while nobody scans"
+    cap = FakeCapture(m.driver)
+    m.capture_provider = lambda: cap
+    try:
+        cap.start()
+        assert wait_for(lambda: m.driver.state()["continuous"], 3)  # ...turning once the scan runs
+        cap.pause()
+        time.sleep(0.5)
+        assert m.driver.state()["continuous"], "without follow_scan it turns on while the scan pauses"
+    finally:
+        cap.close()
+    m.driver.disconnect()
+    assert m.spin(False)["remembered_spin"]["on"] is False          # off also works with no table connected
+    m.shutdown()
+
+
+def test_stop_wins_over_a_spin_that_is_starting(tmp_path, ble_table):
+    """stop() takes no operation lock (an emergency stop never waits): a Stop pressed while the turn command of a
+    starting or restored spin is on its way must still leave the table still and the setting off."""
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    turn = m.driver.rotate_continuous
+
+    def slow_turn(clockwise):                                       # Stop arrives during the Bluetooth round trip
+        stopper = threading.Thread(target=m.stop)
+        stopper.start()
+        stopper.join()
+        return turn(clockwise)
+
+    m.spin(True)
+    m._end_spin()                                                   # turning gone, the setting still on
+    assert m.status()["remembered_spin"]["on"] is True
+    m.driver.rotate_continuous = slow_turn
+    st = m.spin(True, follow_scan=False)
+    assert st["spin"] is None and st["remembered_spin"]["on"] is False
+    assert wait_for(lambda: not m.driver.state()["moving"], 3), "the table must not keep turning after Stop"
+    assert any("Stopped before it began turning" in line for line in st["log"])
+    m.shutdown()
+
+
+def test_scan_warning_when_the_table_should_turn_but_does_not(tmp_path, ble_table, monkeypatch):
+    monkeypatch.setattr(mgr, "NOT_TURNING_GRACE_S", 0.3)
+    m = service(tmp_path, ble_table)
+    m.connect("REVO_DUAL_AXIS_TABLE")
+    cap = FakeCapture(m.driver)
+    m.capture_provider = lambda: cap
+    try:
+        cap.start()
+        assert m.status()["scan_warning"] is None                   # Turn while scanning off: a handheld scan
+        m.spin(True)
+        assert wait_for(lambda: m.driver.state()["continuous"], 3) and m.status()["scan_warning"] is None
+
+        m.driver.disconnect()                                       # the link drops mid-scan
+        assert m.status()["scan_warning"] == mgr.NOT_CONNECTED_WARNING
+        cap.pause()
+        assert m.status()["scan_warning"] is None                   # not scanning: nothing piles up
+        cap.resume()
+        assert m.status()["scan_warning"] == mgr.NOT_CONNECTED_WARNING
+        m.connect("REVO_DUAL_AXIS_TABLE")                           # back: turns at once (the scan runs)
+        assert wait_for(lambda: m.driver.state()["continuous"], 3) and m.status()["scan_warning"] is None
+
+        m.driver.stop()                                             # stopped by the firmware: not restarted by us
+        assert m.status()["scan_warning"] is None, "no flicker while the follower catches up"
+        assert wait_for(lambda: m.status()["scan_warning"] == mgr.STALLED_WARNING, 3)
+        # the capture session passes its own state instead of being asked back
+        assert m.scan_warning("running") == mgr.STALLED_WARNING and m.scan_warning("paused") is None
+        m._end_spin()                                               # turning lost, the setting still on
+        assert wait_for(lambda: m.status()["scan_warning"] == mgr.NOT_TURNING_WARNING, 3)
+        m.stop()                                                    # turned off on purpose
+        assert m.status()["scan_warning"] is None
+
+        m.spin(True)
+        m.shutdown()                                                # a restart, and the table is gone
+        ble_table.fail = 99
+        m = service(tmp_path, ble_table, delays=(5.0,))
+        m.capture_provider = lambda: cap
+        m.start_auto_reconnect()
+        assert m.status()["scan_warning"] == mgr.RECONNECTING_WARNING
+        m.shutdown()
+        m = service(tmp_path, ble_table)
+        m.capture_provider = lambda: cap
+        m.start_auto_reconnect()
+        assert wait_for(lambda: m.status()["auto_reconnect"]["state"] == "gave_up", 5)
+        assert m.status()["scan_warning"] == mgr.NOT_CONNECTED_WARNING
+        m.disconnect()                                              # not using the table: no warning
+        assert m.status()["scan_warning"] is None
+    finally:
+        cap.close()
+        m.shutdown()
+
+
 # --------------------------------------------------------------------------- routes
 def test_routes(tmp_path):
     from cloudclean.web.server import create_app
@@ -723,6 +1043,29 @@ def test_routes(tmp_path):
         assert manager.status()["connected"]
     # the app's lifespan shut the manager down (disconnected the simulated turntable)
     assert manager.closed and simtt.follow_pose() is None
+
+
+def test_service_start_reconnects_in_the_background(tmp_path):
+    from cloudclean.web.server import create_app
+
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    (ws / "settings.json").write_text(json.dumps({"turntable": {
+        "reconnect": {"id": "simulated", "name": "Simulated dual-axis turntable", "kind": "simulated",
+                      "options": {"time_scale": FAST}},
+        "spin": {"on": True, "follow_scan": True, "speed_s_per_rev": 40, "direction": "cw"}}}))
+    with TestClient(create_app(ws)) as client:
+        st = client.get("/api/turntable/status").json()
+        assert st["auto_reconnect"]["state"] in ("waiting", "connecting", "connected")
+        assert wait_for(lambda: client.get("/api/turntable/status").json()["auto_reconnect"]["state"] == "connected",
+                        10)
+        st = client.get("/api/turntable/status").json()
+        assert st["kind"] == "simulated" and st["auto_reconnect"]["state"] == "connected"
+        assert st["spin"]["held_by_scan"] and st["speed_s_per_rev"] == 40 and st["scan_warning"] is None
+        manager = get_turntable_manager(ws)
+    assert manager.closed and simtt.follow_pose() is None
+    saved = json.loads((ws / "settings.json").read_text())["turntable"]
+    assert saved["reconnect"]["id"] == "simulated" and saved["spin"]["on"] is True   # a stop is no "off"
 
 
 # --------------------------------------------------------------------------- simulated scanner follows the platter
