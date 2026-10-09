@@ -195,8 +195,14 @@ result. `options={"time_scale": N}` speeds up the simulated clock (tests, demos)
  angle_wrapped_deg, tilt_deg, moving, speed_s_per_rev, direction: cw|ccw, program: {...}|None, error,
  capabilities: {tilt, tilt_range, speed_range, interval_range, max_rotations, continuous, whole_degrees},
  validated, firmware, last_move, device_state (driver details: last Bluetooth messages, warnings, ...),
- bluetooth: {available, reason, installed}, remembered_device, log: [last 20 lines]}
+ bluetooth: {available, reason, installed}, remembered_device, spin: {...}|None,
+ auto_reconnect: {state, device, name, kind, attempt, attempts, error, message}|None,
+ remembered_spin: {on, follow_scan, speed_s_per_rev, direction}|None, scan_warning: str|None,
+ log: [last 20 lines]}
 ```
+
+`m.spin(on, follow_scan=True, speed_s_per_rev=None, direction=None)` turns the table until stopped ("Turn while
+scanning"); with `follow_scan` it holds while the scan is paused or stopped. See 5.5 for restarts.
 
 ### 5.2 Routes
 
@@ -254,6 +260,37 @@ thread inside the driver, so the web event loop is never blocked.
     confirms with `+QR,TILTVALUE;` (plus or minus 0.6 deg) until the timeout. `+CR,TILTSPEED` is never sent.
   * **Traffic.** The last 200 messages in both directions are in `device_state.last_messages` (latest 12)
     and `driver.traffic`.
+
+### 5.5 After a restart
+
+Every service restart drops the Bluetooth link, and the Spark restarts itself after each update. Twice on
+2026-10-09 the next turntable scan then ran with the table standing still: every frame saw the same side, the frames
+piled up on one spot and the scan came out as a few lines, with no warning. Now:
+
+* **What is kept** (workspace `settings.json`, section `turntable`): `reconnect`, the table connected when the service
+  stopped (`{id, name, kind[, options]}`, `null` after a disconnect on purpose; settings from before name only
+  `last_device`, which is then used), and `spin`, the Turn while scanning setting (`{on, follow_scan,
+  speed_s_per_rev, direction}`, saved when it is started, `on: false` after Stop turning or Stop).
+* **At service start** the app's lifespan calls `start_auto_reconnect()`. It returns at once and tries in a
+  background thread: pauses of 1, 5, 15 and 40 s before the four tries (a Bluetooth try that finds nothing takes
+  about 10 s more, so it gives up after about 2 minutes). It is quiet: tries are logged and shown in
+  `status().auto_reconnect` (waiting, connecting, connected, gave_up), never in `error`. A table that is off,
+  out of range or held by Revo Metro on the laptop is not taken; without bleak it gives up after one try. Only the
+  remembered table is connected: the simulated one only when it was the one connected. A connect or disconnect by
+  the user stops the tries and clears `auto_reconnect` (a try in flight is waited out, so two connects never run
+  at once). A try that fails after the link is up lets go of it (`ble.py`), or the next try would not find the table.
+* **After every (re)connect** Turn while scanning is picked up again when it was on, always **holding until the scan
+  runs**: a restart or reconnect never sets the table turning while nobody scans. Then it turns; with
+  `follow_scan` it holds again when the scan pauses, without it it turns until stopped. A Stop pressed during the
+  restore wins. An explicit Disconnect keeps the setting for the next connect.
+* **`status().scan_warning`**: one plain sentence while a scan runs, Turn while scanning is on and the table is in
+  use (connected, or to be reconnected), but the table is not connected (`NOT_CONNECTED_WARNING`, or
+  `RECONNECTING_WARNING` while the tries go on) or stands still for more than 2 s (`NOT_TURNING_WARNING`: press
+  Start turning; `STALLED_WARNING` when the turning runs but the table refused or the firmware stopped it: Stop
+  turning, then Start turning). For the capture guidance banner; capture code calls
+  `manager.scan_warning(scan_state)` with its own state rather than `status()`, which asks the capture manager.
+  A handheld scan with Turn while scanning still on and the table remembered but switched off is warned too: Stop
+  turning (`spin(False)` works with no table) or Disconnect ends it.
 
 ---
 
