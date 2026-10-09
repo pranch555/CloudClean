@@ -862,12 +862,16 @@ class CaptureSession:
             if tick["lost"] and tick["lost"] >= tick["frames"] / 2:
                 reason = tick.get("device_reason")
                 seen = tick.get("device_markers")
-                if reason == "no_markers" and seen:
+                if reason == "no_markers" and seen and seen >= 4:
+                    # enough markers but no map could start on them: they lie (nearly) in one line
+                    text = (f"The {seen} markers in view lie in a line - tracking needs markers spread out, not in a "
+                            "row: turn the scanner or add markers off the line")
+                elif reason == "no_markers" and seen:
                     # markers the operator can see in the camera are not necessarily usable: each must be found in
                     # BOTH cameras. "No markers in view" next to a picture full of markers read as a contradiction
-                    text = (f"Only {seen} marker{'s' if seen != 1 else ''} found in both cameras - tracking needs 4. "
-                            "Camera view rings the usable ones blue: look down onto the markers more steeply, or "
-                            "come closer")
+                    text = (f"Only {seen} marker{'s' if seen != 1 else ''} found in both cameras - tracking needs 4 "
+                            "to start and 3 to keep going. Camera view rings the usable ones blue: look down onto the "
+                            "markers more steeply, or come closer")
                 elif reason == "no_markers":
                     text = ("No markers in view - the scanner tracks by markers in laser mode: keep at least 4 in "
                             "view (or switch the driver to geometry tracking)")
@@ -889,9 +893,10 @@ class CaptureSession:
                 best = caps.get('optimal_mm') or (rng[0] + rng[1]) / 2
                 near = last.get("near_mm")
                 if near is not None and last.get("distance_mm") is not None and last["distance_mm"] >= rng[0]:
-                    self._msg(msgs, "too_close", "warning", f"Too close - the nearest part is {near:.0f} mm away and "
-                              f"the scanner measures from {rng[0]:.0f} mm, so it is left out: move back, best around "
-                              f"{best:.0f} mm")
+                    # points still come to ~190 mm; what is closer is missing, and only its edge is in the data
+                    self._msg(msgs, "too_close", "warning", f"Too close - the nearest part is {near:.0f} mm away, at "
+                              f"the scanner's limit ({rng[0]:.0f} mm): anything closer is left out. Move back, best "
+                              f"around {best:.0f} mm")
                 else:
                     self._msg(msgs, "too_close", "warning", f"Too close ({last['distance_mm']:.0f} mm) - move back, "
                               f"best around {best:.0f} mm")

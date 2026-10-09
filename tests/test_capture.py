@@ -310,7 +310,8 @@ def test_marker_loss_says_how_many_markers_both_cameras_found():
                                         meta={"device_tracking": "no_markers", "markers": markers_seen}))
         return [m["message"] for m in session.update_guidance()["messages"] if m["code"] == "tracking_lost"]
 
-    assert banner(3)[0].startswith("Only 3 markers found in both cameras - tracking needs 4")
+    assert banner(3)[0].startswith("Only 3 markers found in both cameras - tracking needs 4 to start and 3 to keep")
+    assert banner(6)[0].startswith("The 6 markers in view lie in a line")      # enough, but no map can start on them
     assert banner(1)[0].startswith("Only 1 marker found in both cameras")
     assert banner(0)[0].startswith("No markers in view")
 
@@ -327,4 +328,4 @@ def test_a_part_too_close_says_so_even_when_the_view_is_in_range():
         session.process_frame(Frame(points=pts, pose=np.eye(4), timestamp=i * 0.02, coordinates="sensor",
                                     meta={"distance_mm": 285.0, "near_mm": 192.0}))
     msgs = {m["code"]: m["message"] for m in session.update_guidance()["messages"]}
-    assert msgs["too_close"].startswith("Too close - the nearest part is 192 mm away")
+    assert msgs["too_close"].startswith("Too close - the nearest part is 192 mm away, at the scanner's limit")

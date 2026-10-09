@@ -415,3 +415,41 @@ def test_only_the_part_on_the_turntable_is_kept():
     keep = _part_on_table(sensor, pose, world)
     assert keep.tolist() == [True] * 3 + [False] * 4
     assert _part_on_table(sensor, pose, world[:3]) is None                        # too few plate markers to say
+
+
+def test_a_stale_prediction_on_a_regular_layout_never_gives_a_wrong_pose():
+    """Review of 2026-10-09: counting only markers near the map against a pose let a prediction one grid spacing
+    (or one ring step) off register as many markers as the truth, with the rest in empty map space - 30 mm and
+    131-228 mm wrong poses were accepted. When most of the frame is unexplained the layout must pin the pose down."""
+    def check(world, mapped, wrong_shift):
+        T_true = _pose(np.pi, 0.0, 0.0, [45.0, 45.0, 300.0])                 # sensor -> world, looking down
+        local = markers.apply(np.linalg.inv(T_true), world)
+        tracker = markers.MarkerTracker()
+        tracker.initial = T_true
+        assert tracker.track(local[mapped]).state == "init"
+        tracker._T1, tracker._T2 = wrong_shift @ T_true, None               # a stale, wrong prediction
+        res = tracker.track(local)
+        assert res.pose is None or np.abs(res.pose[:3, 3] - T_true[:3, 3]).max() < 0.5, res
+    lattice = np.array([(x, y, 0.0) for x in range(0, 120, 30) for y in range(0, 120, 30)], float)   # 4 x 4
+    in_map = [i for i, p in enumerate(lattice) if p[0] < 90 and p[1] < 90]                           # 3 x 3
+    check(lattice, in_map, _pose(0.0, 0.0, 0.0, [30.0, 0.0, 0.0]))
+    a = np.radians(np.arange(0, 360, 30))
+    ring = np.c_[45 + 75 * np.cos(a), 45 + 75 * np.sin(a), np.zeros(12)]
+    turn = _pose(0.0, 0.0, np.radians(30), [0.0, 0.0, 0.0])
+    about = np.eye(4)
+    about[:3, 3] = [45.0, 45.0, 0.0]
+    for mapped in ([0, 1, 2, 3], [0, 1, 2, 3, 4]):
+        check(ring, mapped, about @ turn @ np.linalg.inv(about))
+
+
+def test_the_table_crop_waits_until_the_plate_markers_surround_the_part():
+    """Review of 2026-10-09: a map of 4 markers along one side of the plate gave a circle that left the part on the
+    axis out - and fused frames cannot get those points back. No crop until the markers surround their middle."""
+    from cloudclean.capture.drivers.metroy_usb import _part_on_table
+    a = np.radians([0, 30, 60, 90])
+    one_side = np.c_[75 * np.cos(a), 75 * np.sin(a), np.zeros(4)]
+    pose = _pose(0.3, -0.2, 0.1, [5.0, -250.0, 120.0])
+    part = markers.apply(np.linalg.inv(pose), np.array([[0.0, 0.0, 30.0]]))
+    assert _part_on_table(part, pose, one_side) is None
+    around = np.c_[75 * np.cos(np.radians([0, 100, 200, 290])), 75 * np.sin(np.radians([0, 100, 200, 290])), np.zeros(4)]
+    assert _part_on_table(part, pose, around).tolist() == [True]

@@ -159,20 +159,31 @@ TABLE_MAX_RMS_MM = 0.5       # markers on one flat table: the user's turntable p
 TABLE_MAX_OFF_MM = 1.5       # any marker further off the plane is on the part, not the table
 TABLE_MIN_SPREAD_MM = 20.0   # a row of markers fixes no plane
 TABLE_MAX_TILT_DEG = 75.0    # a table is seen from above; a board facing the scanner is a wall, not a floor
-TABLE_ABOVE_MM = 0.5         # points this close to the plate are the plate (its markers fit a plane to 0.19 mm)
-TABLE_MARGIN_MM = 5.0        # beyond the plate's outermost marker. On the user's setup the background (wall, desk)
-                             # landed 110 mm and more from the turntable axis, the markers reach 93 mm
+TABLE_ABOVE_MM = 0.5         # points this close to the plate are the plate (its markers fit a plane to 0.19 mm; laser
+                             # points on it ~0.05 mm + pose jitter ~0.06 mm)
+TABLE_MARGIN_MM = 5.0        # beyond the plate's outermost marker. On the user's setup (two scanner positions) the
+                             # background (wall, desk) began 110 mm from the turntable axis, the markers reach 91-93
+                             # mm, the bust 30 mm: the margin stays well clear of the background
+TABLE_MAX_GAP_DEG = 120.0    # the plate's markers must surround the area before it is cropped to them
 
 
 def _part_on_table(pts: np.ndarray, pose: np.ndarray, world: np.ndarray) -> np.ndarray | None:
     """Which points stand on the table the scan's world frame stands on: above the plate and inside the area its
     markers cover. Everything else - the wall, the desk, the monitor behind - is not the part; on a turntable it does
-    not turn with the part and smears into a ring around it. None while too few plate markers are mapped to say."""
+    not turn with the part and smears into a ring around it.
+
+    None (keep everything) while the mapped plate markers do not yet surround their middle - fewer than 4, or a
+    sector wider than TABLE_MAX_GAP_DEG without any: a map of 4 markers along one side of the plate made a circle
+    that left the part itself out (review 2026-10-09), and frames are fused as they stream, so what is cut is lost."""
     plate = world[np.abs(world[:, 2]) < TABLE_MAX_OFF_MM]
     if len(plate) < TABLE_MIN_MARKERS:
         return None
     c = plate[:, :2].mean(axis=0)
-    reach = np.linalg.norm(plate[:, :2] - c, axis=1).max() + TABLE_MARGIN_MM
+    d = plate[:, :2] - c
+    ang = np.sort(np.degrees(np.arctan2(d[:, 1], d[:, 0])))
+    if np.max(np.diff(np.r_[ang, ang[0] + 360.0])) > TABLE_MAX_GAP_DEG:
+        return None
+    reach = np.linalg.norm(d, axis=1).max() + TABLE_MARGIN_MM
     w = pts @ pose[:3, :3].T + pose[:3, 3]
     return (w[:, 2] > TABLE_ABOVE_MM) & (np.linalg.norm(w[:, :2] - c, axis=1) < reach)
 
@@ -313,8 +324,9 @@ class MetroyUsbDriver(ScannerDriver):
             setting("turntable", "Turntable", "boolean", False, help="The part sits on a rotating turntable."),
             setting("table_only", "Keep only the part on the table", "boolean", True,
                     help="When the markers lie on a flat table (a turntable plate), keep only what stands on it "
-                         "inside the markers' area: the wall, desk or anything behind is left out. On a turntable "
-                         "it would otherwise smear into a ring around the part."),
+                         "inside the markers' area (plus 5 mm): the wall, desk or anything behind is left out. On a "
+                         "turntable it would otherwise smear into a ring around the part. Turn it off for a part "
+                         "that reaches beyond the markers."),
         ]
 
     def capabilities(self) -> dict:
@@ -368,10 +380,10 @@ class MetroyUsbDriver(ScannerDriver):
         if self._tracker is not None:
             # the map starts on the first frame with enough markers, often before the laser lines come up: without
             # a pose from that frame's markers the whole scan stayed in sensor coordinates (lying on its side)
-            if len(self._tracker.world) == 0:
-                self._tracker.initial = _initial_pose(pts, f.markers)
-                self._on_table = _table_frame(f.markers) is not None
-            with self._track_lock:
+            with self._track_lock:              # map_markers / clear_map may reset the map between check and track
+                if len(self._tracker.world) == 0:
+                    self._tracker.initial = _initial_pose(pts, f.markers)
+                    self._on_table = _table_frame(f.markers) is not None
                 res = self._tracker.track(f.markers)
                 world = self._tracker.world.copy()
             meta.update(marker_state=res.state, marker_inliers=res.inliers, marker_rmse_mm=res.rmse_mm,
@@ -390,7 +402,9 @@ class MetroyUsbDriver(ScannerDriver):
                     pts = pts[keep]
         # how far the PART is: the median of everything in view was the wall behind a turntable (285 mm while the
         # bust stood at 165-225 mm, its head too close to measure at all)
-        meta["distance_mm"] = float(np.median(pts[:, 2])) if len(pts) else 0.0
+        # nothing left (only the plate and the background in view) is unknown, not 0 mm: "Too close (0 mm)" sent the
+        # operator the wrong way and hid "Nothing measured"
+        meta["distance_mm"] = float(np.median(pts[:, 2])) if len(pts) else None
         if len(pts) >= 50:
             meta["near_mm"] = float(np.percentile(pts[:, 2], 5))
         if self._recording is not None:
