@@ -18,6 +18,9 @@ POST /api/turntable/spin        {on: true|false, follow_scan?: true, speed_s_per
                                 scan is paused or stopped and turns again when it runs (status `spin`)
 
 Every response is the status dict (rotate/tilt add `move`, speed adds `speed`). Errors: HTTP 400 with one sentence.
+At startup the table that was connected when the service stopped is connected again in the background, and Turn
+while scanning picked up again (status `auto_reconnect`, `remembered_spin`; `scan_warning` while a scan runs without
+the table turning).
 Handlers are plain `def`s: FastAPI runs them in its thread pool, so Bluetooth scans and waits never block the
 event loop.
 """
@@ -65,6 +68,9 @@ def create_router(workspace, jobs) -> APIRouter:
 
     @asynccontextmanager
     async def lifespan(app):
+        # a restart dropped the Bluetooth link (the Spark restarts itself after every update): connect the table it
+        # had again and pick up Turn while scanning - in a background thread, startup never waits on Bluetooth
+        manager.start_auto_reconnect()
         yield
         await asyncio.to_thread(manager.shutdown)
 
