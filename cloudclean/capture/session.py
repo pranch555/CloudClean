@@ -311,7 +311,14 @@ class CaptureSession:
         distance = frame.meta.get("distance_mm")
         if distance is None and frame.coordinates == "sensor" and n:
             distance = float(np.median(pts[:, 2]))
-        info = {"points": n, "distance_mm": distance, "distance_state": self._distance_state(distance),
+        state = self._distance_state(distance)
+        near = frame.meta.get("near_mm")
+        rng = self.capabilities.get("range_mm")
+        if state == "ok" and near is not None and rng and near < rng[0]:
+            # the part as a whole is in range but its nearest side is not: the scanner cannot measure it there (a
+            # bust's head at 165-190 mm came out missing while the distance read 285)
+            state = "too_close"
+        info = {"points": n, "distance_mm": distance, "distance_state": state, "near_mm": near,
                 "speed_mm_s": None, "too_fast": False, "tracking": self.tracking["state"], "fused": False,
                 "episode": frame.meta.get("episode")}
         tick = self._tick
@@ -879,8 +886,15 @@ class CaptureSession:
                 self._msg(msgs, "too_far", "warning", f"Too far ({last['distance_mm']:.0f} mm) - move closer, "
                           f"best around {caps.get('optimal_mm') or (rng[0] + rng[1]) / 2:.0f} mm")
             elif dstate == "too_close":
-                self._msg(msgs, "too_close", "warning", f"Too close ({last['distance_mm']:.0f} mm) - move back, "
-                          f"best around {caps.get('optimal_mm') or (rng[0] + rng[1]) / 2:.0f} mm")
+                best = caps.get('optimal_mm') or (rng[0] + rng[1]) / 2
+                near = last.get("near_mm")
+                if near is not None and last.get("distance_mm") is not None and last["distance_mm"] >= rng[0]:
+                    self._msg(msgs, "too_close", "warning", f"Too close - the nearest part is {near:.0f} mm away and "
+                              f"the scanner measures from {rng[0]:.0f} mm, so it is left out: move back, best around "
+                              f"{best:.0f} mm")
+                else:
+                    self._msg(msgs, "too_close", "warning", f"Too close ({last['distance_mm']:.0f} mm) - move back, "
+                              f"best around {best:.0f} mm")
             if tick["empty"] >= tick["frames"] and dstate not in ("too_far", "too_close"):
                 self._msg(msgs, "no_data", "warning", "Nothing measured - point the scanner at the part")
             expected = max(float(np.median(self._recent_counts)) if len(self._recent_counts) >= 5 else 0.0,

@@ -46,6 +46,10 @@ class MarkerParams:
                                   # normal is 0.26: the far markers of a plate viewed from the side are that flat
     epipolar_px: float = 1.5      # rectified row difference of a stereo pair (Revo: 1.0..1.5)
     size_ratio: float = 1.6       # left/right blob size may differ by this factor at most
+    min_diameter_mm: float = 2.5  # a paired blob's size in mm (area-equivalent, at its triangulated depth). The
+                                  # MetroY takes 6 mm markers only; seen at an angle they measure 3.3-5.5 mm
+                                  # (p1-p99, the user's plate, 2026-10-09), laser spots on a white part ~1.4 mm
+                                  # (median): 2.5 keeps every plate marker and drops 92 % of the spots
     z_min: float = 150.0
     z_max: float = 500.0
 
@@ -135,7 +139,12 @@ def stereo_pairs(left: list[Blob], right: list[Blob], Q: np.ndarray, p: MarkerPa
     i, j = np.array(pairs).T
     y = 0.5 * (L[i, 1] + R[j, 1])
     h = np.c_[L[i, 0], y, L[i, 0] - R[j, 0], np.ones(len(i))] @ Q.T
-    return h[:, :3] / h[:, 3:4], i, j
+    P = h[:, :3] / h[:, 3:4]
+    # a marker has a known physical size: bright laser spots on a light part pair across the cameras too (they are
+    # real surface points), but they are a millimetre or so across, and a marker map that takes them in follows the
+    # laser instead of the part
+    big = 2.0 * L[i, 2] * P[:, 2] / Q[2, 3] >= p.min_diameter_mm      # Q[2, 3] = f
+    return P[big], i[big], j[big]
 
 
 # -- tracking ----------------------------------------------------------------------------------------------------
@@ -387,6 +396,11 @@ class MarkerTracker:
         if not well_posed:
             return                                  # only a firmly registered frame may introduce markers
         fresh = W[~good]
+        if len(fresh) and len(self.world):
+            # within the gate of a map marker it IS that marker, a little off (two markers never sit 5 mm apart):
+            # re-adding it as new made a copy of every plate marker on each turn of the table (444 markers for ~30)
+            near = np.linalg.norm(fresh[:, None] - self.world[None], axis=2).min(1) < self.gate_mm
+            fresh = fresh[~near]
         kept = []
         for c in self._candidates:
             d = np.linalg.norm(fresh - c[0], axis=1) if len(fresh) else np.zeros(0)

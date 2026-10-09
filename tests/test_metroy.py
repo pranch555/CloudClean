@@ -298,15 +298,25 @@ def test_regular_marker_grid_never_gives_a_wrong_pose():
     assert res2.pose is not None and np.abs(res2.pose[:3, 3] - T_true[:3, 3]).max() < 0.2
 
 
+def _random_plate(rng, n: int, spacing: float = 12.0) -> np.ndarray:
+    """n markers scattered over a turntable plate (30-90 mm from the axis), never closer than real 6 mm markers
+    (10 mm across with their ring) can sit."""
+    out = []
+    while len(out) < n:
+        a, r = rng.uniform(0, 2 * np.pi), rng.uniform(30, 90)
+        q = np.array([r * np.cos(a), r * np.sin(a), 0.0])
+        if all(np.linalg.norm(q - o) >= spacing for o in out):
+            out.append(q)
+    return np.array(out)
+
+
 def test_a_map_started_on_few_markers_grows_while_the_plate_turns():
     """2026-10-09, the user's turntable scan: "Map the markers first" started the map on a frame that paired only 4
     markers, and every later frame saw ~10. A frame then had to register half of ITS markers to the map - 5 of 10 -
     which a 4-marker map can never give, and only registered frames may add markers: the map stayed at 4 and all
     5,137 frames were lost. Markers far from every map marker are new, not evidence against the pose."""
     rng = np.random.default_rng(11)
-    a = rng.uniform(0, 2 * np.pi, 14)
-    r = rng.uniform(30, 90, 14)
-    plate = np.c_[r * np.cos(a), r * np.sin(a), np.zeros(14)]              # random layout, as on the user's plate
+    plate = _random_plate(rng, 14)                                         # random layout, as on the user's plate
     part = np.array([[0.0, 0.0, 40.0], [20.0, -10.0, 25.0], [-15.0, 12.0, 55.0]])   # on a part standing on the plate
     from cloudclean.capture.drivers.metroy_usb import _initial_pose
     tracker = markers.MarkerTracker()
@@ -351,3 +361,57 @@ def test_marker_map_first_then_frozen():
     vis = (np.abs(local[:, 0]) < 0.35 * local[:, 2]) & (np.abs(local[:, 1]) < 0.28 * local[:, 2])
     res = tracker.track(local[vis] + 0.3)                 # a biased frame must not move a frozen map
     assert np.array_equal(before, tracker.world)
+
+
+def test_a_full_turn_of_the_table_does_not_copy_the_plate_markers():
+    """2026-10-09: two and a half turns of the table grew the map to 444 markers for ~30 on the plate - a marker seen
+    again after a turn, a little off its map position, was added as a new one. A marker within the association gate
+    of a map marker is that marker."""
+    rng = np.random.default_rng(4)
+    plate = _random_plate(rng, 24)
+    from cloudclean.capture.drivers.metroy_usb import _initial_pose
+    tracker = markers.MarkerTracker()
+    states = []
+    T_view, _ = _plate_view(28.5)
+    for i in range(500):                                   # 1.5 turns, 1.08 deg a frame
+        spin = _pose(0.0, 0.0, np.radians(1.08 * i), [0.0, 0.0, 0.0])
+        to_sensor = np.linalg.inv(np.linalg.inv(spin) @ T_view)
+        local = markers.apply(to_sensor, plate)
+        near_half = local[:, 2] < 300                         # the far side of the plate is hidden behind the part
+        seen = local[near_half] + rng.normal(0, 0.15, (near_half.sum(), 3))   # real markers: ~0.16 mm each
+        if len(tracker.world) == 0:
+            tracker.initial = _initial_pose(np.zeros((0, 3)), seen)
+        states.append(tracker.track(seen).state)
+    assert states.count("lost") <= 5, states.count("lost")
+    assert len(tracker.world) <= 24, f"{len(tracker.world)} map markers for 24 on the plate"
+
+
+def test_marker_pairs_smaller_than_a_marker_are_laser_spots():
+    """Bright laser spots on a white part pair across the cameras like markers; they are ~1.4 mm across, the
+    MetroY's markers 6 mm (3.3-5.5 mm seen at an angle)."""
+    Q = np.array([[1.0, 0, 0, -800], [0, 1.0, 0, -600], [0, 0, 0, 1813.6], [0, 0, 1 / 128.5, 832.4 / 128.5]])
+    f, B, off = 1813.6, 128.5, -832.4
+    z = 250.0
+    d = f * B / z + off                                     # disparity of a point 250 mm away
+    marker = markers.Blob(900.0, 500.0, 0.5 * 4.5 * f / z, 0.8)    # 4.5 mm across at 250 mm
+    spot = markers.Blob(700.0, 300.0, 0.5 * 1.4 * f / z, 0.8)      # 1.4 mm
+    left = [marker, spot]
+    right = [markers.Blob(b.x - d, b.y, b.radius, b.axis_ratio) for b in left]
+    P, il, ir = markers.stereo_pairs(left, right, Q)
+    assert il.tolist() == [0] and abs(P[0, 2] - z) < 0.5
+
+
+def test_only_the_part_on_the_turntable_is_kept():
+    """The wall behind a turntable does not turn with the part and smeared into a ring around it (2026-10-09: the
+    background began 110 mm from the axis, the plate's markers reached 93 mm)."""
+    from cloudclean.capture.drivers.metroy_usb import _part_on_table
+    a = np.linspace(0, 2 * np.pi, 12, endpoint=False)
+    world = np.c_[90 * np.cos(a), 90 * np.sin(a), np.zeros(12)]                  # plate markers, world = table frame
+    pose = _pose(0.3, -0.2, 0.1, [5.0, -250.0, 120.0])                            # any sensor pose
+    wanted = np.array([[0.0, 0.0, 30.0], [20.0, -15.0, 2.0], [0.0, 60.0, 80.0]])   # the part
+    unwanted = np.array([[0.0, 120.0, 30.0], [-130.0, 0.0, 10.0],                 # the wall behind
+                         [40.0, 40.0, 0.2], [10.0, -30.0, -3.0]])                 # the plate itself, below it
+    sensor = markers.apply(np.linalg.inv(pose), np.vstack([wanted, unwanted]))
+    keep = _part_on_table(sensor, pose, world)
+    assert keep.tolist() == [True] * 3 + [False] * 4
+    assert _part_on_table(sensor, pose, world[:3]) is None                        # too few plate markers to say

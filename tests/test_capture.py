@@ -313,3 +313,18 @@ def test_marker_loss_says_how_many_markers_both_cameras_found():
     assert banner(3)[0].startswith("Only 3 markers found in both cameras - tracking needs 4")
     assert banner(1)[0].startswith("Only 1 marker found in both cameras")
     assert banner(0)[0].startswith("No markers in view")
+
+
+def test_a_part_too_close_says_so_even_when_the_view_is_in_range():
+    """2026-10-09: the distance read 285 mm (the wall behind) while a bust's head stood at 165-190 mm, closer than the
+    scanner measures, and came out missing without a word. The nearest part of the view decides."""
+    from cloudclean.capture.drivers.base import Frame
+    session = CaptureSession(create_driver("simulated"), {"realtime": False})
+    session.connect()
+    session.capabilities = {**session.capabilities, "range_mm": [200.0, 430.0], "optimal_mm": 300.0}
+    pts = np.c_[np.linspace(-20, 20, 200), np.zeros(200), np.linspace(190, 300, 200)]
+    for i in range(3):
+        session.process_frame(Frame(points=pts, pose=np.eye(4), timestamp=i * 0.02, coordinates="sensor",
+                                    meta={"distance_mm": 285.0, "near_mm": 192.0}))
+    msgs = {m["code"]: m["message"] for m in session.update_guidance()["messages"]}
+    assert msgs["too_close"].startswith("Too close - the nearest part is 192 mm away")
