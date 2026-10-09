@@ -33,12 +33,12 @@ apart, median / p95 distance of one to the other's local plane - independent noi
     voxel mean 0.1 mm                    0.240 / 0.341         0.064   0.037 / 0.106      210
     this, fed only the kept points       0.096 / 0.202         0.025   0.013 / 0.054      134
     this, 0.15 mm cells                  0.094 / 0.244         0.025   0.012 / 0.060      134
-    this, 0.2 mm cells (default)         0.075 / 0.164         0.020   0.0097 / 0.042     134
+    this, 0.2 mm cells (default)         0.075 / 0.162         0.020   0.0097 / 0.042     134
     this, 0.25 mm cells                  0.061 / 0.139         0.016   0.0085 / 0.034     134
 
 Every point keeps a twin: 99.8 % of the old points have a new one within 0.2 mm and all new ones an old one within
 0.3 mm (median move 0.041 mm, largest 0.39); the local surface at the bounding box's extremes stays within 0.001-0.009
-mm of the old cloud's local mean (the old box was 0.09 mm taller in Y only because one noise spike stuck out 0.21 mm).
+mm of the old cloud's local mean (the old box was 0.07 mm taller in Y only because one noise spike stuck out 0.21 mm).
 
 A voxel mean barely helps: a 0.05-0.1 mm voxel is thinner than the noise, so the noise just spreads over more voxels.
 Fed only the points the cell cap keeps, the fit loses the frames the cap turned away. 0.25 mm cells average more but
@@ -290,7 +290,9 @@ def _curvature(field: SurfaceField, fits: dict, keys: np.ndarray, slots: np.ndar
         rhs[ok] -= t1[:, None] * r1 + t2[:, None] * r2
         count[ok] += 1
     K = np.full((len(keys), 3), np.nan)
-    solvable = (count >= 4) & (np.linalg.det(A) > 1e-12 * field.cell ** 6)
+    # neighbours on (nearly) one line fix only the curvature along it
+    lam = np.linalg.eigvalsh(A)
+    solvable = (count >= 4) & (lam[:, 0] > 0.05 * lam[:, 2])
     if solvable.any():
         K[solvable] = np.linalg.solve(A[solvable], rhs[solvable][:, :, None])[:, :, 0]
     return K
@@ -366,7 +368,7 @@ def project(field: SurfaceField, points: np.ndarray, min_weight: float = 10.0, m
     is smooth when its curvature stays below `max_curvature` per cell (1.5 per mm in 0.2 mm cells). A point further
     than `residual_k` sigma from its block's surface stays raw (something else); at 4 sigma 0.5 % of the bust stayed
     raw - the long tails of poorly tracked frames - and the p90 thickness was 0.183 mm instead of 0.164. With these
-    settings 99.1 % of the bust's points moved: 0.3 % stayed on single stripes, 0.45 % at edges, 0.12 % as outliers."""
+    settings 99.0 % of the bust's points moved: 0.28 % stayed on single stripes, 0.51 % at edges, 0.13 % as outliers."""
     p = np.asarray(points, np.float64)
     out = p.copy()
     if not len(p) or not len(field):
@@ -374,17 +376,23 @@ def project(field: SurfaceField, points: np.ndarray, min_weight: float = 10.0, m
     cell = field.cell
     gate = {"min_weight": min_weight, "min_spread": min_spread, "max_sigma": max_sigma * cell}
     fits = field.fit(min_spread)
-    sig, tc = fits["sigma"], fits["tcov"]
     few, stripe, thick = _classify(fits, cell, **gate)
+    sig, tc = np.maximum(fits["sigma"], 1e-6 * cell), fits["tcov"]     # noiseless (CAD) input: no division by 0
     good = fits["good"]
     K = np.zeros((len(good), 3))
     bent = np.zeros(len(good), bool)
     if curvature:
         raw, steady = _block_curvature(field, fits, gate)
+        # a correction beyond the edge limit is not a curvature (too few or lined-up neighbours): unknown
+        steady[_kmax(steady) > max_curvature / cell] = np.nan
         K = np.nan_to_num(steady)
         # tighter than a 0.67 mm radius a 0.6 mm block is no longer one smooth surface: an edge, a corner (a 90 and
-        # a 135 degree ridge both read sharper than that; a 1 mm radius is averaged and corrected exactly)
-        bent = good & (_kmax(raw) > max_curvature / cell)
+        # a 135 degree ridge both read sharper than that; a 1 mm radius is averaged and corrected exactly). Below
+        # about 0.9 mm the 1.2 mm block that measures the correction is no longer one surface either: a plane alone
+        # put a 0.7 mm radius 0.017 mm inside and 0.8 mm 0.010 inside, so where it has no value and the block's own
+        # neighbours read tighter than 1 mm the points stay as measured.
+        bent = good & ((_kmax(raw) > max_curvature / cell)
+                       | (np.isnan(steady[:, 0]) & (_kmax(raw) > 0.2 / cell)))
     usable = good & ~bent
 
     def offset(s, q):

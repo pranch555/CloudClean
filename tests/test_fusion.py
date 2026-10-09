@@ -291,11 +291,11 @@ def test_field_moments_add_up_like_one_big_fit():
     assert sa["moved_pct"] > 95
 
 
-@pytest.mark.parametrize("R", [1.0, 3.0])
+@pytest.mark.parametrize("R", [0.7, 0.8, 1.0, 3.0])
 def test_projection_does_not_shrink_a_small_radius(R):
-    """Curvature: the plane of a 0.6 mm block lies inside a convex surface by about a^2 / (6 R) - 0.0056 mm on a 3 mm
-    radius, 0.017 mm on 1 mm (measured without the correction). The correction must take it below 0.002 mm, inside
-    and outside (a hole of the same radius)."""
+    """Curvature: the plane of a 0.6 mm block lies on the inner side of a curved surface by about a^2 / (6 R) -
+    0.0056 mm on a 3 mm radius, 0.017 mm on 1 mm (measured without the correction). The correction must take it below
+    0.002 mm; below 1 mm, where the correction cannot be measured, the points stay as measured instead."""
     rng = np.random.default_rng(3)
     n = int(70_000 * R)
     th = rng.uniform(0, 2 * np.pi, n)
@@ -310,4 +310,5 @@ def test_projection_does_not_shrink_a_small_radius(R):
     before = np.linalg.norm(plain[:, :2], axis=1).mean() - R
     print(f"\ncylinder R={R}: mean radial error {radial.mean():+.5f} mm (plane only {before:+.5f}), "
           f"std {radial.std():.4f}, {stats}")
-    assert abs(radial.mean()) < 0.002 and radial.std() < 0.01 and stats["moved_pct"] > 95
+    assert abs(radial.mean()) < 0.002 and radial.std() < 0.035
+    assert R < 1 or (stats["moved_pct"] > 95 and radial.std() < 0.01)
