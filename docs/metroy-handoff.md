@@ -56,6 +56,20 @@ ignoring stripe pixels, is the next step for accuracy.
 
 What the rest of the industry does, and the ranked list of what to change next: docs/laser-scanning-research.md.
 
+**Afternoon 2026-10-09 (agents, merged and live):** averaging fusion (`capture/fusion.py`, setting `fusion` = average |
+raw), marker centres from the sub-pixel rim (`markers._rim_fit`), stripe ends / slope-aware agreement (`stripes.py`,
++6.5 % points on the part, hold-out checked), tracker review fixes (no wrong pose from a stale prediction on grids or
+rings; relocalization 1.5 s -> 21 ms), table crop waits until the plate markers surround the part, turntable reconnects
+after a restart and restores Turn while scanning (`turntable/manager.py`, `scan_warning` in the scan banner). Live, same
+bust and setup: surface thickness median 0.243 -> 0.065 mm (p90 0.350 -> 0.169), local RMS 0.065 -> 0.017 mm, frames lost
+8 of 2,400; marker 3D noise 0.17 -> 0.007 mm, pose jitter at the surface ~0.07 -> ~0.01 mm (static recordings). Assets
+c0defb931798 (before), 9deeb7a55596 (averaging only), 1bbc5b796fbb (all); recording 20261009-131120.
+Stereo row offset from markers: dy = -0.05 px at the centre with a slope of -0.33 px per 1000 px across x (a ~0.33 mrad
+roll, not the constant 0.2-0.25 px the family test suggested; opposite sign to row_offset_scan's -0.25) - NOT applied;
+re-check row_offset_scan.py's sign convention before any correction (tools/metroy/marker_dy.py).
+Open: eye sockets / under the chin / top-of-head holes need a second pass at another tilt (no stereo-paired stripes from
+this angle); a scan that adds frames but no new points should warn whatever the cause (spin off, table still).
+
 **Next:** a recording of the current setup (Record for diagnosis on, reconnect, ~30 s turning, stop, disconnect) to
 check the new detector at the user's low viewing angle and to build the ambiguity resolution on real frames.
 
