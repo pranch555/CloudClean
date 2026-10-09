@@ -62,7 +62,7 @@ STAGES = list(FATE_COLOURS)
 
 
 def read_ply(path: str) -> np.ndarray:
-    raw = open(path, "rb").read()
+    raw = Path(path).read_bytes()
     end = raw.index(b"end_header\n") + len(b"end_header\n")
     head = raw[:end].decode("ascii", "replace")
     n = int([ln for ln in head.splitlines() if ln.startswith("element vertex")][0].split()[-1])
@@ -194,6 +194,8 @@ def holdout_distance(pose, P, k: int = 16, radius: float = 1.0):
         d, j = tree.query(Wp, k=k, distance_upper_bound=radius)
         ds.append(d)
         nb.append(np.where(np.isfinite(d)[..., None], pts[np.minimum(j, len(pts) - 1)], np.nan))
+    if not ds:                                          # the recording never left this table angle: no hold-out
+        return np.full(len(P), np.nan), np.full(len(P), np.nan)
     d = np.concatenate(ds, 1)
     nbp = np.concatenate(nb, 1)
     order = np.argsort(d, 1)[:, :k]
@@ -222,9 +224,10 @@ def fates(p, tr) -> np.ndarray:
     um = tr.get("left_unmasked", raw)
     base = um.src if um is not raw else np.arange(len(raw.x))
     f2 = np.full(len(um.x), "short track", object)
+    ends_kept = tr["left"].end is not None             # this code keeps left ends: an end row not kept was off the fit
     for t in S.link_tracks(um, p):
         k = np.arange(len(t))
-        trimmed = (k < p.trim_ends) | (k >= len(t) - p.trim_ends)
+        trimmed = ((k < p.trim_ends) | (k >= len(t) - p.trim_ends)) & (not ends_kept)
         f2[t[trimmed]] = "trimmed ends"
         f2[t[~trimmed]] = "smooth reject"
     sm = tr["left"]
@@ -355,7 +358,8 @@ def main():
     a = ap.parse_args()
 
     from cloudclean.capture.drivers.metroy_usb import _part_on_table
-    rec = pickle.load(open(Path(a.recording) / "frames.pkl", "rb"))
+    with open(Path(a.recording) / "frames.pkl", "rb") as fh:
+        rec = pickle.load(fh)
     if a.holdout and not os.path.exists(a.holdout):
         build_holdout(rec["frames"], a.holdout)
     types = {f.name: f.type for f in fields(S.Params)}
@@ -390,7 +394,8 @@ def main():
     if a.dump:                                         # the run's on-part points in the world frame, for a fusion
         np.savez(a.dump, P=np.concatenate(world), frame=np.repeat(np.arange(len(world)), [len(w) for w in world]))
     summarise(res)
-    json.dump(res, open(a.out, "w"))
+    with open(a.out, "w") as fh:
+        json.dump(res, fh)
 
 
 def dist_stats(d: np.ndarray) -> str:
