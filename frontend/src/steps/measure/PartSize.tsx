@@ -10,6 +10,11 @@ import { sizeLines } from '../../viewport/SizeTag';
 import { DiameterGlyph, FlatnessGlyph } from './glyphs';
 import { CopyButton } from './parts';
 
+/*
+ * Measure -> Dimensions, the part's size like a caliper display: length × width × height along the part itself, drawn
+ * on the model on request. Below it, the round and flat features the part analysis found.
+ */
+
 const SIZE_IDS = ['size-L', 'size-W', 'size-H'];
 const AXES = [
   { key: 'L', name: 'Length' },

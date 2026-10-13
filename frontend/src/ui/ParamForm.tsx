@@ -3,6 +3,11 @@ import type { ParamSchema } from '../lib/types';
 import { humanize } from '../lib/format';
 import { Field, NumberInput, Section, Select, Switch, TextInput } from './primitives';
 
+/*
+ * The settings form of an operation (clean, merge, mesh, texture): the server's parameter schema with plain labels
+ * and help (`PARAM_INFO`). Basic settings come first, the rest under Advanced.
+ */
+
 export interface ParamInfo {
   basic: string[];
   labels: Record<string, string>;

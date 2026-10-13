@@ -5,6 +5,12 @@ import { local, panelShown, useStore } from '../../store';
 import type { Attachment } from './attachments';
 import { chatWindowOpen, expandChat, noteReplyDone, useChatWindow } from './chatWindow';
 
+/*
+ * The assistant's conversation state (`useAssistant`) and the calls behind it: send a message and stream the answer,
+ * stop it, load or start a conversation, check the language model. UI events in an answer are carried out by
+ * lib/applyUi.ts.
+ */
+
 export interface ToolRecord {
   call_id: string;
   name: string;

@@ -2,6 +2,12 @@ import type { ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, CopyCheck, Info } from 'lucide-react';
 import { fmtLen } from '../lib/format';
 
+/*
+ * The pre-merge check in words (`AssessmentView`): merging will help, is not needed, or needs a look, with each
+ * scan's new surface, overlap and layering. Shown in Align, for a new scan waiting in Scan, and in Autopilot's
+ * history.
+ */
+
 export interface ScanAssessment {
   index: number;
   name?: string;

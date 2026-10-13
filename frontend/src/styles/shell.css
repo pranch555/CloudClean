@@ -1,3 +1,9 @@
+/*
+ * The app frame (shell/*): the workspace grid and drawers, the top bar with the six steps, the model list and side
+ * panel columns, the jobs drawer and toasts. Also the theme switch, drop overlay, first-run tour and the app guide's
+ * "here it is".
+ */
+
 /* ============================================================ app frame */
 .app {
   height: 100%;

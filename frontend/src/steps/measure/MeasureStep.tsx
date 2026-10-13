@@ -12,6 +12,11 @@ import { setTab, useMeasureUi, type MeasureTab } from './state';
 import { ThreadFooter, ThreadTab } from './ThreadTab';
 import { DimensionsFooter, ToolGrid } from './Tools';
 
+/*
+ * Step 5, Measure, one tab each: Dimensions (the part's size and the measuring tools), Thread, Golden model (the
+ * check against it) and Accuracy (whether to trust the numbers).
+ */
+
 const TABS: { value: MeasureTab; label: string; title: string; glyph: Glyph }[] = [
   { value: 'dimensions', label: 'Dimensions', title: 'The part’s size and tools to measure anything on it', glyph: DimensionsGlyph },
   { value: 'thread', label: 'Thread', title: 'Pitch, diameters and standard size of a screw thread', glyph: ThreadGlyph },

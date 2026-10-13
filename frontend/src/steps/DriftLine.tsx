@@ -5,6 +5,11 @@ import type { Asset } from '../lib/types';
 import { useStore } from '../store';
 import { useDrift } from './useReport';
 
+/*
+ * The line in a Clean or Mesh result that says whether the operation changed the part's size: unchanged, moved as a
+ * solid part, or changed by how much. The full explanation is one click away.
+ */
+
 const AXES = ['length', 'width', 'height'] as const;
 
 /**

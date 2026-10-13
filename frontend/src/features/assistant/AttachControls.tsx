@@ -8,6 +8,11 @@ import { getViewer } from '../../viewer/instance';
 import { attachmentFromFile, isPhotoFile, MAX_ATTACHMENTS, shrinkImage } from './attachments';
 import { setKeepPhotos, useAssistant } from './assistantStore';
 
+/*
+ * Adding pictures to a message for the assistant: a photo from this computer, a picture of the 3D view or a photo
+ * already in the project, by button, paste or drop. Used by the Assistant tab, the floating chat and the Home prompt.
+ */
+
 const room = () => MAX_ATTACHMENTS - useAssistant.getState().attachments.length;
 
 function full() {

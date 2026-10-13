@@ -1,6 +1,11 @@
 import { api, ApiError } from './api';
 import type { Asset, Project } from './types';
 
+/*
+ * Projects: list, create, rename and delete them and move models between them (/api/projects). On a server too old to
+ * have projects, every model sits in one stand-in project, My scans.
+ */
+
 /** Client-side stand-in when the server predates projects: one project holding every asset. */
 export const ALL_PROJECT_ID = '__all__';
 

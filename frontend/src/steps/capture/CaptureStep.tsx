@@ -35,6 +35,11 @@ import { PhotosBlock } from './PhotosBlock';
 import { CameraBlock } from './CameraBlock';
 import { ActionError, ConfirmDialog, RecDot, runAction, useCaptureAction } from './parts';
 
+/*
+ * Step 1, Scan: connect a scanner and turntable, scan with live guidance, the camera view and the marker map, and
+ * save the scan; or bring in scan files or make a model from photos. Its blocks live in this folder.
+ */
+
 const LIVE = new Set(['running', 'paused']);
 
 /** Step 1 — Scan: connect a scanner (and turntable), scan with live guidance, save; or bring in files. */

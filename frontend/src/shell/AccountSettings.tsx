@@ -7,6 +7,11 @@ import { useStore } from '../store';
 import { Button } from '../ui/primitives';
 import { ConfirmDialog } from '../steps/capture/parts';
 
+/*
+ * Accounts in the app: Settings -> Account (password, sign out) and, for admins, Settings -> Users (everyone, recent
+ * activity, the Revo Metro bridge key). Also the account chip in the top bar.
+ */
+
 const when = (iso?: string | null) => (iso ? fmtAgo(iso) : 'never');
 
 /** Settings -> Account: who is signed in, change the password, sign out. */

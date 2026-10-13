@@ -1,3 +1,8 @@
+/*
+ * The shapes of what the server sends: models (`Asset`: point cloud, mesh or photo), projects, jobs and operation
+ * settings. Also the app's own names for steps, screens, viewport tools, views and colour modes.
+ */
+
 export type AssetKind = 'pointcloud' | 'mesh' | 'image';
 
 export interface GeometryStats {

@@ -22,6 +22,11 @@ import { TiltGlyph, TurntableDial } from '../../features/capture/TurntableDial';
 import { Block } from '../StepFrame';
 import { Callout, ConfirmDialog } from './parts';
 
+/*
+ * Scan -> Turntable: find and connect the turntable, see the platter's angle, turn or tilt it by hand, and run a
+ * turntable scan with its progress. It talks to the turntable through lib/turntable.ts.
+ */
+
 const FALLBACK_CAPS: TurntableCapabilities = { tilt: false, tilt_range: null, speed_range: [25, 90], interval_range: [5, 30], max_rotations: 5 };
 const DEFAULT_PROGRAM: TurntableProgram = { interval_deg: 30, frames_per_stop: 3, direction: 'cw', rotations: [{ tilt_deg: 0 }], sync_scan: true };
 const NUDGES = [-90, -15, -5, 5, 15, 90];

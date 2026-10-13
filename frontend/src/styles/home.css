@@ -1,3 +1,8 @@
+/*
+ * Home (home/HomeScreen.tsx): the greeting and Ask prompt, the turntable dial (ui/motion/ScanDial.tsx), the start
+ * cards, the project cards and the status strip.
+ */
+
 .home {
   overflow-y: auto;
   min-height: 0;

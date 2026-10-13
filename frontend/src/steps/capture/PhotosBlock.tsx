@@ -10,6 +10,11 @@ import { PhotoGrid, PhotoViewerHost } from '../../shell/models/photos';
 import { Block } from '../StepFrame';
 import { Callout } from './parts';
 
+/*
+ * Scan -> Make a 3D model from photos: the project's photos become a coloured point cloud (job photos_to_3d). Offers
+ * the printable scale sheet, so the model comes out at its true size.
+ */
+
 /** tiles shown before "+N more" (which opens the photo viewer on the rest) */
 const SHOWN = 10;
 

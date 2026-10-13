@@ -8,6 +8,12 @@ import type { Asset } from '../lib/types';
 import { useStore } from '../store';
 import { Badge, Button, Field, NumberInput, Select, Switch, TextInput } from '../ui/primitives';
 
+/*
+ * A recipe of edits applied in order to one model's full-resolution data (`EditRecipe`, job edit): one-click chips
+ * for common edits plus any operation in the server's catalogue. Used by Clean -> Position & crop and Mesh -> Repair
+ * & finish.
+ */
+
 interface ArgSpec {
   type: string;
   default: unknown;

@@ -22,6 +22,12 @@ import { TooltipLayer } from './ui/TooltipLayer';
 import { GuideSpotlight } from './ui/GuideSpotlight';
 import { FloatingChat } from './features/assistant/FloatingChat';
 
+/*
+ * The app's frame: the top bar over either Home or the workspace (model list, 3D view, side panel), with the floating
+ * chat, jobs, toasts, Settings and tour on top. On start it loads the parameters, models and projects from the
+ * server; side panels dock or become drawers to fit the window.
+ */
+
 export default function App() {
   const theme = useThemeEffect();
   const screen = useStore(s => s.screen);

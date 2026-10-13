@@ -2,6 +2,11 @@ import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, u
 import { createPortal } from 'react-dom';
 import { ChevronDown, Info, X } from 'lucide-react';
 
+/*
+ * The app's basic controls in one style: buttons, switches, segmented choices, fields, inputs, sliders, sections,
+ * badges, progress bars, popovers and dialogs. Their styles are in styles/primitives.css.
+ */
+
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'subtle' | 'signal';
 
 /** The id a Field's label points at: controls inside a Field use it when they have no id of their own. */

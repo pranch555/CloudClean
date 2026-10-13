@@ -3,6 +3,11 @@ import { jobStarted } from './jobs';
 import { projectParam } from './projects';
 import { useStore } from '../store';
 
+/*
+ * Bringing files in: upload scans, CAD models and photos into the current project (scans go straight through
+ * Autopilot when "Run on every upload" is on). Also import by path on the server, and the file picker.
+ */
+
 const CAD = /\.(step|stp|iges|igs|brep)$/i;
 
 function handle(res: UploadResult) {

@@ -1,3 +1,8 @@
+/*
+ * The assistant chat (features/assistant/*): the conversation, message box and tool cards, attached pictures, the
+ * logo and glyph, and the floating chat window with its bubble.
+ */
+
 .assistant {
   flex: 1;
   min-height: 0;

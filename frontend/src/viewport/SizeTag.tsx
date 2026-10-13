@@ -6,6 +6,11 @@ import { useStore, type DimLine, type Vec3 } from '../store';
 import { DimMark } from '../ui/icons';
 import { IconButton, Segmented } from '../ui/primitives';
 
+/*
+ * The size readout on the 3D view: the current model's length × width × height along the part itself (or the
+ * scanner's X Y Z). Its ruler draws the dimensions onto the model (`sizeLines`).
+ */
+
 const SIZE_IDS = ['size-L', 'size-W', 'size-H'];
 
 /** Dimension lines along the edges of the part's own box (or the world box), offset so they clear the model. */

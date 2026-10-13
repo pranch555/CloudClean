@@ -9,6 +9,11 @@ import { draftForAssistant } from '../features/assistant/assistantStore';
 import { AssistantGlyph } from '../features/assistant/AssistantMark';
 import { Button, IconButton, Switch } from '../ui/primitives';
 
+/*
+ * Banners at the top of the 3D view: follow the scanner while scanning, the loading pill, and the selection bar
+ * (delete or keep only the selected points, or ask the assistant about them).
+ */
+
 export function Banners() {
   return (
     <div className="banner-stack">

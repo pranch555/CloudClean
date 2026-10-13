@@ -5,6 +5,11 @@ import type { PartAxis } from '../../lib/measureTools';
 import { Slider } from '../../ui/primitives';
 import type { SectionShot } from './state';
 
+/*
+ * Drawings for the Cross-section tool: `ProfilePicker`, the part's silhouette to choose where to cut, and
+ * `SectionDrawing`, the cut hatched and dimensioned like an engineering drawing.
+ */
+
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 /**

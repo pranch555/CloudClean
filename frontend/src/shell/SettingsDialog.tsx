@@ -9,6 +9,11 @@ import { Button, Dialog, Field, NumberInput, Segmented, Select, Switch, TextInpu
 import { ChoiceCards } from '../steps/StepFrame';
 import { startTour } from './Tour';
 
+/*
+ * The Settings dialog: Appearance, Scanner & turntable, Assistant (which language model to use), Automations,
+ * Shortcuts & about, and Account / Users when sign-in is on. Each section is a page of its own.
+ */
+
 const AutopilotPanel = lazy(() => import('../features/autopilot/AutopilotPanel').then(m => ({ default: m.AutopilotPanel })));
 const DevicesSection = lazy(() => import('../steps/capture/DevicesSection').then(m => ({ default: m.DevicesSection })));
 

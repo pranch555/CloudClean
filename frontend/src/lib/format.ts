@@ -1,5 +1,10 @@
 import type { Asset } from './types';
 
+/*
+ * How numbers and names read everywhere in the app: counts (1.2M), lengths with sensible digits, signed values,
+ * percentages, sizes, durations and "5 min ago". Also operation labels and the chart series colours.
+ */
+
 export const fmtCount = (n: number | undefined | null): string => {
   if (n == null) return '–';
   if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M`;

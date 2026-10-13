@@ -179,6 +179,16 @@ cloudclean run a.ply b.ply -o out --config settings.json    # {"clean": {...}, "
   length) and their surface is far softer than a scan's; see the Accuracy section of [docs/photos-to-3d.md](docs/photos-to-3d.md).
 - Photo colouring is only as good as the photo alignment. Use evenly lit photos with fixed exposure and white balance.
 
+## How the code fits together
+
+- [FLOWCHART.md](FLOWCHART.md): how CloudClean works, as flowcharts: a scan from the scanner to a saved model, a
+  button press through the API and a background job, the assistant, the 3D view, deployment.
+- [docs/repo-map.md](docs/repo-map.md): every file, what it is for, what it uses and what uses it, which API routes
+  the browser calls and which jobs they start. Generated from the code: run `python tools/repo_map.py` after
+  changing files (`tests/test_repo_map.py` fails while the map is out of date).
+- [DECISIONS.md](DECISIONS.md): why things are built the way they are, task by task: what was asked, what was
+  chosen, what was tried and rejected, and the measurements behind it.
+
 ## Tests
 
 ```bash

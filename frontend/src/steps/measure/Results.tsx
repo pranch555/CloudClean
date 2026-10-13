@@ -10,6 +10,11 @@ import { kindGlyph } from './glyphs';
 import { dimText, prefixOf, unitText, valueText } from './format';
 import { CopyButton } from './parts';
 
+/*
+ * Measure -> Dimensions, the list of results: every measurement on the model (two-point distances, measuring tools,
+ * the assistant's dimensions). Show one on the model, copy, remove, or download all as CSV.
+ */
+
 interface Row {
   id: string;
   label: string;

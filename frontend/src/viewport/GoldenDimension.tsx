@@ -5,6 +5,11 @@ import { animate, draw, enter, EASE, reducedMotion, springy } from '../lib/motio
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * Measure -> Golden model: the size the panel points at, drawn on the 3D view as on an engineering drawing, a
+ * dimension line with arrowheads and its value beside it.
+ */
+
 /** Below this many pixels on screen the line would be a smudge: a dot and the label instead. */
 const SHORT_PX = 14;
 /** arrowhead length and half width, end tick half length, gap between the line and its label, screen margin (px) */

@@ -6,6 +6,11 @@ import { ROLE_LABEL, roleOf } from './journey';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * The measurement report (Export -> Reports): one printable HTML page per model with a picture of the view, the part
+ * size, every measurement, the thread and where the model came from. Print it to PDF from the browser.
+ */
+
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /**

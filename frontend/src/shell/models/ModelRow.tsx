@@ -13,6 +13,11 @@ import type { CheckInfo } from './checkInfo';
 import { ConfirmDelete } from './photos';
 import { revealModel, usePanelUi } from './panelState';
 
+/*
+ * One model in the model list: thumbnail, name, size, where it came from, and the eye that shows it in the 3D view.
+ * Its menu renames, downloads, moves or deletes it, or makes it the golden model; a check shows its verdict.
+ */
+
 /** Eye with a filled pupil: "shown in the 3D view". */
 function EyeOn({ size = 17 }: { size?: number }) {
   return (

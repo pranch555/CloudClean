@@ -3,6 +3,11 @@ import * as THREE from 'three';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * Picking point pairs on the 3D view (Align, merging by hand): click a spot on the moving scan, then the same spot on
+ * the reference. Each pair shows as two markers with the same number and colour.
+ */
+
 const COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
 
 /** Manual point pairs for merging symmetric parts: click a spot on the moving scan, then the same spot on the reference. */

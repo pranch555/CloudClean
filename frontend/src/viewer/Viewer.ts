@@ -13,6 +13,12 @@ import { HEIGHT_MESH_FRAGMENT, HEIGHT_MESH_FRAGMENT_PARS, HEIGHT_MESH_VERTEX, HE
 import { EyeDome } from './edl';
 import { ViewCube } from './ViewCube';
 
+/*
+ * The 3D view's engine (three.js): the `Viewer` class draws the shown models and runs the camera, view cube, picking,
+ * selection, markers, highlights and thumbnails. Models come from their previews with their colours, data maps and
+ * shading; `LiveCloud` holds the points streamed while scanning.
+ */
+
 export interface DisplaySettings {
   colorMode: ColorMode;
   pointScale: number;

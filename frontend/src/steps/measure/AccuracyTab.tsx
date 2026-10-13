@@ -18,6 +18,11 @@ import { Histogram } from './Histogram';
 import { DIRS, fmtPpm } from './format';
 import { NotHere, PickButtons, SelectionStatus, SelectStep, StepItem, StepList, SwitchRow } from './parts';
 
+/*
+ * Measure -> Accuracy: when a size looks off, three checks say whether the software or the scanner is to blame. Did
+ * processing change the size, is the scanner repeatable, does a known size measure right?
+ */
+
 const SIZE_NAMES = ['Length', 'Width', 'Height'];
 
 const MADE_FROM: Record<string, string> = {

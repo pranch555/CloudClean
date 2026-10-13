@@ -25,6 +25,11 @@ import {
   type XY,
 } from './chatWindow';
 
+/*
+ * The floating chat: the conversation popped out of the side panel into a small window you can drag, resize and
+ * minimize to a bubble, so you can keep talking to the assistant in any step. Where it sits is kept in chatWindow.ts.
+ */
+
 const EDGE = 8;
 const STEP = 16;
 const BIG_STEP = 64;

@@ -3,6 +3,11 @@ import { api } from '../lib/api';
 import { isMissingRoute } from '../lib/measureTools';
 import type { Asset } from '../lib/types';
 
+/*
+ * How a model was made, from the server: `useReport`, the report of the operation that made it, and `useDrift`, how
+ * far that operation moved or resized the surface (/api/accuracy/drift). Both are kept per model.
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const reports = new Map<string, Record<string, any> | null>();
 

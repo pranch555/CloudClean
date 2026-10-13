@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 
+/*
+ * Whether the server can make 3D models from photos (`useReconStatus`: the GPU container on the DGX Spark), with the
+ * reason when it cannot. The answer is kept for a minute.
+ */
+
 export interface ReconStatus {
   available: boolean;
   reason: string;

@@ -9,6 +9,11 @@ import { brushRadius } from '../viewport/BrushOverlay';
 import { Button, Field, NumberInput, Segmented, Slider } from '../ui/primitives';
 import { Block, ToolTile } from './StepFrame';
 
+/*
+ * Clean -> Smooth rough spots: denoise, smooth or flatten bumps on the whole model, on the selection or where you
+ * paint with the smoothing brush (job edit). Runs on the full-resolution data and says how far the surface moved.
+ */
+
 const METHODS: { value: SmoothMethod; label: string; title: string; help: string }[] = [
   { value: 'denoise', label: 'Denoise', title: 'Feature-preserving', help: 'Removes scanner roughness and ripples while keeping sharp edges such as the rim of a screw head and thread crests.' },
   { value: 'smooth', label: 'Smooth', title: 'Blend the surface', help: 'Blends the surface evenly (volume-preserving Taubin for meshes, moving least squares for points). Rounds sharp edges more than Denoise.' },

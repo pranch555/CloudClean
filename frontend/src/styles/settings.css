@@ -1,3 +1,8 @@
+/*
+ * The Settings dialog (shell/SettingsDialog.tsx): its section list and pages, and the Automations page
+ * (features/autopilot/AutopilotPanel.tsx) with its drop zone, stage stepper and history.
+ */
+
 .settings {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);

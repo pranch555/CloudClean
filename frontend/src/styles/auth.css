@@ -1,3 +1,8 @@
+/*
+ * Accounts (lib/auth.ts): the sign-in page (shell/AuthScreen.tsx), the account chip in the top bar, and Settings ->
+ * Account and Users (shell/AccountSettings.tsx).
+ */
+
 /* sign-in page (shell/AuthScreen.tsx) */
 .auth-page {
   min-height: 100vh;

@@ -8,6 +8,11 @@ import { useStore } from '../../store';
 import { Badge, Button, Field, NumberInput, Progress, Section, Segmented, Select, Switch, TextInput } from '../../ui/primitives';
 import { AssessmentView, type Assessment } from '../../steps/Assessment';
 
+/*
+ * Settings -> Automations (Autopilot): drop all scans of one part and get a finished, exported part with no clicks.
+ * Sets the recipe and the watched folder, and shows the running job's stages and the history (/api/autopilot/*).
+ */
+
 interface Settings {
   watch_enabled: boolean;
   watch_folder: string;

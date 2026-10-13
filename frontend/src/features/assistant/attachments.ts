@@ -1,4 +1,10 @@
 import { uid } from '../../lib/uid';
+
+/*
+ * Pictures attached to a message for the assistant (`Attachment`): photos are shrunk to the size a vision model
+ * needs. HEIC phone photos are first turned into JPEG by the server (/api/images/jpeg).
+ */
+
 export interface Attachment {
   id: string;
   url: string;      // data URL sent to the model

@@ -8,6 +8,12 @@ import { heightGradientCss } from '../viewer/colormaps';
 import { Field, IconButton, Popover, Segmented, Select, Slider, Switch } from '../ui/primitives';
 import { toggleFloor, useFloor } from './FloorPanel';
 
+/*
+ * The two rails on the 3D view: the tool rail on the left (move, box, lasso, measure, smoothing brush, pivot) and the
+ * view rail on the right. The view rail fits the view, picks standard views, cuts a section, sets the display, shows
+ * the floor, goes full screen, and saves a picture or a video.
+ */
+
 const TOOLS: { id: ViewportTool; label: string; key: string; icon: typeof MousePointer2 }[] = [
   { id: 'navigate', label: 'Move the view', key: 'V', icon: MousePointer2 },
   { id: 'box', label: 'Select with a box', key: 'B', icon: SquareDashedMousePointer },

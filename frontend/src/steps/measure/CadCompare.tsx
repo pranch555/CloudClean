@@ -14,6 +14,12 @@ import { Block } from '../StepFrame';
 import { CadGlyph } from './glyphs';
 import { Histogram } from './Histogram';
 
+/*
+ * Scan against CAD (job compare): how far every scan point is from the CAD surface, as a colour map and as numbers.
+ * Its result view, `CadResults`, is the Deviation details of Measure -> Golden model; `isCad` tells which models are
+ * CAD.
+ */
+
 export const isCad = (a: Asset) => roleOf(a) === 'cad' || /\.(step|stp|iges|igs|brep|stl|obj)$/i.test(String(a.params?.source ?? ''));
 
 interface CadSetup {

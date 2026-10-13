@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { local, useStore } from '../../store';
 import type { GroupId } from './groups';
 
+/*
+ * The model list's own state (`usePanelUi`): which groups are folded shut (kept in this browser) and which model to
+ * bring into view, as when a "Made from" link opens a model (`revealModel`).
+ */
+
 interface PanelUi {
   /** groups folded shut (kept between visits) */
   collapsed: GroupId[];

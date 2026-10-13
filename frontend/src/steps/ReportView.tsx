@@ -3,6 +3,11 @@ import { fmtDims, fmtLen, fmtPct, humanize } from '../lib/format';
 import { useStore } from '../store';
 import { Badge, Section } from '../ui/primitives';
 
+/*
+ * The report of the operation that made a model, in readable form: cleaning, alignment, mesh accuracy, colour, edits
+ * or inspection. Shown in Export, under the model's details.
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function ReportView({ asset: a, report: r }: { asset: Asset; report: Record<string, any> }) {
   const units = useStore(s => s.display.units);

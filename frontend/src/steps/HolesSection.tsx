@@ -10,6 +10,11 @@ import { getViewer } from '../viewer/instance';
 import { Button, NumberInput } from '../ui/primitives';
 import { Block } from './StepFrame';
 
+/*
+ * Mesh -> Holes: the holes in a mesh, found as Revo Metro does, each with its size and a way to see it on the model.
+ * Only the holes you tick are filled (/api/holes/fill).
+ */
+
 interface Hole {
   id: number;
   vertices: number;

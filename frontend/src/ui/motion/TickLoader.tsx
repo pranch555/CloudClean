@@ -1,6 +1,11 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { animate, reducedMotion, shake, stagger, svg, utils } from '../../lib/motion';
 
+/*
+ * The progress dial of a job in the Jobs drawer: 24 ticks like a turntable, stepping round or filling with progress
+ * while the job runs. When it ends, a check (done) or a cross (failed) draws itself.
+ */
+
 export type TickState = 'queued' | 'running' | 'done' | 'failed' | 'cancelled';
 
 const N = 24;

@@ -10,6 +10,11 @@ import { Button, Progress, Switch } from '../../ui/primitives';
 import { Callout } from '../../steps/capture/parts';
 import { useReport } from '../../steps/useReport';
 
+/*
+ * Mesh -> Colour from photos, the automatic way: the project's photos are placed around the part, lined up with the
+ * model and their colours painted onto it (job colour_from_photos). Afterwards it says how well the photos lined up.
+ */
+
 const SHOWN = 8;
 const MIN_PHOTOS = 3;
 

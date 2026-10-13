@@ -9,6 +9,12 @@ import { STEP_GLYPH } from '../ui/icons';
 import { Button } from '../ui/primitives';
 import { animate, EASE, enter, reducedMotion, springy, stagger, useEntrance, utils } from '../lib/motion';
 
+/*
+ * The shared anatomy of a step panel (`StepFrame`): a header, a body that scrolls and a sticky footer with the main
+ * action. Also the pieces every step uses: the model card, next-step button, result and choice cards, blocks, tool
+ * tiles.
+ */
+
 /** The step number shown last: the kicker rolls from it to the new one. */
 let lastStepN = 0;
 

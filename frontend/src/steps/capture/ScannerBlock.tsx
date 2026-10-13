@@ -7,6 +7,11 @@ import { availability, driverMeta, PRIMARY_DRIVERS, reasonShort, sortDrivers } f
 import { Block, ChoiceCards } from '../StepFrame';
 import { ActionError, Callout, runAction, useCaptureAction } from './parts';
 
+/*
+ * Scan -> Scanner: choose the scanner and what you are scanning, fine-tune its settings, and see the connected
+ * scanner in one line (`ScannerChooser`, `ScannerSummary`, `useScannerSetup`).
+ */
+
 /** The scanner the user is setting up (shared by the Scanner block and the step's Connect button). */
 export interface ScannerSetup {
   drivers: DriverInfo[];

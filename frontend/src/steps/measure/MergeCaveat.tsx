@@ -4,6 +4,11 @@ import type { Asset } from '../../lib/types';
 import { useStore } from '../../store';
 import { useReport } from '../useReport';
 
+/*
+ * The warning in Measure when the model comes from a merge its pre-merge check flagged (an ambiguous pose or a
+ * doubled skin): measurements on it are only as good as the agreement of its scans.
+ */
+
 /** The nearest merge this model was made from (itself included), walking back through its parents. */
 function useMergeAncestor(asset: Asset | undefined): Asset | undefined {
   const byId = useStore(s => s.byId);

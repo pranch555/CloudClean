@@ -1,3 +1,9 @@
+/*
+ * The step panel (steps/StepFrame.tsx) and the Clean, Align, Mesh and Export steps: header, current model, blocks,
+ * choice cards, tool tiles and result cards. Also Fine-tune, verdicts, the edit recipe, export formats, holes and
+ * colour from photos.
+ */
+
 /* ============================================================ step panel anatomy */
 .step {
   display: grid;

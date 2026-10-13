@@ -1,5 +1,10 @@
 import type { ResolvedRegion } from './types';
 
+/*
+ * Point-in-shape tests for a resolved region: a box, ball, cylinder or outline on screen (docs/v3-plan.md Contract
+ * 2). The 3D view uses `shapeTester` to light up the points of a region the assistant names.
+ */
+
 type Shape = ResolvedRegion['shapes'][number];
 type Tester = (x: number, y: number, z: number) => boolean;
 

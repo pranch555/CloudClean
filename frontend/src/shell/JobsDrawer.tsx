@@ -7,6 +7,11 @@ import { Badge, Button, IconButton, Progress } from '../ui/primitives';
 import { TickLoader } from '../ui/motion/TickLoader';
 import { enter } from '../lib/motion';
 
+/*
+ * The Jobs drawer (the Jobs button in the top bar): every operation as a job with its progress, its full log and a
+ * Cancel button.
+ */
+
 const TONE = { queued: 'neutral', running: 'signal', done: 'good', failed: 'critical', cancelled: 'warning' } as const;
 const LABEL = { queued: 'waiting', running: 'running', done: 'done', failed: 'failed', cancelled: 'cancelled' } as const;
 

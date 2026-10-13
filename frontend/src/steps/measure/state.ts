@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { local } from '../../store';
 import type { Direction, PartAxis, RegionPick, SectionResult } from '../../lib/measureTools';
 
+/*
+ * The Measure step's own state (`useMeasureUi`): the open tab (kept in this browser), the chosen tool and its
+ * options, the face picked first, errors, and the latest results and cross-section.
+ */
+
 export type MeasureTab = 'dimensions' | 'thread' | 'cad' | 'accuracy';
 export type ToolId = 'p2p' | 'across' | 'extent' | 'steps' | 'diameter' | 'angle' | 'flatness' | 'sphere' | 'section';
 

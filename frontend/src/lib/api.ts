@@ -1,6 +1,11 @@
 import type { Asset, Job, ParamsResponse } from './types';
 import { sessionEnded } from './auth';
 
+/*
+ * The one way the browser talks to the server: `api` for JSON requests with readable errors, `upload` with progress
+ * and `postSse` for streamed answers. A lost sign-in goes back to the sign-in page.
+ */
+
 export class ApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);

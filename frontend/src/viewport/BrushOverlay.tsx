@@ -2,6 +2,11 @@ import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * The smoothing brush on the 3D view (Clean -> Smooth rough spots): left-drag paints spheres on the surface, the
+ * painted area lights up and a circle shows the brush size at the cursor.
+ */
+
 export const brushRadius = () => {
   const st = useStore.getState();
   if (st.brush.radius > 0) return st.brush.radius;

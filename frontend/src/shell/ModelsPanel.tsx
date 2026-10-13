@@ -12,6 +12,12 @@ import { GroupCard } from './models/GroupCard';
 import { ModelRow } from './models/ModelRow';
 import { PhotoGrid, PhotoViewerHost } from './models/photos';
 
+/*
+ * The model list on the left: every model of the project in groups (scans, made from them, checks, CAD / golden
+ * models, photos), with a filter and the + menu. The + menu scans a part, opens files, makes a model from photos or
+ * imports from the server's disk.
+ */
+
 // kept here: other parts of the app import them from this file
 export { SERIES_VARS, assetColorVar, sizeText, Thumb } from './models/thumb';
 

@@ -4,6 +4,11 @@ import type { Asset } from '../../lib/types';
 import { useThumbs } from '../../lib/thumbnails';
 import { useStore } from '../../store';
 
+/*
+ * A model's picture in the model list (`Thumb`, with its colour swatch), each model's steady colour (`assetColorVar`)
+ * and its size as text (`sizeText`).
+ */
+
 export const SERIES_VARS = ['--series-1', '--series-2', '--series-3', '--series-4', '--series-5', '--series-6', '--series-7', '--series-8'];
 
 /** Stable colour per model (order of creation among geometry assets). */

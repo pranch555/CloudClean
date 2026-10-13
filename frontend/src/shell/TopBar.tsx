@@ -11,6 +11,11 @@ import { Button, IconButton, Popover } from '../ui/primitives';
 import { Journey } from './Journey';
 import { AccountChip } from './AccountSettings';
 
+/*
+ * The top bar: the CloudClean logo (back to Home), the project switcher, the six steps (Journey.tsx), the running
+ * job, the theme toggle, Settings, the account chip and Ask CloudClean.
+ */
+
 export function TopBar({ home = false }: { home?: boolean }) {
   const set = useStore(s => s.set);
   const goHome = useStore(s => s.goHome);

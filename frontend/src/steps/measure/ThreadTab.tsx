@@ -14,6 +14,11 @@ import { ThreadGlyph } from './glyphs';
 import { SelectStep, StepItem, StepList } from './parts';
 import { setError, setTab, setUi, useMeasureUi } from './state';
 
+/*
+ * Measure -> Thread: find a screw or nut thread on the model and show its pitch, diameters, the nearest standard size
+ * and the pitch of each turn.
+ */
+
 export async function analyseThread(target: Asset) {
   const st = useStore.getState();
   const onTarget = (st.selectionCounts[target.id] ?? 0) > 0;

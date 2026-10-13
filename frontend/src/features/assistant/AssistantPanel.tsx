@@ -12,6 +12,12 @@ import { loadConversation, newConversation, refreshAssistantStatus, sendToAssist
 import { dockChat, expandChat, popOutChat, useChatWindow } from './chatWindow';
 import { renderMarkdown } from './markdown';
 
+/*
+ * The conversation with the assistant: messages with their tool steps, pictures and "delete these?" questions, and
+ * the message box with suggestions for the current step. It is the side panel's Assistant tab and the body of the
+ * floating chat; past conversations come from /api/assistant/conversations.
+ */
+
 export const SUGGESTIONS: Record<Step, string[]> = {
   capture: [
     'Connect the scanner and start a turntable scan: 15° steps, one turn flat and one tilted 20°',

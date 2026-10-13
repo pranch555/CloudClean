@@ -7,6 +7,12 @@ import { useStore } from '../../store';
 import { lutTexture } from '../../viewer/colormaps';
 import { getViewer } from '../../viewer/instance';
 
+/*
+ * The live scanning session behind the Scan step (`useCapture`): scanner drivers and settings, session status and
+ * guidance, and the live points streamed into the 3D view over a WebSocket. Connect, save, discard and pending scans
+ * go through /api/capture/*.
+ */
+
 /** Driver settings the camera view (cameraStore.ts) owns: never shown in Fine-tune; the newest values win at connect. */
 export const CAMERA_KEYS = ['camera_mode', 'laser_level', 'exposure_us', 'gain', 'fill_light', 'camera_surface'];
 

@@ -1,6 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+/*
+ * Tooltips for every element with data-tip, drawn in one layer at the top of the page so no panel clips them, and
+ * placed where they fit. Hover shows one after a short delay, keyboard focus at once.
+ */
+
 type Side = 'top' | 'bottom' | 'left' | 'right';
 
 interface Tip {

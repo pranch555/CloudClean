@@ -21,6 +21,11 @@ import './styles/auth.css';
 import App from './App';
 import { AuthGate } from './shell/AuthScreen';
 
+/*
+ * The entry point the page loads: brings in the fonts and every stylesheet, then starts the app (App.tsx) behind the
+ * sign-in gate (shell/AuthScreen.tsx).
+ */
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthGate>

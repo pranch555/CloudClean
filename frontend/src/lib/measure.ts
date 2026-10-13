@@ -2,6 +2,11 @@ import { api, ApiError } from './api';
 import { uid } from './uid';
 import { useStore, type DistanceResult, type Measurement, type Vec3 } from '../store';
 
+/*
+ * Two-point measurements (the M tool): points snapped to the scanned surface on the server, distances along an axis
+ * or the thread axis, labels and colours. Also every measurement on the model as CSV.
+ */
+
 const PALETTE = ['#ee4b1f', '#2f6fd6', '#178f64', '#8a57d4', '#cc4577', '#a88100'];
 export const measureColor = (i: number) => PALETTE[i % PALETTE.length];
 

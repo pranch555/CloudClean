@@ -17,6 +17,11 @@ import { Block, NextStepButton, StepFrame } from './StepFrame';
 import { AlignGlyph } from '../ui/icons';
 import { sendToAssistant, useAssistant } from '../features/assistant/assistantStore';
 
+/*
+ * Step 3, Align: combine several scans of the same part, after a check that merging helps and a side-by-side preview
+ * of the result. It merges automatically, on point pairs you click or on marker stickers (job merge).
+ */
+
 const pairKey = (movId: string, refId: string) => `${movId}>${refId}`;
 
 async function startPairing(mov: Asset, ref: Asset) {

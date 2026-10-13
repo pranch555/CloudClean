@@ -1,3 +1,8 @@
+/*
+ * Page-wide basics under every other stylesheet: box sizing, the body's colours and fonts (from tokens.css), plain
+ * form controls and focus rings. Also quiet scrollbars, type and layout helpers and shared keyframes.
+ */
+
 *,
 *::before,
 *::after {

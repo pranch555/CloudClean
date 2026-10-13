@@ -5,6 +5,11 @@ import type { Job } from './types';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * Jobs on the client: `submitJob` starts an operation, polling keeps the job list current, and when a job finishes
+ * its new model is shown and a toast says how it went. `cancelJob` stops one.
+ */
+
 const FINAL = new Set(['done', 'failed', 'cancelled']);
 const known = new Map<string, string>();
 const finishedHandlers = new Map<string, (job: Job) => void>();

@@ -7,6 +7,12 @@ import { getViewer } from '../../viewer/instance';
 import { defaultsOf, ParamForm } from '../../ui/ParamForm';
 import { Button, Empty, Field, Section, Slider } from '../../ui/primitives';
 
+/*
+ * Mesh -> Colour from photos -> Line up one photo by hand: turn the model until it matches a photo laid over the 3D
+ * view, save the view, and paint the saved views onto the mesh (job texture). `useAlign` holds the photo being lined
+ * up.
+ */
+
 interface SavedView {
   image_id: string;
   mesh_id: string;

@@ -10,6 +10,11 @@ import { GROUPS, type GroupId } from './groups';
 import { setCollapsed, usePanelUi } from './panelState';
 import { ConfirmDelete, deletePhotos } from './photos';
 
+/*
+ * One group of the model list (scans, made from them, checks, CAD / golden models, photos) as a card of its own
+ * colour, with its icon, title and count. It folds shut, and its eye shows or hides the whole group.
+ */
+
 const ICON: Record<GroupId, ReactNode> = {
   scans: <ScanGlyph size={18} />,
   made: <Layers size={17} strokeWidth={1.9} aria-hidden />,

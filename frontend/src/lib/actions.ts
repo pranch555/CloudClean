@@ -3,6 +3,11 @@ import { submitJob } from './jobs';
 import { useStore } from '../store';
 import { getViewer } from '../viewer/instance';
 
+/*
+ * Actions shared by the rails, keyboard shortcuts and steps: pick a viewport tool, jump to a standard view, delete or
+ * keep the selected points (job edit), save a picture of the view. Also undo / redo through the model history.
+ */
+
 export function setTool(tool: ViewportTool) {
   const st = useStore.getState();
   // leaving the measure tool drops an unfinished measurement but keeps completed ones

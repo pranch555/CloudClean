@@ -6,6 +6,11 @@ import { useStore } from '../store';
 import { Button, Field, NumberInput } from '../ui/primitives';
 import { Block } from './StepFrame';
 
+/*
+ * True size of a model made from photos: `photoSize` says whether a model came from photos and how it was scaled.
+ * Clean -> Set the true size scales it to one length you know (job edit, op scale).
+ */
+
 /**
  * Whether a model was made from photos (itself or anything it came from), so its size is only estimated, and the
  * scale factor already applied on the way (an edit with op scale), if any. `sheet`: the photos were taken on the

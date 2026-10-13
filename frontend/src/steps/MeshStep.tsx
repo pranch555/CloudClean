@@ -14,6 +14,11 @@ import { Block, ChoiceCards, NextStepButton, ResultCard, StepFrame, TargetCard }
 import { DriftLine } from './DriftLine';
 import { useReport } from './useReport';
 
+/*
+ * Step 4, Mesh: turn points into a surface (job mesh), true to the scan or closed and watertight, with the detail and
+ * smoothing to use. For a mesh: its holes, repair and finish edits, and colour from photos.
+ */
+
 const DETAIL: Record<string, number> = { auto: 0, fine: 11, finest: 12 };
 const SMOOTH: Record<string, number> = { none: 0, light: 3, more: 8 };
 

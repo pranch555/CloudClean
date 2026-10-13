@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useStore } from '../store';
 
+/*
+ * The Paper (light) and Carbon (dark) themes: `useThemeEffect` puts the theme and text size on the page (System
+ * follows the computer). `switchTheme` opens the new theme as a circle from the toggle; `cssVar` reads theme colours
+ * for the 3D view.
+ */
+
 export type ResolvedTheme = 'paper' | 'carbon';
 
 const media = () => window.matchMedia('(prefers-color-scheme: dark)');

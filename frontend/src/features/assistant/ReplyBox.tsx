@@ -8,6 +8,11 @@ import { hideReply, popOutChat, setReplyTall, useChatWindow } from './chatWindow
 import { ConfirmCard, Gallery } from './AssistantPanel';
 import { renderMarkdown } from './markdown';
 
+/*
+ * The reply box on top of the Ask bar under the 3D view: your last question and the assistant's answer in short, with
+ * its progress while it works. From it the whole chat opens in the side panel or pops out.
+ */
+
 const TRAIL = 4;
 
 /** Open the full conversation in the side panel's Assistant tab. */

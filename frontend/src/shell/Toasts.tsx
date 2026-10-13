@@ -3,6 +3,11 @@ import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
 import { useStore, type Toast } from '../store';
 import { animate, draw, reducedMotion, shake, springy, utils } from '../lib/motion';
 
+/*
+ * Toasts: the short messages in the corner (a job finished, something could not start), each with a hairline that
+ * runs down while it is on screen. They spring in, fade out, and the rest of the stack glides into place.
+ */
+
 const ICON = { info: Info, ok: CheckCircle2, warn: AlertTriangle, error: XCircle };
 
 /*

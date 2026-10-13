@@ -1,3 +1,9 @@
+/*
+ * The basic controls of ui/primitives.tsx: buttons, inputs, fields, segmented choices, switches, sliders, chips,
+ * badges, cards, sections, stats and tables. Also progress bars, empty states, popovers, menus, dialogs, toasts and
+ * tooltips.
+ */
+
 /* ============================================================ buttons */
 .btn {
   display: inline-flex;

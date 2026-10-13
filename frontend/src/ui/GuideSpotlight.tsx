@@ -3,6 +3,11 @@ import { createPortal } from 'react-dom';
 import { MapPin, X } from 'lucide-react';
 import { clearGuide, useGuide } from '../lib/guide';
 
+/*
+ * The assistant's "here it is": a ring around the control the assistant is showing you, with its name and where it is
+ * (lib/guide.ts). It follows the control and goes away by itself, on a click or with Esc.
+ */
+
 const SHOW_MS = 10000;
 const PAD = 6;
 

@@ -1,3 +1,5 @@
+"""The core engine on synthetic scans of known shape: file round trips, cleaning, merging (automatic and on point
+pairs), meshing true to size, and colours from scans and photos."""
 import json
 
 import numpy as np

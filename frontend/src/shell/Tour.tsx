@@ -4,6 +4,11 @@ import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { local, useStore } from '../store';
 import { Button, IconButton } from '../ui/primitives';
 
+/*
+ * The first-run tour: a spotlight on each part of the workspace (the steps, the model list, the side panel, the size
+ * readout, the Ask bar) with one short explanation. Settings -> Shortcuts & about starts it again (`startTour`).
+ */
+
 interface TourStep {
   target: string;
   title: string;

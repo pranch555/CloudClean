@@ -6,6 +6,11 @@ import type { Asset, ColorMode, Job, ParamsResponse, Project, Screen, ScreenSele
 import type { ScalarStyle } from './viewer/colormaps';
 import type { ClipSettings, Pane } from './viewer/Viewer';
 
+/*
+ * The app's shared state (zustand `useStore`): models and projects from the server, the screen and step, the current
+ * and shown models, layout, display settings, measurements and toasts. `local` keeps small settings in this browser.
+ */
+
 export const local = {
   get<T>(key: string, fallback: T): T {
     try {

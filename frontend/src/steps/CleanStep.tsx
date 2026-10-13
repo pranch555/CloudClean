@@ -14,6 +14,11 @@ import { Block, ChoiceCards, NextStepButton, ResultCard, StepFrame, TargetCard, 
 import { DriftLine } from './DriftLine';
 import { useReport } from './useReport';
 
+/*
+ * Step 2, Clean: remove stray points, noise and the table from a scan (job clean) with a Gentle, Standard or Thorough
+ * preset. Also: remove things by hand, position and crop, smooth rough spots, and set the true size of a photo model.
+ */
+
 const PRESETS: { value: string; title: string; body: string; badge?: string }[] = [
   { value: 'light', title: 'Gentle', body: 'Only obvious stray points. Every edge stays exactly as scanned.' },
   { value: 'standard', title: 'Standard', body: 'Scanner noise, stray points and loose bits floating near the part.', badge: 'recommended' },

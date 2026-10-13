@@ -18,6 +18,11 @@ import { DIR_NAME, DIRS, prefixOf, unitText, valueText } from './format';
 import { ProfilePicker, SectionDrawing } from './SectionView';
 import { setError, setTab, setUi, useMeasureUi, type ToolId } from './state';
 
+/*
+ * Measure -> Dimensions, the measuring tools: point to point, caliper, overall size, heights & steps, diameter,
+ * angle, flatness, ball and cross-section. Each has its own panel, runs on the server and shows its latest result.
+ */
+
 interface ToolDef {
   id: ToolId;
   label: string;

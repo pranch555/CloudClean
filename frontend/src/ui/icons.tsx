@@ -1,6 +1,11 @@
 import type { ReactElement } from 'react';
 import type { Step } from '../lib/types';
 
+/*
+ * CloudClean's own icons: the logo, one glyph per step (`STEP_GLYPH`: Scan, Clean, Align, Mesh, Measure, Export) and
+ * the small dimension mark of size readouts, on a 24 px grid in currentColor.
+ */
+
 type P = { size?: number; className?: string };
 
 const base = (size: number) => ({

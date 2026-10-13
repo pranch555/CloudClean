@@ -17,6 +17,12 @@ import { ScanDial, type DialReadout } from '../ui/motion/ScanDial';
 import { Logo } from '../ui/icons';
 import { Button } from '../ui/primitives';
 
+/*
+ * Home, the first screen: the Ask prompt, the turntable dial that continues the latest project, three start cards
+ * (scan, open files, golden model check) and the project cards. A strip at the bottom says whether the scanner and
+ * turntable are connected.
+ */
+
 function greeting() {
   const h = new Date().getHours();
   return h < 5 ? 'Working late.' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';

@@ -13,6 +13,11 @@ import { AlignStep } from '../steps/AlignStep';
 import { MeshStep } from '../steps/MeshStep';
 import { ExportStep } from '../steps/ExportStep';
 
+/*
+ * The side panel on the right, with two tabs: the current step (Scan, Clean, Align, Mesh, Measure or Export) and the
+ * Assistant. Scan and Measure load on first use.
+ */
+
 const CaptureStep = lazy(() => import('../steps/capture/CaptureStep').then(m => ({ default: m.CaptureStep })));
 const MeasureStep = lazy(() => import('../steps/measure/MeasureStep').then(m => ({ default: m.MeasureStep })));
 

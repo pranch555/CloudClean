@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { DEFAULT_LAYOUT, useStore } from '../store';
 
+/*
+ * The drag handle between a side panel and the 3D view: drag to resize the model list or the side panel, double-click
+ * to reset, arrow keys to nudge. Widths are kept in the store's layout.
+ */
+
 const LIMITS = { left: [220, 440], right: [340, 680] } as const;
 
 /** Drag handle in the gap between two panels. Double-click resets; arrow keys nudge. */

@@ -14,6 +14,11 @@ import { ReportView } from './ReportView';
 import { Block, StepFrame, TargetCard } from './StepFrame';
 import { useReport } from './useReport';
 
+/*
+ * Step 6, Export: download the model in the format you need (STL, 3MF, OBJ, PLY ...) or save it to a folder on the
+ * server. Also the measurements as CSV, the reports and the model's details.
+ */
+
 const FORMAT_INFO: Record<string, string> = {
   stl: '3D printing, CAD',
   '3mf': '3D printing, keeps millimetres',

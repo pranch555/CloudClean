@@ -1,5 +1,10 @@
 import type { Asset, Step } from './types';
 
+/*
+ * The six steps of a part (`STEPS`: Scan, Clean, Align, Mesh, Measure, Export) and what each model is in the user's
+ * words (`roleOf`). From a project's models it works out which steps are done and which to suggest next.
+ */
+
 const CAD_SOURCE = /\.(step|stp|iges|igs|brep)$/i;
 
 /** What a model is, in the user's words. */

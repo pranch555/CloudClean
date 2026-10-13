@@ -1,3 +1,8 @@
+/*
+ * The 3D view and everything drawn over it (viewport/*): the stage, size readout, rails, the Floor, banners,
+ * selection actions, the Ask bar and reply box, legends and 3D labels. Also the comparison panes and the empty stage.
+ */
+
 /* ============================================================ stage */
 .stage {
   position: relative;

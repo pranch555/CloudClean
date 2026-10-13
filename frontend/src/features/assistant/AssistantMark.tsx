@@ -1,6 +1,11 @@
 import paperTile from '../../assets/assistant-logo.png';
 import carbonTile from '../../assets/assistant-logo-carbon.png';
 
+/*
+ * The assistant's look: `AssistantMark`, its logo tile (Paper or Carbon artwork, picked by the theme in CSS), and
+ * `AssistantGlyph`, the same picture as a line glyph at text size.
+ */
+
 type MarkProps = {
   /** CSS pixels; the artwork is 160 px, so it stays sharp up to 80 px on a 2x screen */
   size?: number;
